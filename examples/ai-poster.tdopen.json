@@ -1,0 +1,71 @@
+{
+  "id": "example_ai-poster",
+  "name": "AI 文案海报",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "ai_text_1",
+      "type": "ai_text",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "AI 文本",
+        "params": {
+          "prompt": "写一个不超过12字的中文创意工作室标语，只输出标语。",
+          "provider_id": "",
+          "result_url": "",
+          "result_text": ""
+        }
+      }
+    },
+    {
+      "id": "text_2",
+      "type": "text",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "文字画面",
+        "params": {
+          "text": "HELLO, FLOW",
+          "size": 48,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "ai_text_1",
+      "target": "text_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "text_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "ai-poster"
+  }
+}

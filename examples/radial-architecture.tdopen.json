@@ -1,0 +1,95 @@
+{
+  "id": "example_radial-architecture",
+  "name": "放射构筑",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "box_1",
+      "type": "box",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "立方体",
+        "params": {
+          "width": 0.35,
+          "height": 1.1,
+          "depth": 0.3,
+          "detail": 1
+        }
+      }
+    },
+    {
+      "id": "radial_copy_2",
+      "type": "radial_copy",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "环形阵列",
+        "params": {
+          "count": 12,
+          "radius": 2,
+          "angle": 360,
+          "orient": true
+        }
+      }
+    },
+    {
+      "id": "render_3",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#e1bc84",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "box_1",
+      "target": "radial_copy_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "radial_copy_2",
+      "target": "render_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "render_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "radial-architecture"
+  }
+}

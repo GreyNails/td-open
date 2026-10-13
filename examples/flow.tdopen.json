@@ -73,6 +73,8 @@
       "data": {
         "label": "波形信号",
         "params": {
+          "wave": "sine",
+          "phase": 0,
           "frequency": 0.12,
           "amplitude": 0.4,
           "offset": 0

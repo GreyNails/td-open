@@ -1,0 +1,121 @@
+{
+  "id": "example_displacement-grid",
+  "name": "液态网格",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "grid_1",
+      "type": "grid",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "网格线",
+        "params": {
+          "spacing": 40,
+          "thickness": 1,
+          "angle": 0,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "fbm_noise_2",
+      "type": "fbm_noise",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "分形云噪声",
+        "params": {
+          "scale": 4,
+          "octaves": 4,
+          "roughness": 0.5,
+          "seed": 8,
+          "speed": 0.15,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "displace_3",
+      "type": "displace",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "纹理位移",
+        "params": {
+          "x": 0.1,
+          "y": 0.1,
+          "wrap": "repeat"
+        }
+      }
+    },
+    {
+      "id": "rgb_split_4",
+      "type": "rgb_split",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "色差分离",
+        "params": {
+          "distance": 8,
+          "angle": 0
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "grid_1",
+      "target": "displace_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "fbm_noise_2",
+      "target": "displace_3",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_3",
+      "source": "displace_3",
+      "target": "rgb_split_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "rgb_split_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "displacement-grid"
+  }
+}

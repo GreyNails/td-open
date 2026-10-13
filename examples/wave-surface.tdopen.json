@@ -1,0 +1,94 @@
+{
+  "id": "example_wave-surface",
+  "name": "波动地形",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "box_1",
+      "type": "box",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "立方体",
+        "params": {
+          "width": 3,
+          "height": 0.05,
+          "depth": 3,
+          "detail": 24
+        }
+      }
+    },
+    {
+      "id": "wave_sop_2",
+      "type": "wave_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "波浪变形",
+        "params": {
+          "amplitude": 0.25,
+          "frequency": 2,
+          "speed": 1
+        }
+      }
+    },
+    {
+      "id": "render_3",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a888ff",
+          "wireframe": true,
+          "speed": 0.12
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "box_1",
+      "target": "wave_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "wave_sop_2",
+      "target": "render_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "render_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "wave-surface"
+  }
+}

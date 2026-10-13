@@ -1,6 +1,10 @@
 import type { GraphNode } from "../types";
 import { dataCatalog } from "./dataCatalog";
-import { isGeometrySpec, type GeometrySpec } from "./geometry";
+import {
+  isGeometrySpec,
+  validateGeometrySpec,
+  type GeometrySpec,
+} from "./geometry";
 
 type Result =
   { handled: false } | { handled: true; value: number | string | GeometrySpec };
@@ -93,10 +97,10 @@ export function cookDataNode(
     const source = input();
     return typeof source === "string" ? source : fallback;
   };
-  const result = (value: number | string | GeometrySpec): Result => ({
-    handled: true,
-    value,
-  });
+  const result = (value: number | string | GeometrySpec): Result => {
+    if (typeof value === "object") validateGeometrySpec(value);
+    return { handled: true, value };
+  };
 
   if (temporal.has(type)) {
     const signature = JSON.stringify([type, p]);

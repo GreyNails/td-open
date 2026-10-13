@@ -1,0 +1,73 @@
+{
+  "id": "example_helix-sculpture",
+  "name": "螺旋雕塑",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "helix_sop_1",
+      "type": "helix_sop",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "螺旋管",
+        "params": {
+          "radius": 1,
+          "height": 3,
+          "turns": 3,
+          "tube": 0.08,
+          "detail": 48,
+          "segments": 12
+        }
+      }
+    },
+    {
+      "id": "render_2",
+      "type": "render",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#d1b5ff",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "helix_sop_1",
+      "target": "render_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "render_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "helix-sculpture"
+  }
+}

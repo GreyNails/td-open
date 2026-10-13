@@ -1,0 +1,74 @@
+{
+  "id": "example_julia-orbit",
+  "name": "Julia 对称花",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "julia_1",
+      "type": "julia",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "茱莉亚分形",
+        "params": {
+          "real": -0.7,
+          "imaginary": 0.27,
+          "zoom": 1,
+          "iterations": 60,
+          "speed": 0.05,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "kaleidoscope_2",
+      "type": "kaleidoscope",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "万花筒",
+        "params": {
+          "segments": 6,
+          "angle": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "julia_1",
+      "target": "kaleidoscope_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "kaleidoscope_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "julia-orbit"
+  }
+}

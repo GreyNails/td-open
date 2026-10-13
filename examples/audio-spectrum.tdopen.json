@@ -1,0 +1,89 @@
+{
+  "id": "example_audio-spectrum",
+  "name": "音乐频谱",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "audio_1",
+      "type": "audio",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "音频输入",
+        "params": {
+          "gain": 1,
+          "url": ""
+        }
+      }
+    },
+    {
+      "id": "spectrum_2",
+      "type": "spectrum",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "频谱画面",
+        "params": {
+          "bars": 64
+        }
+      }
+    },
+    {
+      "id": "blur_3",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 3,
+          "glow": 0.6
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "audio_1",
+      "target": "spectrum_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "spectrum_2",
+      "target": "blur_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "blur_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "audio-spectrum"
+  }
+}

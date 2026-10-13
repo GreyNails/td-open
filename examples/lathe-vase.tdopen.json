@@ -1,0 +1,70 @@
+{
+  "id": "example_lathe-vase",
+  "name": "旋转成器",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "lathe_sop_1",
+      "type": "lathe_sop",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "旋转曲面",
+        "params": {
+          "points": "[[0,-1],[0.7,-0.8],[0.35,0],[0.8,0.8],[0.6,1]]",
+          "detail": 48,
+          "angle": 360
+        }
+      }
+    },
+    {
+      "id": "render_2",
+      "type": "render",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#e7b87d",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "lathe_sop_1",
+      "target": "render_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "render_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "lathe-vase"
+  }
+}

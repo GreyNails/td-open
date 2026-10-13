@@ -1,0 +1,145 @@
+{
+  "id": "example_schmitt-trigger",
+  "name": "迟滞切换",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "lfo_1",
+      "type": "lfo",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "波形信号",
+        "params": {
+          "wave": "sine",
+          "phase": 0,
+          "frequency": 0.3,
+          "amplitude": 1,
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "hysteresis_2",
+      "type": "hysteresis",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "迟滞开关",
+        "params": {
+          "low": 0.3,
+          "high": 0.7
+        }
+      }
+    },
+    {
+      "id": "stripes_3",
+      "type": "stripes",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "流动条纹",
+        "params": {
+          "count": 12,
+          "duty": 0.5,
+          "angle": 0,
+          "speed": 0.1,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "rings_4",
+      "type": "rings",
+      "position": {
+        "x": 0,
+        "y": 410
+      },
+      "data": {
+        "label": "扩散圆环",
+        "params": {
+          "spacing": 32,
+          "thickness": 3,
+          "speed": 0.25,
+          "x": 0.5,
+          "y": 0.5,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "switch_top_5",
+      "type": "switch_top",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面切换",
+        "params": {
+          "index": 0
+        }
+      }
+    },
+    {
+      "id": "output_6",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "lfo_1",
+      "target": "hysteresis_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "stripes_3",
+      "target": "switch_top_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "rings_4",
+      "target": "switch_top_5",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_4",
+      "source": "hysteresis_2",
+      "target": "switch_top_5",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    },
+    {
+      "id": "edge_5",
+      "source": "switch_top_5",
+      "target": "output_6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "schmitt-trigger"
+  }
+}

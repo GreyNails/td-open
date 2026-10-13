@@ -1,0 +1,98 @@
+{
+  "id": "example_spring-motion",
+  "name": "弹簧运动",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "square_1",
+      "type": "square",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "方波",
+        "params": {
+          "frequency": 1,
+          "amplitude": 1,
+          "offset": 0,
+          "phase": 0,
+          "width": 0.5
+        }
+      }
+    },
+    {
+      "id": "spring_2",
+      "type": "spring",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "弹簧跟随",
+        "params": {
+          "frequency": 2,
+          "damping": 0.45
+        }
+      }
+    },
+    {
+      "id": "polygon_3",
+      "type": "polygon",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "正多边形",
+        "params": {
+          "sides": 6,
+          "radius": 0.38,
+          "angle": 0,
+          "x": 0.5,
+          "y": 0.5,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "square_1",
+      "target": "spring_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "spring_2",
+      "target": "polygon_3",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    },
+    {
+      "id": "edge_3",
+      "source": "polygon_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "spring-motion"
+  }
+}

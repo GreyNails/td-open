@@ -1,0 +1,96 @@
+{
+  "id": "example_scatter-cloud",
+  "name": "散点雕塑",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "sphere_1",
+      "type": "sphere",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "球体",
+        "params": {
+          "radius": 0.28,
+          "detail": 16
+        }
+      }
+    },
+    {
+      "id": "scatter_sop_2",
+      "type": "scatter_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "随机散布",
+        "params": {
+          "count": 30,
+          "seed": 1,
+          "width": 4,
+          "height": 4,
+          "depth": 4,
+          "scale_min": 0.4,
+          "scale_max": 1
+        }
+      }
+    },
+    {
+      "id": "render_3",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#9fc9ed",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "sphere_1",
+      "target": "scatter_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "scatter_sop_2",
+      "target": "render_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "render_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "scatter-cloud"
+  }
+}

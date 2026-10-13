@@ -1,0 +1,95 @@
+{
+  "id": "example_ai-music-visual",
+  "name": "AI 音乐视觉",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "ai_music_1",
+      "type": "ai_music",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "AI 音乐",
+        "params": {
+          "prompt": "",
+          "provider_id": "",
+          "result_url": "",
+          "result_text": ""
+        }
+      }
+    },
+    {
+      "id": "particles_2",
+      "type": "particles",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "粒子星环",
+        "params": {
+          "count": 1600,
+          "speed": 0.3,
+          "size": 2,
+          "color": "#c1a2ff",
+          "spread": 1
+        }
+      }
+    },
+    {
+      "id": "blur_3",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 4,
+          "glow": 0.6
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "ai_music_1",
+      "target": "particles_2",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    },
+    {
+      "id": "edge_2",
+      "source": "particles_2",
+      "target": "blur_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "blur_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "ai-music-visual"
+  }
+}

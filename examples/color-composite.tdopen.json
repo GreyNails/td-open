@@ -1,0 +1,97 @@
+{
+  "id": "example_color-composite",
+  "name": "渐变叠色",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "conic_gradient_1",
+      "type": "conic_gradient",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "角向渐变",
+        "params": {
+          "x": 0.5,
+          "y": 0.5,
+          "angle": 0,
+          "cycles": 1,
+          "speed": 0.1,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "grid_2",
+      "type": "grid",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "网格线",
+        "params": {
+          "spacing": 40,
+          "thickness": 1,
+          "angle": 0,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "composite_multiply_3",
+      "type": "composite_multiply",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "正片叠底",
+        "params": {
+          "opacity": 0.7
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "conic_gradient_1",
+      "target": "composite_multiply_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "grid_2",
+      "target": "composite_multiply_3",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_3",
+      "source": "composite_multiply_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "color-composite"
+  }
+}

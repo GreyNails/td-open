@@ -1,0 +1,89 @@
+{
+  "id": "example_typography",
+  "name": "数据排字",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "text_dat_1",
+      "type": "text_dat",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "文本数据",
+        "params": {
+          "text": "hello / open studio"
+        }
+      }
+    },
+    {
+      "id": "case_text_2",
+      "type": "case_text",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "文本格式",
+        "params": {
+          "mode": "upper"
+        }
+      }
+    },
+    {
+      "id": "text_3",
+      "type": "text",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "文字画面",
+        "params": {
+          "text": "HELLO, FLOW",
+          "size": 45,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "text_dat_1",
+      "target": "case_text_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "case_text_2",
+      "target": "text_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "text_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "typography"
+  }
+}

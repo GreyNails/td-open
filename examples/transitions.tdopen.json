@@ -1,0 +1,119 @@
+{
+  "id": "example_transitions",
+  "name": "双画面交叉渐变",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "radial_ramp_1",
+      "type": "radial_ramp",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "径向渐变",
+        "params": {
+          "color": "#fbd6ff",
+          "background": "#201632",
+          "radius": 0.7,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "checkerboard_2",
+      "type": "checkerboard",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "棋盘格",
+        "params": {
+          "columns": 12,
+          "rows": 7,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "lfo_3",
+      "type": "lfo",
+      "position": {
+        "x": 0,
+        "y": 410
+      },
+      "data": {
+        "label": "波形信号",
+        "params": {
+          "wave": "sine",
+          "phase": 0,
+          "frequency": 0.15,
+          "amplitude": 0.5,
+          "offset": 0.5
+        }
+      }
+    },
+    {
+      "id": "switch_top_4",
+      "type": "switch_top",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "画面切换",
+        "params": {
+          "index": 0
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "radial_ramp_1",
+      "target": "switch_top_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "checkerboard_2",
+      "target": "switch_top_4",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_3",
+      "source": "lfo_3",
+      "target": "switch_top_4",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    },
+    {
+      "id": "edge_4",
+      "source": "switch_top_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "transitions"
+  }
+}

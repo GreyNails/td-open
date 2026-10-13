@@ -1,0 +1,115 @@
+{
+  "id": "example_ink-morphology",
+  "name": "形态学墨迹",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "fbm_noise_1",
+      "type": "fbm_noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "分形云噪声",
+        "params": {
+          "scale": 4,
+          "octaves": 4,
+          "roughness": 0.5,
+          "seed": 8,
+          "speed": 0.15,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "threshold_2",
+      "type": "threshold",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "黑白阈值",
+        "params": {
+          "threshold": 0.5,
+          "softness": 0.02
+        }
+      }
+    },
+    {
+      "id": "dilate_3",
+      "type": "dilate",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "亮部膨胀",
+        "params": {
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "erode_4",
+      "type": "erode",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "亮部侵蚀",
+        "params": {
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "fbm_noise_1",
+      "target": "threshold_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "threshold_2",
+      "target": "dilate_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "dilate_3",
+      "target": "erode_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "erode_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "ink-morphology"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "example_ai-texture",
+  "name": "AI 图案再创作",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "ai_image_1",
+      "type": "ai_image",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "AI 图片",
+        "params": {
+          "prompt": "",
+          "provider_id": "",
+          "result_url": "",
+          "result_text": ""
+        }
+      }
+    },
+    {
+      "id": "kaleidoscope_2",
+      "type": "kaleidoscope",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "万花筒",
+        "params": {
+          "segments": 8,
+          "angle": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "id": "rgb_split_3",
+      "type": "rgb_split",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "色差分离",
+        "params": {
+          "distance": 8,
+          "angle": 0
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "ai_image_1",
+      "target": "kaleidoscope_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "kaleidoscope_2",
+      "target": "rgb_split_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "rgb_split_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "ai-texture"
+  }
+}

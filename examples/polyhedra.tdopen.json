@@ -1,0 +1,70 @@
+{
+  "id": "example_polyhedra",
+  "name": "柏拉图多面体",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "platonic_sop_1",
+      "type": "platonic_sop",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "柏拉图立体",
+        "params": {
+          "solid": "icosahedron",
+          "radius": 1,
+          "subdivision": 0
+        }
+      }
+    },
+    {
+      "id": "render_2",
+      "type": "render",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#94d8c5",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "platonic_sop_1",
+      "target": "render_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "render_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "polyhedra"
+  }
+}

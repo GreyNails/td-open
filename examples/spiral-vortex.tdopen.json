@@ -1,0 +1,75 @@
+{
+  "id": "example_spiral-vortex",
+  "name": "螺旋漩涡",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "spiral_1",
+      "type": "spiral",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "螺旋纹理",
+        "params": {
+          "arms": 5,
+          "twist": 8,
+          "x": 0.5,
+          "y": 0.5,
+          "speed": 0.15,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "swirl_2",
+      "type": "swirl",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "漩涡扭曲",
+        "params": {
+          "amount": 0.7,
+          "radius": 0.75,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "spiral_1",
+      "target": "swirl_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "swirl_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "spiral-vortex"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "example_mcp-dashboard",
+  "name": "MCP 数据看板",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "mcp_tool_1",
+      "type": "mcp_tool",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "MCP 工具",
+        "params": {
+          "server_id": "",
+          "tool": "",
+          "arguments": "{}"
+        }
+      }
+    },
+    {
+      "id": "text_2",
+      "type": "text",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "文字画面",
+        "params": {
+          "text": "HELLO, FLOW",
+          "size": 22,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "mcp_tool_1",
+      "target": "text_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "text_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "mcp-dashboard"
+  }
+}

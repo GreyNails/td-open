@@ -1,0 +1,94 @@
+{
+  "id": "example_bounding-box",
+  "name": "边界盒",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "torus_knot_1",
+      "type": "torus_knot",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "环面纽结",
+        "params": {
+          "radius": 1,
+          "tube": 0.18,
+          "p": 2,
+          "q": 3,
+          "detail": 48,
+          "segments": 12
+        }
+      }
+    },
+    {
+      "id": "bounds_sop_2",
+      "type": "bounds_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "包围盒",
+        "params": {
+          "wireframe": true
+        }
+      }
+    },
+    {
+      "id": "render_3",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a5d0e2",
+          "wireframe": true,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "torus_knot_1",
+      "target": "bounds_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "bounds_sop_2",
+      "target": "render_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "render_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "bounding-box"
+  }
+}

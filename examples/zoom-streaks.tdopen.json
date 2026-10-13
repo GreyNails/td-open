@@ -1,0 +1,98 @@
+{
+  "id": "example_zoom-streaks",
+  "name": "放射光束",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "star_1",
+      "type": "star",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "星形",
+        "params": {
+          "points": 5,
+          "radius": 0.4,
+          "inner": 0.45,
+          "angle": 0,
+          "x": 0.5,
+          "y": 0.5,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "zoom_blur_2",
+      "type": "zoom_blur",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "径向拉伸模糊",
+        "params": {
+          "amount": 0.25,
+          "samples": 12,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "blur_3",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 4,
+          "glow": 0.8
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "star_1",
+      "target": "zoom_blur_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "zoom_blur_2",
+      "target": "blur_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "blur_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "zoom-streaks"
+  }
+}

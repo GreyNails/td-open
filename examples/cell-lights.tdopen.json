@@ -1,0 +1,137 @@
+{
+  "id": "example_cell-lights",
+  "name": "细胞边界",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "cellular_1",
+      "type": "cellular",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "细胞纹理",
+        "params": {
+          "scale": 10,
+          "seed": 3,
+          "speed": 0.15,
+          "color": "#ffffff",
+          "background": "#000000"
+        }
+      }
+    },
+    {
+      "id": "edge_2",
+      "type": "edge",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "边缘检测",
+        "params": {
+          "amount": 8,
+          "threshold": 0.12
+        }
+      }
+    },
+    {
+      "id": "invert_3",
+      "type": "invert",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "颜色反相",
+        "params": {
+          "amount": 1
+        }
+      }
+    },
+    {
+      "id": "duotone_4",
+      "type": "duotone",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "双色映射",
+        "params": {
+          "color": "#86f6ff",
+          "background": "#050d20",
+          "gamma": 1
+        }
+      }
+    },
+    {
+      "id": "blur_5",
+      "type": "blur",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 4,
+          "glow": 0.8
+        }
+      }
+    },
+    {
+      "id": "output_6",
+      "type": "output",
+      "position": {
+        "x": 1225,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "cellular_1",
+      "target": "edge_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "edge_2",
+      "target": "invert_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "invert_3",
+      "target": "duotone_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "duotone_4",
+      "target": "blur_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_5",
+      "source": "blur_5",
+      "target": "output_6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "cell-lights"
+  }
+}

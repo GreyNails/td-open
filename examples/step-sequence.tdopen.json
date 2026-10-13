@@ -1,0 +1,122 @@
+{
+  "id": "example_step-sequence",
+  "name": "步进动画",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "sequence_chop_1",
+      "type": "sequence_chop",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "数值步进器",
+        "params": {
+          "values": "0,1,0.25,0.75",
+          "rate": 2,
+          "mode": "step"
+        }
+      }
+    },
+    {
+      "id": "slew_chop_2",
+      "type": "slew_chop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "变化速率限制",
+        "params": {
+          "rise": 1,
+          "fall": 1
+        }
+      }
+    },
+    {
+      "id": "star_3",
+      "type": "star",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "星形",
+        "params": {
+          "points": 5,
+          "radius": 0.4,
+          "inner": 0.45,
+          "angle": 0,
+          "x": 0.5,
+          "y": 0.5,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "rotate_4",
+      "type": "rotate",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "连续旋转",
+        "params": {
+          "angle": 0,
+          "speed": 0.05,
+          "scale": 1,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "sequence_chop_1",
+      "target": "slew_chop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "star_3",
+      "target": "rotate_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "slew_chop_2",
+      "target": "rotate_4",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    },
+    {
+      "id": "edge_4",
+      "source": "rotate_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "step-sequence"
+  }
+}

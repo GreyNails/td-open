@@ -1,0 +1,70 @@
+{
+  "id": "example_capsule-study",
+  "name": "胶囊结构",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "capsule_1",
+      "type": "capsule",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "胶囊体",
+        "params": {
+          "radius": 0.5,
+          "height": 1,
+          "detail": 48
+        }
+      }
+    },
+    {
+      "id": "render_2",
+      "type": "render",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#f6b889",
+          "wireframe": false,
+          "speed": 0.2
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "capsule_1",
+      "target": "render_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "render_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "capsule-study"
+  }
+}

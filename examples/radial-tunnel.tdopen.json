@@ -1,0 +1,97 @@
+{
+  "id": "example_radial-tunnel",
+  "name": "极坐标隧道",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "stripes_1",
+      "type": "stripes",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动条纹",
+        "params": {
+          "count": 12,
+          "duty": 0.5,
+          "angle": 0,
+          "speed": 0.1,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "polar_2",
+      "type": "polar",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "极坐标变换",
+        "params": {
+          "direction": "to_polar",
+          "angle": 0,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "feedback_3",
+      "type": "feedback",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "反馈拖影",
+        "params": {
+          "decay": 0.92,
+          "zoom": 1.005,
+          "angle": 0.25,
+          "input_gain": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "stripes_1",
+      "target": "polar_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "polar_2",
+      "target": "feedback_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "feedback_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "radial-tunnel"
+  }
+}

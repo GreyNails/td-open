@@ -1,0 +1,99 @@
+{
+  "id": "example_signal-envelope",
+  "name": "ADSR 光环",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "beat_1",
+      "type": "beat",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "节拍脉冲",
+        "params": {
+          "bpm": 120,
+          "width": 0.1,
+          "phase": 0
+        }
+      }
+    },
+    {
+      "id": "adsr_2",
+      "type": "adsr",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "ADSR 包络",
+        "params": {
+          "threshold": 0.5,
+          "attack": 0.1,
+          "decay": 0.2,
+          "sustain": 0.6,
+          "release": 0.4
+        }
+      }
+    },
+    {
+      "id": "rings_3",
+      "type": "rings",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "扩散圆环",
+        "params": {
+          "spacing": 32,
+          "thickness": 3,
+          "speed": 0.25,
+          "x": 0.5,
+          "y": 0.5,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "beat_1",
+      "target": "adsr_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "adsr_2",
+      "target": "rings_3",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    },
+    {
+      "id": "edge_3",
+      "source": "rings_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "signal-envelope"
+  }
+}

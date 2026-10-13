@@ -1,3 +1,5 @@
+import { TemplateGallery } from "./TemplateGallery";
+import { templateById } from "./templates";
 import {
   createContext,
   useCallback,
@@ -1174,12 +1176,16 @@ function Studio() {
           </span>
           <Plus size={14} />
         </button>
-        <div className="library-tip">
+        <div className="library-tip example-guide">
           <div>
             <Zap size={14} />
-            小连接，大创意
+            {templateById[String(project.settings?.preset)]?.name ??
+              "小连接，大创意"}
           </div>
-          <p>把一个节点的输出拖到另一个节点的输入，看看会发生什么。</p>
+          <p>
+            {templateById[String(project.settings?.preset)]?.learn ??
+              "把一个节点的输出拖到另一个节点的输入，看看会发生什么。"}
+          </p>
           <button onClick={() => setModal("help")}>
             认识节点与连线 <ArrowRight size={13} />
           </button>
@@ -2021,7 +2027,7 @@ function Studio() {
             <strong>
               TD<span>Open</span>
             </strong>
-            <span className="alpha">ALPHA 0.2</span>
+            <span className="alpha">ALPHA 0.3</span>
           </div>
           <span className="header-divider" />
           <div className="project-title">
@@ -2203,7 +2209,7 @@ function Studio() {
             onMouseDown={(e) => e.target === e.currentTarget && setModal("")}
           >
             <section
-              className="modal"
+              className={`modal ${modal === "templates" ? "examples-modal" : ""}`}
               role="dialog"
               aria-modal="true"
               aria-label={
@@ -2248,78 +2254,7 @@ function Studio() {
               </div>
               {modal === "templates" ? (
                 <>
-                  <div className="template-grid">
-                    {[
-                      {
-                        id: "flow",
-                        name: "流光实验",
-                        sub: "纹理 · 色彩 · 柔光",
-                        tag: "适合第一次探索",
-                      },
-                      {
-                        id: "particles",
-                        name: "声音的形状",
-                        sub: "音频 · 粒子 · 实时互动",
-                        tag: "启用麦克风后互动",
-                      },
-                      {
-                        id: "3d",
-                        name: "空间练习",
-                        sub: "三维几何 · 线框 · 渲染",
-                        tag: "真正的 WebGL 3D",
-                      },
-                      {
-                        id: "kaleidoscope",
-                        name: "万花筒与反馈",
-                        sub: "图案 · 镜像 · 反馈拖影",
-                        tag: "探索新增图像节点",
-                      },
-                      {
-                        id: "geometry-lab",
-                        name: "双物体空间",
-                        sub: "几何 · 变换 · 组合",
-                        tag: "搭建多个三维物体",
-                      },
-                      {
-                        id: "data-driven",
-                        name: "数据变成画面",
-                        sub: "CSV · 数值转换 · 视觉调制",
-                        tag: "让数据参与创作",
-                      },
-                      {
-                        id: "ai",
-                        name: "想象力画布",
-                        sub: "AI 图片 · 色彩 · 输出",
-                        tag: "需要连接 AI 服务",
-                      },
-                    ].map((t) => (
-                      <button
-                        className="template-card"
-                        key={t.id}
-                        onClick={() => usePreset(t.id)}
-                      >
-                        <div className={"template-art " + t.id}>
-                          <span>
-                            {t.id === "3d"
-                              ? "◎"
-                              : t.id === "particles"
-                                ? "✧"
-                                : t.id === "ai"
-                                  ? "✦"
-                                  : "≈"}
-                          </span>
-                          <small>{t.tag}</small>
-                        </div>
-                        <div>
-                          <h3>
-                            {t.name}
-                            <ArrowRight size={16} />
-                          </h3>
-                          <p>{t.sub}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  <TemplateGallery open={usePreset} />
                   <button
                     className="button subtle"
                     onClick={() => usePreset("empty")}

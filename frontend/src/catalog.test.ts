@@ -1,20 +1,26 @@
 import { describe, it, expect } from "vitest";
+import { templates } from "./templates";
 import { catalog, byType, preset, makeNode, connectionError } from "./catalog";
 import { cookDataNode } from "./nodes/dataRuntime";
 describe("typed graph contracts", () => {
-  it("all eight templates connect every node to a single output with compatible acyclic edges", () => {
-    for (const name of [
-      "flow",
-      "particles",
-      "3d",
-      "ai",
-      "empty",
-      "kaleidoscope",
-      "geometry-lab",
-      "data-driven",
-    ]) {
+  it("all shipped examples connect every node to a single output with compatible acyclic edges", () => {
+    for (const name of [...templates.map((t) => t.id), "empty"]) {
       const p = preset(name);
       expect(p.settings?.preset).toBe(name);
+      for (const node of p.nodes) {
+        const spec = byType[node.type];
+        for (const [key, value] of Object.entries(node.data.params)) {
+          const parameter = spec.params.find((p) => p.key === key);
+          expect(parameter, `${name}: ${node.type}.${key}`).toBeDefined();
+          if (parameter?.options) expect(parameter.options).toContain(value);
+          if (typeof value === "number") {
+            if (parameter?.min !== undefined)
+              expect(value).toBeGreaterThanOrEqual(parameter.min);
+            if (parameter?.max !== undefined)
+              expect(value).toBeLessThanOrEqual(parameter.max);
+          }
+        }
+      }
       const outputs = p.nodes.filter((node) => node.type === "output");
       expect(outputs).toHaveLength(1);
       const contributing = new Set([outputs[0].id]);

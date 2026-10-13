@@ -1,0 +1,120 @@
+{
+  "id": "example_hex-hud",
+  "name": "六角扫描",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "hex_grid_1",
+      "type": "hex_grid",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "蜂窝网格",
+        "params": {
+          "scale": 10,
+          "thickness": 0.12,
+          "angle": 0,
+          "speed": 0.05,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "rings_2",
+      "type": "rings",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "扩散圆环",
+        "params": {
+          "spacing": 32,
+          "thickness": 3,
+          "speed": 0.25,
+          "x": 0.5,
+          "y": 0.5,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "composite_screen_3",
+      "type": "composite_screen",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "滤色合成",
+        "params": {
+          "opacity": 0.7
+        }
+      }
+    },
+    {
+      "id": "blur_4",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 3,
+          "glow": 0.5
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "hex_grid_1",
+      "target": "composite_screen_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "rings_2",
+      "target": "composite_screen_3",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_3",
+      "source": "composite_screen_3",
+      "target": "blur_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "blur_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "hex-hud"
+  }
+}

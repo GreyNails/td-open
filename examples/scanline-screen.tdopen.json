@@ -1,0 +1,93 @@
+{
+  "id": "example_scanline-screen",
+  "name": "复古显示器",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "plasma_1",
+      "type": "plasma",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "等离子场",
+        "params": {
+          "scale": 4,
+          "complexity": 0.65,
+          "speed": 0.3,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "pixelate_2",
+      "type": "pixelate",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "像素化",
+        "params": {
+          "size": 5
+        }
+      }
+    },
+    {
+      "id": "scanlines_3",
+      "type": "scanlines",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "扫描线",
+        "params": {
+          "spacing": 4,
+          "amount": 0.55,
+          "speed": 0.1
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "plasma_1",
+      "target": "pixelate_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "pixelate_2",
+      "target": "scanlines_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "scanlines_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "scanline-screen"
+  }
+}

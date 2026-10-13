@@ -1,0 +1,92 @@
+{
+  "id": "example_wire-skeleton",
+  "name": "网格骨架",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "ring_sop_1",
+      "type": "ring_sop",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "圆环平面",
+        "params": {
+          "inner": 0.5,
+          "outer": 1,
+          "detail": 48
+        }
+      }
+    },
+    {
+      "id": "wireframe_sop_2",
+      "type": "wireframe_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "几何边线",
+        "params": {
+          "mode": "edges",
+          "threshold": 20
+        }
+      }
+    },
+    {
+      "id": "render_3",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#b3dcb2",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "ring_sop_1",
+      "target": "wireframe_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "wireframe_sop_2",
+      "target": "render_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "render_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "wire-skeleton"
+  }
+}

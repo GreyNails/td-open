@@ -5,6 +5,8 @@ import { byType } from "./catalog";
 
 import { cookVisualNode } from "./nodes/visual";
 import { cookDataNode } from "./nodes/dataRuntime";
+import { cookAdvancedDataNode } from "./nodes/advancedDataRuntime";
+import { cookAdvancedVisualNode } from "./nodes/advancedVisual";
 import { buildGeometryObject, type GeometrySpec } from "./nodes/geometry";
 type Geo = GeometrySpec;
 type Value = HTMLCanvasElement | number | string | Geo;
@@ -405,11 +407,17 @@ export class StudioEngine {
             (e.targetHandle || byType[n.type]?.inputs[0]?.id || "in") ===
               handle,
         );
-        return e ? evalNode(e.source) : undefined;
+        if (!e) return undefined;
+        const value = evalNode(e.source);
+        if (this.errors.has(e.source))
+          throw new Error(`上游节点执行失败：${this.errors.get(e.source)}`);
+        return value;
       };
       let result: Value = 0;
       try {
         result = this.cook(n, time, inp);
+        if (typeof result === "number" && !Number.isFinite(result))
+          throw new Error("运算结果不是有限数值");
         this.errors.delete(id);
       } catch (e) {
         this.errors.set(id, e instanceof Error ? e.message : String(e));
@@ -455,24 +463,43 @@ export class StudioEngine {
     const v = (key: string, def = 0) => Number(p[key] ?? def);
     const s = (key: string, def = "") => String(p[key] ?? def);
     const type = n.type;
+    const advancedData = cookAdvancedDataNode(n, time, inp, this.state(n.id));
+    if (advancedData.handled) return advancedData.value;
     const dataResult = cookDataNode(n, time, inp, this.state(n.id));
     if (dataResult.handled) return dataResult.value;
-    if (type === "lfo")
+    if (type === "lfo") {
+      const phase = time * v("frequency", 0.3) + v("phase"),
+        fraction = ((phase % 1) + 1) % 1;
+      const waves: Record<string, number> = {
+        sine: Math.sin(phase * Math.PI * 2),
+        triangle: 1 - 4 * Math.abs(fraction - 0.5),
+        square: fraction < 0.5 ? 1 : -1,
+        saw: 2 * fraction - 1,
+      };
       return (
-        Math.sin(time * v("frequency", 0.3) * Math.PI * 2) * v("amplitude", 1) +
+        (waves[s("wave", "sine")] ?? waves.sine) * v("amplitude", 1) +
         v("offset")
       );
+    }
     if (type === "constant") return v("value", 1);
     if (type === "audio" || type === "ai_music")
       return this.audioLevel * v("gain", 1);
     if (type === "math") {
       const a = Number(inp() ?? 0),
-        b = v("value", 1);
-      return s("operation") === "add"
-        ? a + b
-        : s("operation") === "clamp"
-          ? clamp(a, 0, b)
-          : a * b;
+        b = Number(inp("in2") ?? v("value", 1));
+      const operation = s("operation", "multiply");
+      if (operation === "divide" && b === 0) throw new Error("不能除以零");
+      const operations: Record<string, () => number> = {
+        add: () => a + b,
+        subtract: () => a - b,
+        multiply: () => a * b,
+        divide: () => a / b,
+        min: () => Math.min(a, b),
+        max: () => Math.max(a, b),
+        clamp: () => clamp(a, 0, b),
+      };
+      if (!operations[operation]) throw new Error(`未知运算：${operation}`);
+      return operations[operation]();
     }
     if (type === "geometry")
       return { shape: s("shape", "torus"), detail: v("detail", 32) };
@@ -492,18 +519,20 @@ export class StudioEngine {
       const mod = Number(inp("mod") ?? 0);
       const second = inp("in2");
       if (
-        cookVisualNode({
-          node: n,
-          ctx,
-          canvas: c,
-          input: source,
-          input2: isCanvas(second) ? second : undefined,
-          time,
-          mod,
-          width: W,
-          height: H,
-          state: this.state(n.id),
-        })
+        [cookAdvancedVisualNode, cookVisualNode].some((cook) =>
+          cook({
+            node: n,
+            ctx,
+            canvas: c,
+            input: source,
+            input2: isCanvas(second) ? second : undefined,
+            time,
+            mod,
+            width: W,
+            height: H,
+            state: this.state(n.id),
+          }),
+        )
       )
         return c;
       if (type === "noise") {
@@ -810,7 +839,11 @@ export class StudioEngine {
       textures = new Set<THREE.Texture>();
     const visit = (o: THREE.Object3D) => {
       if (o.userData.tdBorrowedResources) return;
-      if (o instanceof THREE.Mesh) {
+      if (
+        o instanceof THREE.Mesh ||
+        o instanceof THREE.LineSegments ||
+        o instanceof THREE.Points
+      ) {
         geometries.add(o.geometry);
         const mats = Array.isArray(o.material) ? o.material : [o.material];
         for (const material of mats) {

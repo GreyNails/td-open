@@ -1,0 +1,92 @@
+{
+  "id": "example_taper-tower",
+  "name": "渐缩结构",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "cylinder_1",
+      "type": "cylinder",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "圆柱",
+        "params": {
+          "radius": 0.8,
+          "radius_top": 0.8,
+          "height": 2,
+          "detail": 32
+        }
+      }
+    },
+    {
+      "id": "taper_sop_2",
+      "type": "taper_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "锥化几何",
+        "params": {
+          "amount": 0.4
+        }
+      }
+    },
+    {
+      "id": "render_3",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#d8c794",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "cylinder_1",
+      "target": "taper_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "taper_sop_2",
+      "target": "render_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "render_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "taper-tower"
+  }
+}

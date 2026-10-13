@@ -236,6 +236,71 @@ describe("expanded StudioEngine pipelines", () => {
     expect(engine.errors.size).toBe(0);
     expect(engine.values.get(numeric.id)).toBe(42);
   });
+  it("propagates upstream failures through numeric branches and recovers without stopping independent nodes", () => {
+    const source = node("constant", { value: -1 }),
+      sqrt = node("function_chop", { function: "sqrt" }),
+      sum = node("weighted_sum"),
+      math = node("math"),
+      independent = node("constant", { value: 42 });
+    const engine = create(
+      [math, sum, sqrt, source, independent],
+      [
+        [source, sqrt],
+        [sqrt, sum],
+        [sum, math],
+      ],
+    );
+    engine.render(0);
+    expect(engine.errors.has(sqrt.id)).toBe(true);
+    expect(engine.errors.get(sum.id)).toContain("上游");
+    expect(engine.errors.get(math.id)).toContain("上游");
+    expect(engine.values.get(independent.id)).toBe(42);
+    withParams(engine, source.id, { value: 4 });
+    engine.render(1);
+    expect(engine.errors.size).toBe(0);
+    expect(engine.values.get(math.id)).toBe(2);
+    withParams(engine, math.id, { operation: "divide", value: 0 });
+    engine.render(2);
+    expect(engine.errors.get(math.id)).toContain("零");
+  });
+  it("supports LFO phase and four waveform modes and math second-port operands", () => {
+    const oscillator = node("lfo", {
+        wave: "triangle",
+        phase: 0.25,
+        frequency: 1,
+        amplitude: 2,
+        offset: 1,
+      }),
+      a = node("constant", { value: 12 }),
+      b = node("constant", { value: 3 }),
+      math = node("math", { operation: "divide", value: 99 });
+    const engine = create(
+      [oscillator, a, b, math],
+      [
+        [a, math],
+        [b, math, "in2"],
+      ],
+    );
+    engine.render(0);
+    expect(engine.values.get(oscillator.id)).toBe(1);
+    expect(engine.values.get(math.id)).toBe(4);
+    for (const [wave, expected] of [
+      ["sine", 3],
+      ["square", 3],
+      ["saw", 0],
+    ] as const) {
+      withParams(engine, oscillator.id, { wave });
+      engine.render(0);
+      expect(engine.values.get(oscillator.id)).toBeCloseTo(expected);
+    }
+  });
+  it("marks non-finite scalar results as errors", () => {
+    const a = node("constant", { value: 1e308 }),
+      math = node("math", { value: 10 });
+    const engine = create([a, math], [[a, math]]);
+    engine.render(0);
+    expect(engine.errors.get(math.id)).toContain("有限");
+  });
   it("renders merged transformed primitives while retaining a cached scene until geometry changes", () => {
     const box = node("box"),
       move = node("transform_sop", { x: 1, sx: 0.5 }),

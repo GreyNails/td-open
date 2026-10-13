@@ -69,7 +69,7 @@ def evaluate(project: Project, time: float = 0) -> dict[str, Any]:
                 result = str(inputs.get("in", params.get("result_text") or params.get("text", "")))
             else:
                 skipped.append(node_id)
-                if node.type in {"lag", "speed", "counter", "trigger", "derivative", "hold"}:
+                if node.type in {"lag", "speed", "counter", "trigger", "derivative", "hold", "spring", "delay_chop", "moving_average", "peak_chop", "rms_chop", "adsr", "hysteresis", "random_hold", "timer_chop", "slew_chop"}:
                     skip_reasons[node_id] = "有状态信号节点需要浏览器连续帧上下文"
                 elif spec.get("runtime") == "provider":
                     skip_reasons[node_id] = "AI 与 MCP 节点需要通过专用接口手动执行"

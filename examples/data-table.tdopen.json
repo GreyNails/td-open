@@ -1,0 +1,116 @@
+{
+  "id": "example_data-table",
+  "name": "表格转 JSON",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "table_dat_1",
+      "type": "table_dat",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "CSV 表格",
+        "params": {
+          "csv": "name,value\nalpha,3\nbeta,1\ngamma,2",
+          "mode": "csv",
+          "row": 1,
+          "column": 1
+        }
+      }
+    },
+    {
+      "id": "table_sort_2",
+      "type": "table_sort",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "表格排序",
+        "params": {
+          "column": 1,
+          "header": true,
+          "numeric": true,
+          "descending": false
+        }
+      }
+    },
+    {
+      "id": "table_to_json_3",
+      "type": "table_to_json",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "表格转对象",
+        "params": {
+          "numeric": true
+        }
+      }
+    },
+    {
+      "id": "text_4",
+      "type": "text",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "文字画面",
+        "params": {
+          "text": "HELLO, FLOW",
+          "size": 20,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "table_dat_1",
+      "target": "table_sort_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "table_sort_2",
+      "target": "table_to_json_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "table_to_json_3",
+      "target": "text_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "text_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "data-table"
+  }
+}

@@ -445,6 +445,28 @@
     "description": "生成周期变化的数值。连接到调制端口，让画面随时间变化。",
     "params": [
       {
+        "key": "wave",
+        "label": "波形",
+        "type": "select",
+        "default": "sine",
+        "options": [
+          "sine",
+          "triangle",
+          "square",
+          "saw"
+        ]
+      },
+      {
+        "key": "phase",
+        "label": "相位",
+        "type": "number",
+        "default": 0,
+        "min": -1,
+        "max": 1,
+        "step": 0.01,
+        "hint": ""
+      },
+      {
         "key": "frequency",
         "label": "频率",
         "type": "number",
@@ -516,7 +538,7 @@
     "label": "数值运算",
     "english": "Math",
     "family": "CHOP",
-    "description": "对输入信号执行加法、乘法或范围限制。",
+    "description": "两路信号执行四则运算、极值或范围限制；第二路未连接时使用运算值。",
     "params": [
       {
         "key": "operation",
@@ -526,6 +548,10 @@
         "options": [
           "multiply",
           "add",
+          "subtract",
+          "divide",
+          "min",
+          "max",
           "clamp"
         ]
       },
@@ -545,6 +571,11 @@
         "id": "in",
         "kind": "CHOP",
         "label": "数值"
+      },
+      {
+        "id": "in2",
+        "kind": "CHOP",
+        "label": "第二路"
       }
     ],
     "outputs": [
@@ -4696,6 +4727,5053 @@
         "id": "in2",
         "kind": "SOP",
         "label": "第二个几何体"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "cellular",
+    "label": "细胞纹理",
+    "english": "Cellular / Voronoi",
+    "family": "TOP",
+    "description": "按最近随机种子点生成细胞距离纹理，可用于水面、石材和分区遮罩。",
+    "params": [
+      {
+        "key": "scale",
+        "label": "细胞密度",
+        "type": "number",
+        "default": 7,
+        "min": 1,
+        "max": 30,
+        "step": 0.01
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 3,
+        "min": 0,
+        "max": 1000,
+        "step": 1
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.15,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "fbm_noise",
+    "label": "分形云噪声",
+    "english": "Fractal Brownian Noise",
+    "family": "TOP",
+    "description": "叠加多层平滑值噪声，生成连续流动的云雾和地形高度场。",
+    "params": [
+      {
+        "key": "scale",
+        "label": "空间尺度",
+        "type": "number",
+        "default": 4,
+        "min": 0.5,
+        "max": 24,
+        "step": 0.01
+      },
+      {
+        "key": "octaves",
+        "label": "噪声层数",
+        "type": "number",
+        "default": 4,
+        "min": 1,
+        "max": 7,
+        "step": 1
+      },
+      {
+        "key": "roughness",
+        "label": "粗糙度",
+        "type": "number",
+        "default": 0.5,
+        "min": 0.1,
+        "max": 0.9,
+        "step": 0.01
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 8,
+        "min": 0,
+        "max": 1000,
+        "step": 1
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.15,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "mandelbrot",
+    "label": "曼德勃罗分形",
+    "english": "Mandelbrot",
+    "family": "TOP",
+    "description": "计算复平面迭代逃逸次数，可平移、缩放和改变迭代精度。",
+    "params": [
+      {
+        "key": "zoom",
+        "label": "放大倍数",
+        "type": "number",
+        "default": 1,
+        "min": 0.2,
+        "max": 60,
+        "step": 0.01
+      },
+      {
+        "key": "x",
+        "label": "实部中心",
+        "type": "number",
+        "default": -0.5,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "虚部中心",
+        "type": "number",
+        "default": 0,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "iterations",
+        "label": "迭代上限",
+        "type": "number",
+        "default": 60,
+        "min": 12,
+        "max": 160,
+        "step": 1
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.05,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "julia",
+    "label": "茱莉亚分形",
+    "english": "Julia Set",
+    "family": "TOP",
+    "description": "调整复数常量，探索不同的分形连通结构。",
+    "params": [
+      {
+        "key": "real",
+        "label": "常量实部",
+        "type": "number",
+        "default": -0.7,
+        "min": -1.5,
+        "max": 1.5,
+        "step": 0.01
+      },
+      {
+        "key": "imaginary",
+        "label": "常量虚部",
+        "type": "number",
+        "default": 0.27,
+        "min": -1.5,
+        "max": 1.5,
+        "step": 0.01
+      },
+      {
+        "key": "zoom",
+        "label": "放大倍数",
+        "type": "number",
+        "default": 1,
+        "min": 0.2,
+        "max": 40,
+        "step": 0.01
+      },
+      {
+        "key": "iterations",
+        "label": "迭代上限",
+        "type": "number",
+        "default": 60,
+        "min": 12,
+        "max": 160,
+        "step": 1
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.05,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "moire",
+    "label": "摩尔干涉纹",
+    "english": "Moire Interference",
+    "family": "TOP",
+    "description": "叠加两个略微旋转的波场，生成干涉拍频图案。",
+    "params": [
+      {
+        "key": "frequency",
+        "label": "条纹密度",
+        "type": "number",
+        "default": 24,
+        "min": 2,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "angle",
+        "label": "角度",
+        "type": "number",
+        "default": 12,
+        "min": -360,
+        "max": 360,
+        "step": 1
+      },
+      {
+        "key": "offset",
+        "label": "波场偏移",
+        "type": "number",
+        "default": 0.15,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.15,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "spiral",
+    "label": "螺旋纹理",
+    "english": "Spiral",
+    "family": "TOP",
+    "description": "把极角与半径组合成连续螺旋，可控制臂数、扭转和运动。",
+    "params": [
+      {
+        "key": "arms",
+        "label": "螺旋臂数",
+        "type": "number",
+        "default": 5,
+        "min": 1,
+        "max": 24,
+        "step": 1
+      },
+      {
+        "key": "twist",
+        "label": "径向扭转",
+        "type": "number",
+        "default": 8,
+        "min": -30,
+        "max": 30,
+        "step": 0.01
+      },
+      {
+        "key": "x",
+        "label": "中心 X",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "中心 Y",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.15,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "hex_grid",
+    "label": "蜂窝网格",
+    "english": "Hexagonal Grid",
+    "family": "TOP",
+    "description": "生成等距六边形蜂窝，独立调节网格大小、边线厚度和旋转。",
+    "params": [
+      {
+        "key": "scale",
+        "label": "网格密度",
+        "type": "number",
+        "default": 10,
+        "min": 2,
+        "max": 40,
+        "step": 0.01
+      },
+      {
+        "key": "thickness",
+        "label": "边线占比",
+        "type": "number",
+        "default": 0.12,
+        "min": 0.02,
+        "max": 0.5,
+        "step": 0.01
+      },
+      {
+        "key": "angle",
+        "label": "角度",
+        "type": "number",
+        "default": 0,
+        "min": -360,
+        "max": 360,
+        "step": 1
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.05,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "metaballs",
+    "label": "融合液滴",
+    "english": "Metaballs",
+    "family": "TOP",
+    "description": "多个运动点的势场相互融合，生成具有柔和边缘的液态图形。",
+    "params": [
+      {
+        "key": "count",
+        "label": "液滴数量",
+        "type": "number",
+        "default": 6,
+        "min": 1,
+        "max": 16,
+        "step": 1
+      },
+      {
+        "key": "size",
+        "label": "液滴大小",
+        "type": "number",
+        "default": 0.07,
+        "min": 0.01,
+        "max": 0.25,
+        "step": 0.01
+      },
+      {
+        "key": "softness",
+        "label": "边缘柔度",
+        "type": "number",
+        "default": 0.25,
+        "min": 0.01,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.25,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "conic_gradient",
+    "label": "角向渐变",
+    "english": "Conic Gradient",
+    "family": "TOP",
+    "description": "围绕中心按极角渐变，可制作旋转色带和角度遮罩。",
+    "params": [
+      {
+        "key": "x",
+        "label": "中心 X",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "中心 Y",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "angle",
+        "label": "角度",
+        "type": "number",
+        "default": 0,
+        "min": -360,
+        "max": 360,
+        "step": 1
+      },
+      {
+        "key": "cycles",
+        "label": "循环次数",
+        "type": "number",
+        "default": 1,
+        "min": 1,
+        "max": 12,
+        "step": 1
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.1,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "linear_gradient",
+    "label": "线性渐变",
+    "english": "Linear Gradient",
+    "family": "TOP",
+    "description": "沿任意角度生成可移动的重复线性渐变。",
+    "params": [
+      {
+        "key": "angle",
+        "label": "角度",
+        "type": "number",
+        "default": 25,
+        "min": -360,
+        "max": 360,
+        "step": 1
+      },
+      {
+        "key": "cycles",
+        "label": "循环次数",
+        "type": "number",
+        "default": 1,
+        "min": 0.2,
+        "max": 12,
+        "step": 0.01
+      },
+      {
+        "key": "offset",
+        "label": "位置偏移",
+        "type": "number",
+        "default": 0,
+        "min": -1,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.1,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "plasma",
+    "label": "等离子场",
+    "english": "Plasma",
+    "family": "TOP",
+    "description": "混合横向、纵向、径向与对角波场，生成流动的有机色块。",
+    "params": [
+      {
+        "key": "scale",
+        "label": "图案尺度",
+        "type": "number",
+        "default": 4,
+        "min": 0.5,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "complexity",
+        "label": "混合比例",
+        "type": "number",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.3,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "hue_shift",
+    "label": "色相旋转",
+    "english": "Hue Shift",
+    "family": "TOP",
+    "description": "在 HSV 空间旋转色相，保留饱和度、明度和透明度。",
+    "params": [
+      {
+        "key": "angle",
+        "label": "角度",
+        "type": "number",
+        "default": 90,
+        "min": -360,
+        "max": 360,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "saturation",
+    "label": "色彩饱和度",
+    "english": "Saturation",
+    "family": "TOP",
+    "description": "以感知亮度为中心增加或减少颜色饱和度。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "饱和度",
+        "type": "number",
+        "default": 1.5,
+        "min": 0,
+        "max": 4,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "brightness",
+    "label": "亮度偏移",
+    "english": "Brightness",
+    "family": "TOP",
+    "description": "给 RGB 通道添加一致亮度偏移。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "亮度偏移",
+        "type": "number",
+        "default": 0.15,
+        "min": -1,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "exposure",
+    "label": "曝光",
+    "english": "Exposure",
+    "family": "TOP",
+    "description": "以摄影曝光档数调整颜色增益，每增加一档亮度翻倍。",
+    "params": [
+      {
+        "key": "stops",
+        "label": "曝光档数",
+        "type": "number",
+        "default": 1,
+        "min": -6,
+        "max": 6,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "sepia",
+    "label": "复古棕调",
+    "english": "Sepia",
+    "family": "TOP",
+    "description": "以经典棕褐色矩阵处理画面，可混合原始颜色。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "强度",
+        "type": "number",
+        "default": 0.85,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "duotone",
+    "label": "双色映射",
+    "english": "Duotone",
+    "family": "TOP",
+    "description": "按感知亮度在暗部和亮部两种颜色之间映射。",
+    "params": [
+      {
+        "key": "color",
+        "label": "亮部颜色",
+        "type": "color",
+        "default": "#c8a4ff"
+      },
+      {
+        "key": "background",
+        "label": "暗部颜色",
+        "type": "color",
+        "default": "#10263e"
+      },
+      {
+        "key": "gamma",
+        "label": "明暗分布",
+        "type": "number",
+        "default": 1,
+        "min": 0.1,
+        "max": 4,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "solarize",
+    "label": "日晒负片",
+    "english": "Solarize",
+    "family": "TOP",
+    "description": "把超过阈值的通道反相，形成模拟胶片日晒效果。",
+    "params": [
+      {
+        "key": "threshold",
+        "label": "反相阈值",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "amount",
+        "label": "强度",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "color_balance",
+    "label": "通道色彩平衡",
+    "english": "Color Balance",
+    "family": "TOP",
+    "description": "分别调整红、绿、蓝通道增益，用于校色或风格化。",
+    "params": [
+      {
+        "key": "red",
+        "label": "红色增益",
+        "type": "number",
+        "default": 1.2,
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      {
+        "key": "green",
+        "label": "绿色增益",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      {
+        "key": "blue",
+        "label": "蓝色增益",
+        "type": "number",
+        "default": 0.8,
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "channel_extract",
+    "label": "通道提取",
+    "english": "Channel Extract",
+    "family": "TOP",
+    "description": "把单个颜色通道、透明度或亮度转换为灰度画面。",
+    "params": [
+      {
+        "key": "channel",
+        "label": "提取通道",
+        "type": "select",
+        "default": "red",
+        "options": [
+          "red",
+          "green",
+          "blue",
+          "alpha",
+          "luma"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "channel_shuffle",
+    "label": "通道重排",
+    "english": "Channel Shuffle",
+    "family": "TOP",
+    "description": "交换 RGB 通道位置，可独立选择每一个输出通道的来源。",
+    "params": [
+      {
+        "key": "red",
+        "label": "红色来源",
+        "type": "select",
+        "default": "blue",
+        "options": [
+          "red",
+          "green",
+          "blue",
+          "alpha",
+          "zero",
+          "one"
+        ]
+      },
+      {
+        "key": "green",
+        "label": "绿色来源",
+        "type": "select",
+        "default": "red",
+        "options": [
+          "red",
+          "green",
+          "blue",
+          "alpha",
+          "zero",
+          "one"
+        ]
+      },
+      {
+        "key": "blue",
+        "label": "蓝色来源",
+        "type": "select",
+        "default": "green",
+        "options": [
+          "red",
+          "green",
+          "blue",
+          "alpha",
+          "zero",
+          "one"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "luma_key",
+    "label": "亮度抠像",
+    "english": "Luma Key",
+    "family": "TOP",
+    "description": "按亮度生成透明度，可保留亮部或暗部，并控制过渡范围。",
+    "params": [
+      {
+        "key": "threshold",
+        "label": "亮度阈值",
+        "type": "number",
+        "default": 0.45,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "softness",
+        "label": "过渡柔度",
+        "type": "number",
+        "default": 0.15,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "keep",
+        "label": "保留区域",
+        "type": "select",
+        "default": "bright",
+        "options": [
+          "bright",
+          "dark"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "color_curve",
+    "label": "三点色调曲线",
+    "english": "Tonal Curve",
+    "family": "TOP",
+    "description": "用暗部、中间调、亮部三个控制点构建连续的颜色映射曲线。",
+    "params": [
+      {
+        "key": "shadows",
+        "label": "暗部输出",
+        "type": "number",
+        "default": 0.1,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "midtones",
+        "label": "中间调输出",
+        "type": "number",
+        "default": 0.6,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "highlights",
+        "label": "亮部输出",
+        "type": "number",
+        "default": 0.95,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "color_quantize",
+    "label": "色板量化",
+    "english": "Palette Quantize",
+    "family": "TOP",
+    "description": "把每个像素映射到色板中距离最近的颜色，用于像素艺术。",
+    "params": [
+      {
+        "key": "palette",
+        "label": "色板",
+        "type": "select",
+        "default": "neon",
+        "options": [
+          "neon",
+          "pastel",
+          "thermal",
+          "mono"
+        ]
+      },
+      {
+        "key": "amount",
+        "label": "强度",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "barrel",
+    "label": "桶形畸变",
+    "english": "Barrel Distortion",
+    "family": "TOP",
+    "description": "按半径改变采样位置，模拟广角镜头桶形或枕形畸变。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "畸变强度",
+        "type": "number",
+        "default": 0.35,
+        "min": -0.75,
+        "max": 1.5,
+        "step": 0.01
+      },
+      {
+        "key": "x",
+        "label": "中心 X",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "中心 Y",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "swirl",
+    "label": "漩涡扭曲",
+    "english": "Swirl",
+    "family": "TOP",
+    "description": "围绕中心旋转像素，旋转角度随距离逐渐衰减。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "扭转圈数",
+        "type": "number",
+        "default": 0.7,
+        "min": -3,
+        "max": 3,
+        "step": 0.01
+      },
+      {
+        "key": "radius",
+        "label": "作用半径",
+        "type": "number",
+        "default": 0.75,
+        "min": 0.05,
+        "max": 1.5,
+        "step": 0.01
+      },
+      {
+        "key": "x",
+        "label": "中心 X",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "中心 Y",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "polar",
+    "label": "极坐标变换",
+    "english": "Polar Coordinates",
+    "family": "TOP",
+    "description": "在直角纹理和环形极坐标纹理之间转换。",
+    "params": [
+      {
+        "key": "direction",
+        "label": "转换方向",
+        "type": "select",
+        "default": "to_polar",
+        "options": [
+          "to_polar",
+          "to_rectangular"
+        ]
+      },
+      {
+        "key": "angle",
+        "label": "角度",
+        "type": "number",
+        "default": 0,
+        "min": -360,
+        "max": 360,
+        "step": 1
+      },
+      {
+        "key": "radius",
+        "label": "径向缩放",
+        "type": "number",
+        "default": 1,
+        "min": 0.2,
+        "max": 3,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "bulge",
+    "label": "球面凸起",
+    "english": "Bulge / Pinch",
+    "family": "TOP",
+    "description": "在指定半径内对像素进行球面挤压或膨胀。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "凸起强度",
+        "type": "number",
+        "default": 0.55,
+        "min": -0.9,
+        "max": 0.9,
+        "step": 0.01
+      },
+      {
+        "key": "radius",
+        "label": "作用半径",
+        "type": "number",
+        "default": 0.65,
+        "min": 0.05,
+        "max": 1.5,
+        "step": 0.01
+      },
+      {
+        "key": "x",
+        "label": "中心 X",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "中心 Y",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "sine_warp",
+    "label": "正弦波扭曲",
+    "english": "Sine Warp",
+    "family": "TOP",
+    "description": "使用互相垂直的正弦波偏移画面，形成可动画的水波扭曲。",
+    "params": [
+      {
+        "key": "amplitude",
+        "label": "扭曲幅度",
+        "type": "number",
+        "default": 0.05,
+        "min": 0,
+        "max": 0.3,
+        "step": 0.01
+      },
+      {
+        "key": "frequency",
+        "label": "波数",
+        "type": "number",
+        "default": 5,
+        "min": 0.1,
+        "max": 30,
+        "step": 0.01
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.3,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "glitch",
+    "label": "数字故障",
+    "english": "Digital Glitch",
+    "family": "TOP",
+    "description": "对水平条带进行确定性的随机偏移，并分离红蓝通道。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "故障强度",
+        "type": "number",
+        "default": 0.2,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "bands",
+        "label": "条带数量",
+        "type": "number",
+        "default": 24,
+        "min": 2,
+        "max": 100,
+        "step": 1
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 2,
+        "min": 0,
+        "max": 1000,
+        "step": 1
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.4,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "scanlines",
+    "label": "扫描线",
+    "english": "Scanlines",
+    "family": "TOP",
+    "description": "模拟屏幕扫描条纹，可调节间距、强度和滚动速度。",
+    "params": [
+      {
+        "key": "spacing",
+        "label": "扫描间距",
+        "type": "number",
+        "default": 4,
+        "min": 2,
+        "max": 30,
+        "step": 1
+      },
+      {
+        "key": "amount",
+        "label": "强度",
+        "type": "number",
+        "default": 0.55,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "speed",
+        "label": "流动速度",
+        "type": "number",
+        "default": 0.1,
+        "min": -2,
+        "max": 2,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "halftone",
+    "label": "半调网点",
+    "english": "Halftone",
+    "family": "TOP",
+    "description": "按局部亮度绘制大小不同的圆形印刷网点。",
+    "params": [
+      {
+        "key": "size",
+        "label": "网点间距",
+        "type": "number",
+        "default": 9,
+        "min": 3,
+        "max": 40,
+        "step": 1
+      },
+      {
+        "key": "color",
+        "label": "网点颜色",
+        "type": "color",
+        "default": "#f4d6ff"
+      },
+      {
+        "key": "background",
+        "label": "纸张颜色",
+        "type": "color",
+        "default": "#151529"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "bayer_dither",
+    "label": "有序抖色",
+    "english": "Bayer Dither",
+    "family": "TOP",
+    "description": "使用 4×4 Bayer 阈值矩阵将画面转换为有限灰阶。",
+    "params": [
+      {
+        "key": "levels",
+        "label": "灰阶数",
+        "type": "number",
+        "default": 2,
+        "min": 2,
+        "max": 16,
+        "step": 1
+      },
+      {
+        "key": "scale",
+        "label": "像素尺寸",
+        "type": "number",
+        "default": 2,
+        "min": 1,
+        "max": 8,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "directional_blur",
+    "label": "方向模糊",
+    "english": "Directional Blur",
+    "family": "TOP",
+    "description": "沿选定角度平均多个采样，模拟单方向运动拖影。",
+    "params": [
+      {
+        "key": "distance",
+        "label": "模糊距离",
+        "type": "number",
+        "default": 22,
+        "min": 0,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "angle",
+        "label": "角度",
+        "type": "number",
+        "default": 30,
+        "min": -360,
+        "max": 360,
+        "step": 1
+      },
+      {
+        "key": "samples",
+        "label": "采样数",
+        "type": "number",
+        "default": 12,
+        "min": 2,
+        "max": 32,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "radial_blur",
+    "label": "旋转模糊",
+    "english": "Radial Blur",
+    "family": "TOP",
+    "description": "围绕画面中心平均不同旋转角度的采样。",
+    "params": [
+      {
+        "key": "angle",
+        "label": "角度范围",
+        "type": "number",
+        "default": 18,
+        "min": 0,
+        "max": 120,
+        "step": 0.01
+      },
+      {
+        "key": "samples",
+        "label": "采样数",
+        "type": "number",
+        "default": 12,
+        "min": 2,
+        "max": 32,
+        "step": 1
+      },
+      {
+        "key": "x",
+        "label": "中心 X",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "中心 Y",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "zoom_blur",
+    "label": "径向拉伸模糊",
+    "english": "Zoom Blur",
+    "family": "TOP",
+    "description": "围绕中心叠加多个缩放画面，形成向外扩散的速度感。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "拉伸比例",
+        "type": "number",
+        "default": 0.25,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "samples",
+        "label": "采样数",
+        "type": "number",
+        "default": 12,
+        "min": 2,
+        "max": 32,
+        "step": 1
+      },
+      {
+        "key": "x",
+        "label": "中心 X",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "中心 Y",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "median_filter",
+    "label": "中值去噪",
+    "english": "Median Filter",
+    "family": "TOP",
+    "description": "以邻域中值替换 RGB，去除孤立亮点并保留边缘；在半分辨率执行。",
+    "params": [
+      {
+        "key": "radius",
+        "label": "邻域半径",
+        "type": "number",
+        "default": 1,
+        "min": 1,
+        "max": 3,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "dilate",
+    "label": "亮部膨胀",
+    "english": "Dilate",
+    "family": "TOP",
+    "description": "取邻域各通道最大值，让亮部区域向外扩张；在半分辨率执行。",
+    "params": [
+      {
+        "key": "radius",
+        "label": "膨胀半径",
+        "type": "number",
+        "default": 2,
+        "min": 1,
+        "max": 5,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "erode",
+    "label": "亮部侵蚀",
+    "english": "Erode",
+    "family": "TOP",
+    "description": "取邻域各通道最小值，让亮部区域收缩；在半分辨率执行。",
+    "params": [
+      {
+        "key": "radius",
+        "label": "侵蚀半径",
+        "type": "number",
+        "default": 2,
+        "min": 1,
+        "max": 5,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "composite_over",
+    "label": "透明叠加",
+    "english": "Alpha Over",
+    "family": "TOP",
+    "description": "依据第二画面的透明度叠加到第一画面上。",
+    "params": [
+      {
+        "key": "opacity",
+        "label": "第二画面不透明度",
+        "type": "number",
+        "default": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "in2",
+        "kind": "TOP",
+        "label": "第二画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "composite_add",
+    "label": "加色合成",
+    "english": "Add Composite",
+    "family": "TOP",
+    "description": "相加两个画面的颜色，适合光线与粒子叠加。",
+    "params": [
+      {
+        "key": "opacity",
+        "label": "第二画面不透明度",
+        "type": "number",
+        "default": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "in2",
+        "kind": "TOP",
+        "label": "第二画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "composite_multiply",
+    "label": "正片叠底",
+    "english": "Multiply Composite",
+    "family": "TOP",
+    "description": "逐通道相乘两个画面，适合阴影和纹理着色。",
+    "params": [
+      {
+        "key": "opacity",
+        "label": "第二画面不透明度",
+        "type": "number",
+        "default": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "in2",
+        "kind": "TOP",
+        "label": "第二画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "composite_screen",
+    "label": "滤色合成",
+    "english": "Screen Composite",
+    "family": "TOP",
+    "description": "相乘两个画面的反色，得到柔和的增亮效果。",
+    "params": [
+      {
+        "key": "opacity",
+        "label": "第二画面不透明度",
+        "type": "number",
+        "default": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "in2",
+        "kind": "TOP",
+        "label": "第二画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "composite_overlay",
+    "label": "叠加合成",
+    "english": "Overlay Composite",
+    "family": "TOP",
+    "description": "根据底图亮度切换正片叠底与滤色，增强局部对比。",
+    "params": [
+      {
+        "key": "opacity",
+        "label": "第二画面不透明度",
+        "type": "number",
+        "default": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "in2",
+        "kind": "TOP",
+        "label": "第二画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "composite_lighten",
+    "label": "变亮合成",
+    "english": "Lighten Composite",
+    "family": "TOP",
+    "description": "逐通道保留两张图中更亮的颜色。",
+    "params": [
+      {
+        "key": "opacity",
+        "label": "第二画面不透明度",
+        "type": "number",
+        "default": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "in2",
+        "kind": "TOP",
+        "label": "第二画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "composite_darken",
+    "label": "变暗合成",
+    "english": "Darken Composite",
+    "family": "TOP",
+    "description": "逐通道保留两张图中更暗的颜色。",
+    "params": [
+      {
+        "key": "opacity",
+        "label": "第二画面不透明度",
+        "type": "number",
+        "default": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "in2",
+        "kind": "TOP",
+        "label": "第二画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "composite_xor",
+    "label": "透明异或",
+    "english": "Alpha XOR",
+    "family": "TOP",
+    "description": "仅保留两个画面不透明区域不重叠的部分。",
+    "params": [
+      {
+        "key": "opacity",
+        "label": "第二画面不透明度",
+        "type": "number",
+        "default": 0.7,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "in2",
+        "kind": "TOP",
+        "label": "第二画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ]
+  },
+  {
+    "type": "weighted_sum",
+    "label": "加权求和",
+    "english": "Weighted Sum",
+    "family": "CHOP",
+    "description": "对三路数值分配不同权重，再加入偏移；适合组合多个调制来源。",
+    "params": [
+      {
+        "key": "weight1",
+        "label": "第一路权重",
+        "type": "number",
+        "default": 1,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "weight2",
+        "label": "第二路权重",
+        "type": "number",
+        "default": 0.5,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "weight3",
+        "label": "第三路权重",
+        "type": "number",
+        "default": 0.25,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "offset",
+        "label": "偏移",
+        "type": "number",
+        "default": 0,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      },
+      {
+        "id": "in2",
+        "kind": "CHOP",
+        "label": "第二路"
+      },
+      {
+        "id": "in3",
+        "kind": "CHOP",
+        "label": "第三路"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "function_chop",
+    "label": "数值函数",
+    "english": "Function",
+    "family": "CHOP",
+    "description": "平方根、幂、对数、反三角和双曲正切等非线性运算，错误定义域会明确报错。",
+    "params": [
+      {
+        "key": "function",
+        "label": "函数",
+        "type": "select",
+        "default": "power",
+        "options": [
+          "power",
+          "sqrt",
+          "log",
+          "exp",
+          "cos",
+          "tan",
+          "asin",
+          "acos",
+          "atan",
+          "tanh"
+        ]
+      },
+      {
+        "key": "exponent",
+        "label": "幂指数",
+        "type": "number",
+        "default": 2,
+        "min": -10,
+        "max": 10,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "atan2",
+    "label": "方向角",
+    "english": "Atan2",
+    "family": "CHOP",
+    "description": "根据 X 和 Y 两路数值计算完整四象限方向角。",
+    "params": [
+      {
+        "key": "unit",
+        "label": "角度单位",
+        "type": "select",
+        "default": "degrees",
+        "options": [
+          "degrees",
+          "radians"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      },
+      {
+        "id": "in2",
+        "kind": "CHOP",
+        "label": "第二路"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "mix_chop",
+    "label": "信号混合",
+    "english": "Mix CHOP",
+    "family": "CHOP",
+    "description": "在两路信号之间线性插值，调制输入可连续控制混合比例。",
+    "params": [
+      {
+        "key": "mix",
+        "label": "混合比例",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "clamp",
+        "label": "限制比例",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      },
+      {
+        "id": "in2",
+        "kind": "CHOP",
+        "label": "第二路"
+      },
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "ease_chop",
+    "label": "缓动曲线",
+    "english": "Ease",
+    "family": "CHOP",
+    "description": "将 0–1 进度转为动画缓动，支持二次、三次、正弦和弹跳。",
+    "params": [
+      {
+        "key": "curve",
+        "label": "曲线",
+        "type": "select",
+        "default": "sine",
+        "options": [
+          "quadratic",
+          "cubic",
+          "sine",
+          "bounce"
+        ]
+      },
+      {
+        "key": "direction",
+        "label": "方向",
+        "type": "select",
+        "default": "in_out",
+        "options": [
+          "in",
+          "out",
+          "in_out"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "smoothstep",
+    "label": "平滑阶跃",
+    "english": "Smoothstep",
+    "family": "CHOP",
+    "description": "在两条阈值间生成端点斜率为零的平滑过渡。",
+    "params": [
+      {
+        "key": "edge0",
+        "label": "起始阈值",
+        "type": "number",
+        "default": 0,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "edge1",
+        "label": "结束阈值",
+        "type": "number",
+        "default": 1,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "smoother",
+        "label": "五次平滑",
+        "type": "boolean",
+        "default": false
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "angle_wrap",
+    "label": "角度循环",
+    "english": "Angle Wrap",
+    "family": "CHOP",
+    "description": "把角度循环到指定起点与周期内，支持负数。",
+    "params": [
+      {
+        "key": "start",
+        "label": "起始角度",
+        "type": "number",
+        "default": -180,
+        "min": -360,
+        "max": 360,
+        "step": 0.01
+      },
+      {
+        "key": "period",
+        "label": "周期",
+        "type": "number",
+        "default": 360,
+        "min": 0.01,
+        "max": 1000,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "angle_distance",
+    "label": "最短角距离",
+    "english": "Angle Distance",
+    "family": "CHOP",
+    "description": "计算从第一路角度到第二路角度的最短有符号旋转距离。",
+    "params": [
+      {
+        "key": "period",
+        "label": "角度周期",
+        "type": "number",
+        "default": 360,
+        "min": 0.01,
+        "max": 1000,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      },
+      {
+        "id": "in2",
+        "kind": "CHOP",
+        "label": "第二路"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "sequence_chop",
+    "label": "数值步进器",
+    "english": "Sequence",
+    "family": "CHOP",
+    "description": "按播放时间依次输出逗号分隔的数值序列，可选择阶梯或线性插值。",
+    "params": [
+      {
+        "key": "values",
+        "label": "数值序列",
+        "type": "text",
+        "default": "0,1,0.25,0.75"
+      },
+      {
+        "key": "rate",
+        "label": "每秒步数",
+        "type": "number",
+        "default": 2,
+        "min": 0,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "mode",
+        "label": "过渡",
+        "type": "select",
+        "default": "step",
+        "options": [
+          "step",
+          "linear"
+        ]
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "gaussian_chop",
+    "label": "高斯曲线",
+    "english": "Gaussian",
+    "family": "CHOP",
+    "description": "按输入与中心的距离输出钟形衰减，适合柔和的空间与时间权重。",
+    "params": [
+      {
+        "key": "center",
+        "label": "中心",
+        "type": "number",
+        "default": 0,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "sigma",
+        "label": "标准差",
+        "type": "number",
+        "default": 1,
+        "min": 0.001,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "amplitude",
+        "label": "振幅",
+        "type": "number",
+        "default": 1,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "exponential_chop",
+    "label": "指数衰减",
+    "english": "Exponential Decay",
+    "family": "CHOP",
+    "description": "对输入时间进行指数衰减，可用于闪光和衰落。",
+    "params": [
+      {
+        "key": "decay",
+        "label": "衰减系数",
+        "type": "number",
+        "default": 2,
+        "min": 0,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "amplitude",
+        "label": "初始振幅",
+        "type": "number",
+        "default": 1,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "damped_wave",
+    "label": "衰减振荡",
+    "english": "Damped Wave",
+    "family": "CHOP",
+    "description": "按时间生成带指数衰减的正弦波，可周期重启。",
+    "params": [
+      {
+        "key": "frequency",
+        "label": "频率",
+        "type": "number",
+        "default": 3,
+        "min": 0,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "decay",
+        "label": "衰减",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "amplitude",
+        "label": "振幅",
+        "type": "number",
+        "default": 1,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "repeat",
+        "label": "循环秒数（0 为不循环）",
+        "type": "number",
+        "default": 3,
+        "min": 0,
+        "max": 60,
+        "step": 0.01
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "spring",
+    "label": "弹簧跟随",
+    "english": "Spring",
+    "family": "CHOP",
+    "description": "使用阻尼弹簧连续追随输入目标，会产生可控的惯性与回弹。",
+    "params": [
+      {
+        "key": "frequency",
+        "label": "弹簧频率",
+        "type": "number",
+        "default": 2,
+        "min": 0.01,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "damping",
+        "label": "阻尼比",
+        "type": "number",
+        "default": 0.45,
+        "min": 0,
+        "max": 4,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "delay_chop",
+    "label": "信号延迟",
+    "english": "Delay CHOP",
+    "family": "CHOP",
+    "description": "保存有限时间的历史信号并线性采样过去时刻，最多保留 4096 帧。",
+    "params": [
+      {
+        "key": "delay",
+        "label": "延迟秒数",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 30,
+        "step": 0.01
+      },
+      {
+        "key": "initial",
+        "label": "历史不足时数值",
+        "type": "number",
+        "default": 0,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "moving_average",
+    "label": "移动平均",
+    "english": "Moving Average",
+    "family": "CHOP",
+    "description": "对最近时间窗口内的样本求平均，平滑抖动信号。",
+    "params": [
+      {
+        "key": "window",
+        "label": "统计窗口（秒）",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 30,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "peak_chop",
+    "label": "峰值追踪",
+    "english": "Peak",
+    "family": "CHOP",
+    "description": "保留窗口内绝对值最大的样本，适合音量峰值检测。",
+    "params": [
+      {
+        "key": "window",
+        "label": "统计窗口（秒）",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 30,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "rms_chop",
+    "label": "均方根",
+    "english": "RMS",
+    "family": "CHOP",
+    "description": "计算窗口内信号的均方根能量。",
+    "params": [
+      {
+        "key": "window",
+        "label": "统计窗口（秒）",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 30,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "adsr",
+    "label": "ADSR 包络",
+    "english": "ADSR",
+    "family": "CHOP",
+    "description": "门控信号按下时经过起音、衰减与持续阶段，松开时从当前音量释放。",
+    "params": [
+      {
+        "key": "threshold",
+        "label": "门限",
+        "type": "number",
+        "default": 0.5,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "attack",
+        "label": "起音秒数",
+        "type": "number",
+        "default": 0.1,
+        "min": 0,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "decay",
+        "label": "衰减秒数",
+        "type": "number",
+        "default": 0.2,
+        "min": 0,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "sustain",
+        "label": "持续电平",
+        "type": "number",
+        "default": 0.6,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "release",
+        "label": "释放秒数",
+        "type": "number",
+        "default": 0.4,
+        "min": 0,
+        "max": 10,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "hysteresis",
+    "label": "迟滞开关",
+    "english": "Hysteresis",
+    "family": "CHOP",
+    "description": "分别设置打开与关闭阈值，避免阈值附近的抖动反复触发。",
+    "params": [
+      {
+        "key": "low",
+        "label": "关闭阈值",
+        "type": "number",
+        "default": 0.3,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "high",
+        "label": "打开阈值",
+        "type": "number",
+        "default": 0.7,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "random_hold",
+    "label": "触发随机",
+    "english": "Random Hold",
+    "family": "CHOP",
+    "description": "每次输入上升穿过阈值时生成一个固定种子的随机值，并保持到下次触发。",
+    "params": [
+      {
+        "key": "threshold",
+        "label": "阈值",
+        "type": "number",
+        "default": 0.5,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 65535,
+        "step": 1
+      },
+      {
+        "key": "min",
+        "label": "最小值",
+        "type": "number",
+        "default": 0,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "max",
+        "label": "最大值",
+        "type": "number",
+        "default": 1,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "timer_chop",
+    "label": "触发计时",
+    "english": "Timer",
+    "family": "CHOP",
+    "description": "输入上升沿启动计时，输出秒数或 0–1 进度，支持循环。",
+    "params": [
+      {
+        "key": "threshold",
+        "label": "阈值",
+        "type": "number",
+        "default": 0.5,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "duration",
+        "label": "时长秒数",
+        "type": "number",
+        "default": 2,
+        "min": 0.001,
+        "max": 600,
+        "step": 0.01
+      },
+      {
+        "key": "loop",
+        "label": "循环",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "key": "output",
+        "label": "输出",
+        "type": "select",
+        "default": "progress",
+        "options": [
+          "progress",
+          "seconds"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "slew_chop",
+    "label": "变化速率限制",
+    "english": "Slew",
+    "family": "CHOP",
+    "description": "分别限制每秒上升和下降的最大幅度。",
+    "params": [
+      {
+        "key": "rise",
+        "label": "每秒上升上限",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "fall",
+        "label": "每秒下降上限",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 100,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "text_length",
+    "label": "文本长度",
+    "english": "Text Length",
+    "family": "DAT",
+    "description": "按 Unicode 字符、行数或单词数统计文本，输出可用于信号计算。",
+    "params": [
+      {
+        "key": "mode",
+        "label": "统计方式",
+        "type": "select",
+        "default": "characters",
+        "options": [
+          "characters",
+          "lines",
+          "words"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ]
+  },
+  {
+    "type": "substring_dat",
+    "label": "文本切片",
+    "english": "Substring",
+    "family": "DAT",
+    "description": "以 Unicode 字符为单位截取文本，负起点从结尾计算。",
+    "params": [
+      {
+        "key": "start",
+        "label": "起始位置",
+        "type": "number",
+        "default": 0,
+        "min": -10000,
+        "max": 10000,
+        "step": 1
+      },
+      {
+        "key": "length",
+        "label": "长度",
+        "type": "number",
+        "default": 10,
+        "min": 0,
+        "max": 10000,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "pad_dat",
+    "label": "文本补齐",
+    "english": "Pad",
+    "family": "DAT",
+    "description": "向文本左侧或右侧重复补齐指定字符。",
+    "params": [
+      {
+        "key": "length",
+        "label": "目标长度",
+        "type": "number",
+        "default": 8,
+        "min": 0,
+        "max": 10000,
+        "step": 1
+      },
+      {
+        "key": "fill",
+        "label": "填充字符",
+        "type": "text",
+        "default": "0"
+      },
+      {
+        "key": "side",
+        "label": "方向",
+        "type": "select",
+        "default": "left",
+        "options": [
+          "left",
+          "right"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "format_dat",
+    "label": "文本模板",
+    "english": "Format",
+    "family": "DAT",
+    "description": "模板中的 {in} 与 {in2} 会替换为对应输入；不会执行代码。",
+    "params": [
+      {
+        "key": "template",
+        "label": "模板",
+        "type": "text",
+        "default": "第一路：{in}\n第二路：{in2}"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      },
+      {
+        "id": "in2",
+        "kind": "DAT",
+        "label": "第二份数据"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "encode_dat",
+    "label": "文本编码",
+    "english": "Encode / Decode",
+    "family": "DAT",
+    "description": "在 UTF-8 文本与 Base64、URL 编码之间转换。",
+    "params": [
+      {
+        "key": "mode",
+        "label": "编码方式",
+        "type": "select",
+        "default": "base64_encode",
+        "options": [
+          "base64_encode",
+          "base64_decode",
+          "url_encode",
+          "url_decode"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "sort_dat",
+    "label": "文本排序",
+    "english": "Sort Lines",
+    "family": "DAT",
+    "description": "按行或 JSON 数组排序，可启用数值排序和倒序。",
+    "params": [
+      {
+        "key": "format",
+        "label": "输入格式",
+        "type": "select",
+        "default": "lines",
+        "options": [
+          "lines",
+          "json"
+        ]
+      },
+      {
+        "key": "numeric",
+        "label": "数值排序",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "key": "descending",
+        "label": "降序",
+        "type": "boolean",
+        "default": false
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "unique_dat",
+    "label": "文本去重",
+    "english": "Unique",
+    "family": "DAT",
+    "description": "按首次出现顺序去除重复行或 JSON 数组值。",
+    "params": [
+      {
+        "key": "format",
+        "label": "输入格式",
+        "type": "select",
+        "default": "lines",
+        "options": [
+          "lines",
+          "json"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "filter_dat",
+    "label": "文本筛选",
+    "english": "Filter Lines",
+    "family": "DAT",
+    "description": "保留包含指定文字、指定前缀或后缀的行，支持反选。",
+    "params": [
+      {
+        "key": "query",
+        "label": "匹配文字",
+        "type": "text",
+        "default": "a"
+      },
+      {
+        "key": "mode",
+        "label": "匹配方式",
+        "type": "select",
+        "default": "contains",
+        "options": [
+          "contains",
+          "starts",
+          "ends"
+        ]
+      },
+      {
+        "key": "invert",
+        "label": "反选",
+        "type": "boolean",
+        "default": false
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "join_dat",
+    "label": "数组连接",
+    "english": "Join",
+    "family": "DAT",
+    "description": "将 JSON 数组转成带分隔符的文本，对象元素以 JSON 显示。",
+    "params": [
+      {
+        "key": "separator",
+        "label": "分隔符",
+        "type": "text",
+        "default": ", "
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "json_merge",
+    "label": "JSON 合并",
+    "english": "JSON Merge",
+    "family": "DAT",
+    "description": "合并两个 JSON 对象；同名键采用第二路的值。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      },
+      {
+        "id": "in2",
+        "kind": "DAT",
+        "label": "第二份数据"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "json_set",
+    "label": "JSON 写入",
+    "english": "JSON Set",
+    "family": "DAT",
+    "description": "通过点分路径更新 JSON 对象的嵌套值，支持数组索引。",
+    "params": [
+      {
+        "key": "path",
+        "label": "路径",
+        "type": "text",
+        "default": "settings.amount"
+      },
+      {
+        "key": "value",
+        "label": "值（JSON 或普通文本）",
+        "type": "text",
+        "default": "1"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "json_keys",
+    "label": "JSON 键值",
+    "english": "JSON Keys",
+    "family": "DAT",
+    "description": "提取对象的键、值或键值对，输出 JSON 数组。",
+    "params": [
+      {
+        "key": "mode",
+        "label": "提取内容",
+        "type": "select",
+        "default": "keys",
+        "options": [
+          "keys",
+          "values",
+          "entries"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "table_transpose",
+    "label": "表格转置",
+    "english": "Transpose",
+    "family": "DAT",
+    "description": "交换 CSV 表格的行和列，缺失单元格补为空文本。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "table_select",
+    "label": "表格选择",
+    "english": "Select Table",
+    "family": "DAT",
+    "description": "按行范围和列索引提取 CSV 子表。",
+    "params": [
+      {
+        "key": "start",
+        "label": "起始行",
+        "type": "number",
+        "default": 0,
+        "min": 0,
+        "max": 10000,
+        "step": 1
+      },
+      {
+        "key": "count",
+        "label": "行数",
+        "type": "number",
+        "default": 10,
+        "min": 0,
+        "max": 10000,
+        "step": 1
+      },
+      {
+        "key": "columns",
+        "label": "列索引（留空为全部）",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "table_sort",
+    "label": "表格排序",
+    "english": "Sort Table",
+    "family": "DAT",
+    "description": "按指定 CSV 列稳定排序，可保留表头。",
+    "params": [
+      {
+        "key": "column",
+        "label": "排序列",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 1000,
+        "step": 1
+      },
+      {
+        "key": "header",
+        "label": "首行为表头",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "numeric",
+        "label": "数值排序",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "descending",
+        "label": "降序",
+        "type": "boolean",
+        "default": false
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "table_merge",
+    "label": "表格拼接",
+    "english": "Merge Table",
+    "family": "DAT",
+    "description": "纵向追加行或横向拼接列，正确保留 CSV 引号和换行。",
+    "params": [
+      {
+        "key": "axis",
+        "label": "拼接方向",
+        "type": "select",
+        "default": "rows",
+        "options": [
+          "rows",
+          "columns"
+        ]
+      },
+      {
+        "key": "skip_header",
+        "label": "纵向跳过第二张表头",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      },
+      {
+        "id": "in2",
+        "kind": "DAT",
+        "label": "第二份数据"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "table_to_json",
+    "label": "表格转对象",
+    "english": "Table to JSON",
+    "family": "DAT",
+    "description": "将 CSV 表头映射成每行对象的键，并可把数字单元格转换为数值。",
+    "params": [
+      {
+        "key": "numeric",
+        "label": "识别数值",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "DAT",
+        "label": "文本 / 表格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "chop_to_dat",
+    "label": "数值转文本",
+    "english": "CHOP to DAT",
+    "family": "DAT",
+    "description": "把数值信号格式化为指定小数位的文本，便于字幕或数据导出。",
+    "params": [
+      {
+        "key": "digits",
+        "label": "小数位数",
+        "type": "number",
+        "default": 2,
+        "min": 0,
+        "max": 12,
+        "step": 1
+      },
+      {
+        "key": "prefix",
+        "label": "前缀",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "suffix",
+        "label": "后缀",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "数值"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "DAT",
+        "label": "文本"
+      }
+    ]
+  },
+  {
+    "type": "platonic_sop",
+    "label": "柏拉图立体",
+    "english": "Platonic",
+    "family": "SOP",
+    "description": "生成四面体、八面体、十二面体或二十面体，可进行球面细分。",
+    "params": [
+      {
+        "key": "solid",
+        "label": "立体类型",
+        "type": "select",
+        "default": "icosahedron",
+        "options": [
+          "tetrahedron",
+          "octahedron",
+          "dodecahedron",
+          "icosahedron"
+        ]
+      },
+      {
+        "key": "radius",
+        "label": "半径",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "subdivision",
+        "label": "细分层级",
+        "type": "number",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "step": 1
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "capsule",
+    "label": "胶囊体",
+    "english": "Capsule",
+    "family": "SOP",
+    "description": "生成带半球端部的胶囊网格。",
+    "params": [
+      {
+        "key": "radius",
+        "label": "半径",
+        "type": "number",
+        "default": 0.5,
+        "min": 0.01,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "height",
+        "label": "中段高度",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "detail",
+        "label": "细分精度",
+        "type": "number",
+        "default": 48,
+        "min": 4,
+        "max": 128,
+        "step": 1
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "ring_sop",
+    "label": "圆环平面",
+    "english": "Ring",
+    "family": "SOP",
+    "description": "生成具有内外半径的平面圆环。",
+    "params": [
+      {
+        "key": "inner",
+        "label": "内半径",
+        "type": "number",
+        "default": 0.5,
+        "min": 0.001,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "outer",
+        "label": "外半径",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "detail",
+        "label": "细分精度",
+        "type": "number",
+        "default": 48,
+        "min": 4,
+        "max": 128,
+        "step": 1
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "tube_sop",
+    "label": "路径管道",
+    "english": "Tube",
+    "family": "SOP",
+    "description": "沿 JSON 三维点列表的平滑曲线生成管道。",
+    "params": [
+      {
+        "key": "points",
+        "label": "三维点 JSON",
+        "type": "text",
+        "default": "[[-1,-1,0],[0,1,0],[1,-1,0]]"
+      },
+      {
+        "key": "tube",
+        "label": "管半径",
+        "type": "number",
+        "default": 0.12,
+        "min": 0.001,
+        "max": 3,
+        "step": 0.01
+      },
+      {
+        "key": "detail",
+        "label": "细分精度",
+        "type": "number",
+        "default": 48,
+        "min": 4,
+        "max": 128,
+        "step": 1
+      },
+      {
+        "key": "segments",
+        "label": "剖面细分",
+        "type": "number",
+        "default": 12,
+        "min": 3,
+        "max": 32,
+        "step": 1
+      },
+      {
+        "key": "closed",
+        "label": "闭合路径",
+        "type": "boolean",
+        "default": false
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "lathe_sop",
+    "label": "旋转曲面",
+    "english": "Lathe",
+    "family": "SOP",
+    "description": "将 JSON 二维剖面（半径,高度）围绕 Y 轴旋转成曲面。",
+    "params": [
+      {
+        "key": "points",
+        "label": "剖面 JSON",
+        "type": "text",
+        "default": "[[0,-1],[0.7,-0.8],[0.35,0],[0.8,0.8],[0.6,1]]"
+      },
+      {
+        "key": "detail",
+        "label": "细分精度",
+        "type": "number",
+        "default": 48,
+        "min": 4,
+        "max": 128,
+        "step": 1
+      },
+      {
+        "key": "angle",
+        "label": "旋转角度",
+        "type": "number",
+        "default": 360,
+        "min": 1,
+        "max": 360,
+        "step": 0.01
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "extrude_sop",
+    "label": "轮廓挤出",
+    "english": "Extrude",
+    "family": "SOP",
+    "description": "将二维 JSON 多边形轮廓沿 Z 轴挤出，可添加倒角。",
+    "params": [
+      {
+        "key": "points",
+        "label": "轮廓 JSON",
+        "type": "text",
+        "default": "[[-1,-0.7],[1,-0.7],[0,1]]"
+      },
+      {
+        "key": "depth",
+        "label": "挤出厚度",
+        "type": "number",
+        "default": 0.4,
+        "min": 0.001,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "bevel",
+        "label": "倒角宽度",
+        "type": "number",
+        "default": 0.05,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "helix_sop",
+    "label": "螺旋管",
+    "english": "Helix",
+    "family": "SOP",
+    "description": "沿空间螺旋曲线生成管状网格。",
+    "params": [
+      {
+        "key": "radius",
+        "label": "半径",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 3,
+        "min": 0.01,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "turns",
+        "label": "圈数",
+        "type": "number",
+        "default": 3,
+        "min": 0.1,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "tube",
+        "label": "管半径",
+        "type": "number",
+        "default": 0.08,
+        "min": 0.001,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "detail",
+        "label": "细分精度",
+        "type": "number",
+        "default": 48,
+        "min": 4,
+        "max": 128,
+        "step": 1
+      },
+      {
+        "key": "segments",
+        "label": "剖面细分",
+        "type": "number",
+        "default": 12,
+        "min": 3,
+        "max": 32,
+        "step": 1
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "torus_knot",
+    "label": "环面纽结",
+    "english": "Torus Knot",
+    "family": "SOP",
+    "description": "使用 P/Q 绕数生成环面纽结，适合复杂线框展示。",
+    "params": [
+      {
+        "key": "radius",
+        "label": "半径",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "tube",
+        "label": "管半径",
+        "type": "number",
+        "default": 0.18,
+        "min": 0.001,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "p",
+        "label": "P 绕数",
+        "type": "number",
+        "default": 2,
+        "min": 1,
+        "max": 12,
+        "step": 1
+      },
+      {
+        "key": "q",
+        "label": "Q 绕数",
+        "type": "number",
+        "default": 3,
+        "min": 1,
+        "max": 12,
+        "step": 1
+      },
+      {
+        "key": "detail",
+        "label": "细分精度",
+        "type": "number",
+        "default": 48,
+        "min": 4,
+        "max": 128,
+        "step": 1
+      },
+      {
+        "key": "segments",
+        "label": "剖面细分",
+        "type": "number",
+        "default": 12,
+        "min": 3,
+        "max": 32,
+        "step": 1
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "grid_sop",
+    "label": "空间网格",
+    "english": "Grid",
+    "family": "SOP",
+    "description": "生成 XZ 地面网格的实体细线，独立控制行列与间距。",
+    "params": [
+      {
+        "key": "rows",
+        "label": "行数",
+        "type": "number",
+        "default": 8,
+        "min": 1,
+        "max": 64,
+        "step": 1
+      },
+      {
+        "key": "columns",
+        "label": "列数",
+        "type": "number",
+        "default": 8,
+        "min": 1,
+        "max": 64,
+        "step": 1
+      },
+      {
+        "key": "spacing",
+        "label": "间距",
+        "type": "number",
+        "default": 0.35,
+        "min": 0.01,
+        "max": 10,
+        "step": 0.01
+      },
+      {
+        "key": "width",
+        "label": "线宽",
+        "type": "number",
+        "default": 0.015,
+        "min": 0.001,
+        "max": 0.5,
+        "step": 0.01
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "copy_sop",
+    "label": "线性阵列",
+    "english": "Copy",
+    "family": "SOP",
+    "description": "沿三维偏移排列多个输入副本，每个副本可以递增旋转和缩放。",
+    "params": [
+      {
+        "key": "count",
+        "label": "数量",
+        "type": "number",
+        "default": 5,
+        "min": 1,
+        "max": 128,
+        "step": 1
+      },
+      {
+        "key": "x",
+        "label": "X 步长",
+        "type": "number",
+        "default": 0.6,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "y",
+        "label": "Y 步长",
+        "type": "number",
+        "default": 0,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "z",
+        "label": "Z 步长",
+        "type": "number",
+        "default": 0,
+        "min": -100,
+        "max": 100,
+        "step": 0.01
+      },
+      {
+        "key": "rotation",
+        "label": "Y 旋转步长",
+        "type": "number",
+        "default": 20,
+        "min": -360,
+        "max": 360,
+        "step": 0.01
+      },
+      {
+        "key": "scale",
+        "label": "缩放倍率",
+        "type": "number",
+        "default": 0.9,
+        "min": 0.1,
+        "max": 2,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "radial_copy",
+    "label": "环形阵列",
+    "english": "Radial Copy",
+    "family": "SOP",
+    "description": "将输入几何体沿 XZ 平面的圆周排列。",
+    "params": [
+      {
+        "key": "count",
+        "label": "数量",
+        "type": "number",
+        "default": 12,
+        "min": 1,
+        "max": 128,
+        "step": 1
+      },
+      {
+        "key": "radius",
+        "label": "排列半径",
+        "type": "number",
+        "default": 2,
+        "min": 0,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "angle",
+        "label": "覆盖角度",
+        "type": "number",
+        "default": 360,
+        "min": 1,
+        "max": 360,
+        "step": 0.01
+      },
+      {
+        "key": "orient",
+        "label": "朝向圆心",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "scatter_sop",
+    "label": "随机散布",
+    "english": "Scatter",
+    "family": "SOP",
+    "description": "使用固定种子在三维盒内散布输入副本，附带随机尺寸与旋转。",
+    "params": [
+      {
+        "key": "count",
+        "label": "数量",
+        "type": "number",
+        "default": 30,
+        "min": 1,
+        "max": 128,
+        "step": 1
+      },
+      {
+        "key": "seed",
+        "label": "种子",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 65535,
+        "step": 1
+      },
+      {
+        "key": "width",
+        "label": "X 范围",
+        "type": "number",
+        "default": 4,
+        "min": 0,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "height",
+        "label": "Y 范围",
+        "type": "number",
+        "default": 4,
+        "min": 0,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "depth",
+        "label": "Z 范围",
+        "type": "number",
+        "default": 4,
+        "min": 0,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "scale_min",
+        "label": "最小缩放",
+        "type": "number",
+        "default": 0.15,
+        "min": 0.01,
+        "max": 2,
+        "step": 0.01
+      },
+      {
+        "key": "scale_max",
+        "label": "最大缩放",
+        "type": "number",
+        "default": 0.5,
+        "min": 0.01,
+        "max": 2,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "twist_sop",
+    "label": "扭曲几何",
+    "english": "Twist",
+    "family": "SOP",
+    "description": "按顶点 Y 坐标绕纵轴扭转，细分越高越平滑。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "每单位扭转角度",
+        "type": "number",
+        "default": 90,
+        "min": -720,
+        "max": 720,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      },
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "taper_sop",
+    "label": "锥化几何",
+    "english": "Taper",
+    "family": "SOP",
+    "description": "按顶点 Y 坐标线性改变横向尺寸。",
+    "params": [
+      {
+        "key": "amount",
+        "label": "锥化强度",
+        "type": "number",
+        "default": 0.4,
+        "min": -3,
+        "max": 3,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      },
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "wave_sop",
+    "label": "波浪变形",
+    "english": "Wave Deform",
+    "family": "SOP",
+    "description": "沿 X 轴传播的正弦波改变顶点 Y 坐标，播放时会连续运动。",
+    "params": [
+      {
+        "key": "amplitude",
+        "label": "振幅",
+        "type": "number",
+        "default": 0.25,
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      {
+        "key": "frequency",
+        "label": "空间频率",
+        "type": "number",
+        "default": 2,
+        "min": 0,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "speed",
+        "label": "速度",
+        "type": "number",
+        "default": 1,
+        "min": -10,
+        "max": 10,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      },
+      {
+        "id": "mod",
+        "kind": "CHOP",
+        "label": "调制"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "noise_sop",
+    "label": "几何噪声",
+    "english": "Noise Deform",
+    "family": "SOP",
+    "description": "以连续的三维三角噪声扰动顶点，种子控制不同形态。",
+    "params": [
+      {
+        "key": "amplitude",
+        "label": "振幅",
+        "type": "number",
+        "default": 0.2,
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      {
+        "key": "frequency",
+        "label": "空间频率",
+        "type": "number",
+        "default": 2,
+        "min": 0.01,
+        "max": 20,
+        "step": 0.01
+      },
+      {
+        "key": "seed",
+        "label": "种子",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 65535,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "mirror_sop",
+    "label": "镜像几何",
+    "english": "Mirror",
+    "family": "SOP",
+    "description": "沿一个轴镜像输入，并可保留原始几何体。",
+    "params": [
+      {
+        "key": "axis",
+        "label": "镜像轴",
+        "type": "select",
+        "default": "x",
+        "options": [
+          "x",
+          "y",
+          "z"
+        ]
+      },
+      {
+        "key": "keep",
+        "label": "保留原体",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "wireframe_sop",
+    "label": "几何边线",
+    "english": "Wireframe",
+    "family": "SOP",
+    "description": "将输入网格转换为真实线段边线，可选择保留三角网格或仅保留硬边。",
+    "params": [
+      {
+        "key": "mode",
+        "label": "边线类型",
+        "type": "select",
+        "default": "edges",
+        "options": [
+          "edges",
+          "triangles"
+        ]
+      },
+      {
+        "key": "threshold",
+        "label": "硬边阈值（度）",
+        "type": "number",
+        "default": 20,
+        "min": 0,
+        "max": 180,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "几何体"
+      }
+    ]
+  },
+  {
+    "type": "bounds_sop",
+    "label": "包围盒",
+    "english": "Bounds",
+    "family": "SOP",
+    "description": "计算输入整体变换后的轴对齐包围盒，输出线框或实体盒。",
+    "params": [
+      {
+        "key": "wireframe",
+        "label": "显示边线",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "几何体"
       }
     ],
     "outputs": [

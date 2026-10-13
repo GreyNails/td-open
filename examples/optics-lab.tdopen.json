@@ -1,0 +1,95 @@
+{
+  "id": "example_optics-lab",
+  "name": "镜头实验",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "checkerboard_1",
+      "type": "checkerboard",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "棋盘格",
+        "params": {
+          "columns": 12,
+          "rows": 7,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "barrel_2",
+      "type": "barrel",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "桶形畸变",
+        "params": {
+          "amount": 0.35,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "bulge_3",
+      "type": "bulge",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "球面凸起",
+        "params": {
+          "amount": 0.55,
+          "radius": 0.65,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "checkerboard_1",
+      "target": "barrel_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "barrel_2",
+      "target": "bulge_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "bulge_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "optics-lab"
+  }
+}

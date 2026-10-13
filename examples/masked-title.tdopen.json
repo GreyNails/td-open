@@ -1,0 +1,93 @@
+{
+  "id": "example_masked-title",
+  "name": "流体字形",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_1",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 3,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "text_2",
+      "type": "text",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "文字画面",
+        "params": {
+          "text": "MAKE / FLOW",
+          "size": 58,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "mask_3",
+      "type": "mask",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "亮度遮罩",
+        "params": {
+          "mode": "luma",
+          "invert": 0
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "mask_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "text_2",
+      "target": "mask_3",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_3",
+      "source": "mask_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "masked-title"
+  }
+}

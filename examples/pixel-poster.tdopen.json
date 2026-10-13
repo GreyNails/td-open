@@ -1,0 +1,114 @@
+{
+  "id": "example_pixel-poster",
+  "name": "像素海报",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_1",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 3,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "pixelate_2",
+      "type": "pixelate",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "像素化",
+        "params": {
+          "size": 16
+        }
+      }
+    },
+    {
+      "id": "posterize_3",
+      "type": "posterize",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "色阶分段",
+        "params": {
+          "steps": 4
+        }
+      }
+    },
+    {
+      "id": "vignette_4",
+      "type": "vignette",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "暗角",
+        "params": {
+          "amount": 0.7,
+          "radius": 0.3,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "pixelate_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "pixelate_2",
+      "target": "posterize_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "posterize_3",
+      "target": "vignette_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "vignette_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "pixel-poster"
+  }
+}

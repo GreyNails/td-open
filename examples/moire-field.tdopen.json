@@ -1,0 +1,95 @@
+{
+  "id": "example_moire-field",
+  "name": "摩尔纹场",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "moire_1",
+      "type": "moire",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "摩尔干涉纹",
+        "params": {
+          "frequency": 24,
+          "angle": 12,
+          "offset": 0.15,
+          "speed": 0.15,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "contrast_2",
+      "type": "contrast",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "对比度",
+        "params": {
+          "amount": 1.4,
+          "pivot": 0.5
+        }
+      }
+    },
+    {
+      "id": "color_3",
+      "type": "color",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "色彩调整",
+        "params": {
+          "hue": 0,
+          "saturation": 1.2,
+          "brightness": 1.1
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "moire_1",
+      "target": "contrast_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "contrast_2",
+      "target": "color_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "color_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "moire-field"
+  }
+}

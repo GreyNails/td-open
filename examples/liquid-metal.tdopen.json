@@ -1,0 +1,96 @@
+{
+  "id": "example_liquid-metal",
+  "name": "液态金属",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "fbm_noise_1",
+      "type": "fbm_noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "分形云噪声",
+        "params": {
+          "scale": 8,
+          "octaves": 3,
+          "roughness": 0.7,
+          "seed": 8,
+          "speed": 0.15,
+          "color": "#ffffff",
+          "background": "#000000"
+        }
+      }
+    },
+    {
+      "id": "emboss_2",
+      "type": "emboss",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "浮雕",
+        "params": {
+          "amount": 8,
+          "angle": 135
+        }
+      }
+    },
+    {
+      "id": "color_balance_3",
+      "type": "color_balance",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "通道色彩平衡",
+        "params": {
+          "red": 0.9,
+          "green": 1,
+          "blue": 1.2
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "fbm_noise_1",
+      "target": "emboss_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "emboss_2",
+      "target": "color_balance_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "color_balance_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "liquid-metal"
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "id": "example_json-dashboard",
+  "name": "JSON 信息牌",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "text_dat_1",
+      "type": "text_dat",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "文本数据",
+        "params": {
+          "text": "{\"name\":\"OPEN STUDIO\",\"bpm\":120}"
+        }
+      }
+    },
+    {
+      "id": "json_select_2",
+      "type": "json_select",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "JSON 取值",
+        "params": {
+          "path": "name",
+          "fallback": ""
+        }
+      }
+    },
+    {
+      "id": "text_3",
+      "type": "text",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "文字画面",
+        "params": {
+          "text": "HELLO, FLOW",
+          "size": 54,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "text_dat_1",
+      "target": "json_select_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "json_select_2",
+      "target": "text_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "text_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "json-dashboard"
+  }
+}

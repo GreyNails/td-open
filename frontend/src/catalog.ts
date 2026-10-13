@@ -2,6 +2,9 @@ import type { GraphNode, NodeSpec, Param, Port, Project } from "./types";
 import { uid } from "./types";
 import { visualCatalog } from "./nodes/visualCatalog";
 import { dataCatalog } from "./nodes/dataCatalog";
+import { advancedVisualCatalog } from "./nodes/advancedVisualCatalog";
+import { advancedDataCatalog } from "./nodes/advancedDataCatalog";
+import { templateById } from "./templates";
 const port = (id: string, kind = "TOP", label = "画面"): Port => ({
   id,
   kind,
@@ -185,6 +188,8 @@ export const catalog: NodeSpec[] = [
     "CHOP",
     "生成周期变化的数值。连接到调制端口，让画面随时间变化。",
     [
+      select("wave", "波形", "sine", ["sine", "triangle", "square", "saw"]),
+      num("phase", "相位", 0, -1, 1),
       num("frequency", "频率", 0.3, 0.01, 5),
       num("amplitude", "振幅", 1, 0, 5),
       num("offset", "偏移", 0, -5, 5),
@@ -207,12 +212,20 @@ export const catalog: NodeSpec[] = [
     "数值运算",
     "Math",
     "CHOP",
-    "对输入信号执行加法、乘法或范围限制。",
+    "两路信号执行四则运算、极值或范围限制；第二路未连接时使用运算值。",
     [
-      select("operation", "运算", "multiply", ["multiply", "add", "clamp"]),
+      select("operation", "运算", "multiply", [
+        "multiply",
+        "add",
+        "subtract",
+        "divide",
+        "min",
+        "max",
+        "clamp",
+      ]),
       num("value", "运算值", 1, -10, 10),
     ],
-    [port("in", "CHOP", "数值")],
+    [port("in", "CHOP", "数值"), port("in2", "CHOP", "第二路")],
     [port("out", "CHOP", "数值")],
   ),
   spec(
@@ -325,7 +338,12 @@ export const catalog: NodeSpec[] = [
     [],
   ),
 ];
-catalog.push(...visualCatalog, ...dataCatalog);
+catalog.push(
+  ...visualCatalog,
+  ...dataCatalog,
+  ...advancedVisualCatalog,
+  ...advancedDataCatalog,
+);
 export const byType = Object.fromEntries(catalog.map((n) => [n.type, n]));
 export const familyColors: Record<string, string> = {
   TOP: "#b29af7",
@@ -365,6 +383,32 @@ export function preset(kind = "flow"): Project {
       targetHandle,
     });
   let name = "流光实验 · Flow study";
+  const example = templateById[kind];
+  if (example?.recipe) {
+    name = example.name;
+    const recipe = example.recipe;
+    // Compute columns from graph dependencies, including branches declared later.
+    const levels = recipe.nodes.map(() => 0);
+    for (let pass = 0; pass < recipe.nodes.length; pass++) {
+      let changed = false;
+      for (const [from, to] of recipe.edges) {
+        if (levels[to] < levels[from] + 1) {
+          levels[to] = levels[from] + 1;
+          changed = true;
+        }
+      }
+      if (!changed) break;
+    }
+    const rows = new Map<number, number>();
+    recipe.nodes.forEach((item, i) => {
+      const [type, params] = typeof item === "string" ? [item, {}] : item;
+      const row = rows.get(levels[i]) ?? 0;
+      rows.set(levels[i], row + 1);
+      add(type, levels[i] * 245, row * 205, params);
+    });
+    for (const [from, to, handle] of recipe.edges)
+      link(ns[from], ns[to], handle);
+  }
   if (kind === "flow") {
     const n = add("noise", 0, 25);
     const c = add("color", 245, 25);

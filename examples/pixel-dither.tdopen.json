@@ -1,0 +1,71 @@
+{
+  "id": "example_pixel-dither",
+  "name": "有序抖色",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "plasma_1",
+      "type": "plasma",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "等离子场",
+        "params": {
+          "scale": 4,
+          "complexity": 0.65,
+          "speed": 0.3,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "bayer_dither_2",
+      "type": "bayer_dither",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "有序抖色",
+        "params": {
+          "levels": 2,
+          "scale": 2
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "plasma_1",
+      "target": "bayer_dither_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "bayer_dither_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "pixel-dither"
+  }
+}

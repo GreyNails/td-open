@@ -34,7 +34,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
     temporary_dir.mkdir(parents=True, exist_ok=True)
     tempfile.tempdir = str(temporary_dir)
     os.environ["TMPDIR"] = str(temporary_dir)
-    app = FastAPI(title="TD Open API", version="0.2.0", description="Local-first visual programming workspace")
+    app = FastAPI(title="TD Open API", version="0.3.0", description="Local-first visual programming workspace")
     store = ProjectStore(data_dir)
     app.state.store = store
 
@@ -70,7 +70,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "version": "0.2.0", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
+        return {"status": "ok", "version": "0.3.0", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
 
     @app.get("/api/catalog")
     def catalog():

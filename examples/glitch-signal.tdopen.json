@@ -1,0 +1,96 @@
+{
+  "id": "example_glitch-signal",
+  "name": "故障信号",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "stripes_1",
+      "type": "stripes",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动条纹",
+        "params": {
+          "count": 12,
+          "duty": 0.5,
+          "angle": 0,
+          "speed": 0.1,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "glitch_2",
+      "type": "glitch",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "数字故障",
+        "params": {
+          "amount": 0.2,
+          "bands": 24,
+          "seed": 2,
+          "speed": 0.4
+        }
+      }
+    },
+    {
+      "id": "rgb_split_3",
+      "type": "rgb_split",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "色差分离",
+        "params": {
+          "distance": 8,
+          "angle": 0
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "stripes_1",
+      "target": "glitch_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "glitch_2",
+      "target": "rgb_split_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "rgb_split_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "glitch-signal"
+  }
+}

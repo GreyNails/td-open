@@ -1,0 +1,95 @@
+{
+  "id": "example_lava-lamp",
+  "name": "熔岩灯",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "metaballs_1",
+      "type": "metaballs",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "融合液滴",
+        "params": {
+          "count": 6,
+          "size": 0.07,
+          "softness": 0.25,
+          "speed": 0.25,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "duotone_2",
+      "type": "duotone",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "双色映射",
+        "params": {
+          "color": "#c8a4ff",
+          "background": "#10263e",
+          "gamma": 1
+        }
+      }
+    },
+    {
+      "id": "blur_3",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 6,
+          "glow": 0.5
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "metaballs_1",
+      "target": "duotone_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "duotone_2",
+      "target": "blur_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "blur_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "lava-lamp"
+  }
+}

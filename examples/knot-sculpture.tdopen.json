@@ -1,0 +1,73 @@
+{
+  "id": "example_knot-sculpture",
+  "name": "环面结雕塑",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "torus_knot_1",
+      "type": "torus_knot",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "环面纽结",
+        "params": {
+          "radius": 1,
+          "tube": 0.18,
+          "p": 2,
+          "q": 3,
+          "detail": 48,
+          "segments": 12
+        }
+      }
+    },
+    {
+      "id": "render_2",
+      "type": "render",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#97c8ed",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "torus_knot_1",
+      "target": "render_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "render_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "knot-sculpture"
+  }
+}

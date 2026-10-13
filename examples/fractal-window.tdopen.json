@@ -1,0 +1,98 @@
+{
+  "id": "example_fractal-window",
+  "name": "分形之窗",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "mandelbrot_1",
+      "type": "mandelbrot",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "曼德勃罗分形",
+        "params": {
+          "zoom": 1,
+          "x": -0.5,
+          "y": 0,
+          "iterations": 60,
+          "speed": 0.05,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "color_curve_2",
+      "type": "color_curve",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "三点色调曲线",
+        "params": {
+          "shadows": 0.1,
+          "midtones": 0.6,
+          "highlights": 0.95
+        }
+      }
+    },
+    {
+      "id": "vignette_3",
+      "type": "vignette",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "暗角",
+        "params": {
+          "amount": 0.7,
+          "radius": 0.3,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "mandelbrot_1",
+      "target": "color_curve_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "color_curve_2",
+      "target": "vignette_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "vignette_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "fractal-window"
+  }
+}

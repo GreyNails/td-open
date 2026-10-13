@@ -1,0 +1,97 @@
+{
+  "id": "example_halftone-print",
+  "name": "半调印刷",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "fbm_noise_1",
+      "type": "fbm_noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "分形云噪声",
+        "params": {
+          "scale": 4,
+          "octaves": 4,
+          "roughness": 0.5,
+          "seed": 8,
+          "speed": 0.15,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "halftone_2",
+      "type": "halftone",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "半调网点",
+        "params": {
+          "size": 9,
+          "color": "#f4d6ff",
+          "background": "#151529"
+        }
+      }
+    },
+    {
+      "id": "duotone_3",
+      "type": "duotone",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "双色映射",
+        "params": {
+          "color": "#c8a4ff",
+          "background": "#10263e",
+          "gamma": 1
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "fbm_noise_1",
+      "target": "halftone_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "halftone_2",
+      "target": "duotone_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "duotone_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "halftone-print"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "id": "example_data-sort",
+  "name": "去重排序",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "text_dat_1",
+      "type": "text_dat",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "文本数据",
+        "params": {
+          "text": "beta\nalpha\ngamma\nalpha"
+        }
+      }
+    },
+    {
+      "id": "sort_dat_2",
+      "type": "sort_dat",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "文本排序",
+        "params": {
+          "format": "lines",
+          "numeric": false,
+          "descending": false
+        }
+      }
+    },
+    {
+      "id": "unique_dat_3",
+      "type": "unique_dat",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "文本去重",
+        "params": {
+          "format": "lines"
+        }
+      }
+    },
+    {
+      "id": "text_4",
+      "type": "text",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "文字画面",
+        "params": {
+          "text": "HELLO, FLOW",
+          "size": 30,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "text_dat_1",
+      "target": "sort_dat_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "sort_dat_2",
+      "target": "unique_dat_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "unique_dat_3",
+      "target": "text_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "text_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "data-sort"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "id": "example_ink-outline",
+  "name": "墨线轮廓",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_1",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 3,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "edge_2",
+      "type": "edge",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "边缘检测",
+        "params": {
+          "amount": 1,
+          "threshold": 0.05
+        }
+      }
+    },
+    {
+      "id": "duotone_3",
+      "type": "duotone",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "双色映射",
+        "params": {
+          "color": "#c8a4ff",
+          "background": "#10263e",
+          "gamma": 1
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "edge_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "edge_2",
+      "target": "duotone_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "duotone_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "ink-outline"
+  }
+}

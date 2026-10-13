@@ -1,0 +1,92 @@
+{
+  "id": "example_twist-sculpture",
+  "name": "扭转雕塑",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "box_1",
+      "type": "box",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "立方体",
+        "params": {
+          "width": 1.6,
+          "height": 1.6,
+          "depth": 1.6,
+          "detail": 16
+        }
+      }
+    },
+    {
+      "id": "twist_sop_2",
+      "type": "twist_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "扭曲几何",
+        "params": {
+          "amount": 90
+        }
+      }
+    },
+    {
+      "id": "render_3",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#bea0ee",
+          "wireframe": false,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "box_1",
+      "target": "twist_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "twist_sop_2",
+      "target": "render_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "render_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "twist-sculpture"
+  }
+}

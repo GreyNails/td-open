@@ -1,0 +1,94 @@
+{
+  "id": "example_neon-waves",
+  "name": "霓虹声纹",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "wave_1",
+      "type": "wave",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "波浪线",
+        "params": {
+          "amplitude": 0.18,
+          "frequency": 2,
+          "count": 8,
+          "thickness": 2,
+          "speed": 0.25,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "mirror_2",
+      "type": "mirror",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "镜像对称",
+        "params": {
+          "axis": "vertical"
+        }
+      }
+    },
+    {
+      "id": "blur_3",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 5,
+          "glow": 0.8
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "wave_1",
+      "target": "mirror_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "mirror_2",
+      "target": "blur_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "blur_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "neon-waves"
+  }
+}

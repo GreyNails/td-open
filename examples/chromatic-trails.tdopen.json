@@ -1,0 +1,119 @@
+{
+  "id": "example_chromatic-trails",
+  "name": "色散拖影",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "rings_1",
+      "type": "rings",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "扩散圆环",
+        "params": {
+          "spacing": 32,
+          "thickness": 3,
+          "speed": 0.25,
+          "x": 0.5,
+          "y": 0.5,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "feedback_2",
+      "type": "feedback",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "反馈拖影",
+        "params": {
+          "decay": 0.92,
+          "zoom": 1.005,
+          "angle": 0.25,
+          "input_gain": 0.3
+        }
+      }
+    },
+    {
+      "id": "rgb_split_3",
+      "type": "rgb_split",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "色差分离",
+        "params": {
+          "distance": 8,
+          "angle": 0
+        }
+      }
+    },
+    {
+      "id": "blur_4",
+      "type": "blur",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 3,
+          "glow": 0.4
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "rings_1",
+      "target": "feedback_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "feedback_2",
+      "target": "rgb_split_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "rgb_split_3",
+      "target": "blur_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "blur_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "chromatic-trails"
+  }
+}

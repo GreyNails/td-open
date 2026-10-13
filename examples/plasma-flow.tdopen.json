@@ -1,0 +1,70 @@
+{
+  "id": "example_plasma-flow",
+  "name": "等离子流",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "plasma_1",
+      "type": "plasma",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "等离子场",
+        "params": {
+          "scale": 4,
+          "complexity": 0.65,
+          "speed": 0.3,
+          "color": "#c8a4ff",
+          "background": "#10263e"
+        }
+      }
+    },
+    {
+      "id": "hue_shift_2",
+      "type": "hue_shift",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "色相旋转",
+        "params": {
+          "angle": 90
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "plasma_1",
+      "target": "hue_shift_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "hue_shift_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "plasma-flow"
+  }
+}

@@ -154,12 +154,13 @@ function load(file) {
   if (cache.has(file)) return cache.get(file).exports;
   const module = {exports: {}}; cache.set(file, module);
   const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}).outputText;
-  vm.runInNewContext(code, {module, exports: module.exports, require: name => name.startsWith('.') ? load(path.resolve(path.dirname(file), name)) : requirePackage(name)}, {filename: file});
+  vm.runInNewContext(code, {module, exports: module.exports, TextEncoder, TextDecoder, btoa, atob, require: name => name.startsWith('.') ? load(path.resolve(path.dirname(file), name)) : requirePackage(name)}, {filename: file});
   return module.exports;
 }
 const {cookDataNode} = load('frontend/src/nodes/dataRuntime.ts');
+const {cookAdvancedDataNode} = load('frontend/src/nodes/advancedDataRuntime.ts');
 const results = JSON.parse(fs.readFileSync(0, 'utf8')).map(({kind, params, inputs, time}) => {
-  try { return {value: cookDataNode({id:'test', type:kind, data:{params}}, time, (handle='in') => inputs[handle], new Map()).value}; }
+  try { const args = [{id:'test', type:kind, data:{params}}, time, (handle='in') => inputs[handle], new Map()]; const advanced = cookAdvancedDataNode(...args); return {value: (advanced.handled ? advanced : cookDataNode(...args)).value}; }
   catch (error) { return {error: String(error)}; }
 });
 process.stdout.write(JSON.stringify(results));

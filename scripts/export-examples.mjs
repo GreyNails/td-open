@@ -44,16 +44,10 @@ const { preset } = await import(
   pathToFileURL(path.join(temporary, "catalog.mjs"))
 );
 const documents = new Map();
-for (const kind of [
-  "flow",
-  "particles",
-  "3d",
-  "ai",
-  "empty",
-  "kaleidoscope",
-  "geometry-lab",
-  "data-driven",
-]) {
+const { templates } = await import(
+  pathToFileURL(path.join(temporary, "templates.mjs"))
+);
+for (const kind of [...templates.map((t) => t.id), "empty"]) {
   documents.set(kind, preset(kind));
 }
 for (const [kind, project] of documents) {
@@ -73,3 +67,14 @@ for (const [kind, project] of documents) {
   );
 }
 console.log(`Wrote ${documents.size} versioned example projects to examples/`);
+const header = `# 案例索引\n\n62 个可编辑案例，加 1 份空白作品。点击编辑器的“示例作品”可以搜索、分类、筛选并打开；也可以下载下列 JSON 后导入。缩略图来自内置引擎的实际输出；AI / MCP 案例使用明确标注的连接说明卡片。\n\n![部分实际输出](images/example-showcase.png)\n\n`;
+let guide = header;
+for (const category of new Set(templates.map((t) => t.category))) {
+  guide += `## ${category}\n\n| 案例 | 节点数 | 练习方向 | 运行条件 |\n| --- | ---: | --- | --- |\n`;
+  for (const t of templates.filter((t) => t.category === category))
+    guide += `| [${t.name}](../examples/${t.id}.tdopen.json) | ${documents.get(t.id).nodes.length} | ${t.learn.replaceAll("|", "／")} | ${t.requires === "ai" ? "配置 AI 服务，手动生成" : t.requires === "mcp" ? "连接 MCP，手动调用" : t.requires === "audio" ? "导入音频或授权麦克风" : "无需外部服务"} |\n`;
+  guide += "\n";
+}
+guide +=
+  "[创建空白作品](../examples/empty.tdopen.json)\n\n新增案例请编辑 `frontend/src/templates.ts`，然后运行 `node scripts/export-examples.mjs`。浏览器缩略图由 `TD_CHROMIUM=/path/to/chromium node frontend/render-examples.mjs` 生成，脚本同时检查全部案例的实际执行错误。\n";
+await fs.writeFile(path.join(root, "docs/EXAMPLES.md"), guide);

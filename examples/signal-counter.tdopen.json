@@ -1,0 +1,118 @@
+{
+  "id": "example_signal-counter",
+  "name": "节拍计数器",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "beat_1",
+      "type": "beat",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "节拍脉冲",
+        "params": {
+          "bpm": 120,
+          "width": 0.1,
+          "phase": 0
+        }
+      }
+    },
+    {
+      "id": "counter_2",
+      "type": "counter",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "脉冲计数",
+        "params": {
+          "threshold": 0.5,
+          "step": 1,
+          "initial": 0,
+          "max": 16,
+          "wrap": false
+        }
+      }
+    },
+    {
+      "id": "chop_to_dat_3",
+      "type": "chop_to_dat",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "数值转文本",
+        "params": {
+          "digits": 2,
+          "prefix": "",
+          "suffix": ""
+        }
+      }
+    },
+    {
+      "id": "text_4",
+      "type": "text",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "文字画面",
+        "params": {
+          "text": "HELLO, FLOW",
+          "size": 90,
+          "color": "#ffffff"
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "beat_1",
+      "target": "counter_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "counter_2",
+      "target": "chop_to_dat_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "chop_to_dat_3",
+      "target": "text_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "text_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "signal-counter"
+  }
+}
