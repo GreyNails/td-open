@@ -1,5 +1,7 @@
 """Portable, versioned graph format shared by HTTP, MCP, and disk storage."""
 
+from __future__ import annotations
+
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
@@ -20,6 +22,7 @@ class Position(Model):
 class NodeData(Model):
     label: str = Field(default="", max_length=200)
     params: dict[str, JsonValue] = Field(default_factory=dict)
+    graph: Project | None = None
 
 
 class Node(Model):
@@ -41,8 +44,8 @@ class Project(Model):
     id: Identifier
     name: str = Field(min_length=1, max_length=200)
     version: Literal[1] = 1
-    nodes: list[Node] = Field(default_factory=list, max_length=500)
-    edges: list[Edge] = Field(default_factory=list, max_length=2000)
+    nodes: list[Node] = Field(default_factory=list, max_length=5000)
+    edges: list[Edge] = Field(default_factory=list, max_length=20000)
     settings: dict[str, JsonValue] = Field(default_factory=dict)
 
 
@@ -54,3 +57,5 @@ class CommandRequest(Model):
 class EvaluateRequest(Model):
     project: Project
     time: float = Field(default=0, ge=0)
+
+NodeData.model_rebuild()

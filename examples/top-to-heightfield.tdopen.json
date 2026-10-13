@@ -1,0 +1,262 @@
+{
+  "id": "example_top-to-heightfield",
+  "name": "纹理变成地形",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_1",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 3,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "raster_sop_2",
+      "type": "raster_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "栅格高度场",
+        "params": {
+          "resolution": 48,
+          "height": 1.5,
+          "width": 3
+        }
+      }
+    },
+    {
+      "id": "texture_sop_3",
+      "type": "texture_sop",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "UV 贴图坐标",
+        "params": {
+          "projection": "spherical",
+          "repeat_u": 1,
+          "repeat_v": 1
+        }
+      }
+    },
+    {
+      "id": "pbr_mat_4",
+      "type": "pbr_mat",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "物理材质",
+        "params": {
+          "color": "#acd6ca",
+          "opacity": 1,
+          "double_side": true,
+          "roughness": 0.7,
+          "metalness": 0.15,
+          "clearcoat": 0.2,
+          "transmission": 0,
+          "ior": 1.5,
+          "emissive": "#000000",
+          "emissive_intensity": 1
+        }
+      }
+    },
+    {
+      "id": "geometry_comp_5",
+      "type": "geometry_comp",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "场景几何对象",
+        "params": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1,
+          "visible": true
+        }
+      }
+    },
+    {
+      "id": "light_comp_6",
+      "type": "light_comp",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "灯光",
+        "params": {
+          "x": 4,
+          "y": 3,
+          "z": 6,
+          "targetx": 0,
+          "targety": 0,
+          "targetz": 0,
+          "type": "directional",
+          "color": "#fff0de",
+          "intensity": 3,
+          "distance": 0,
+          "decay": 2,
+          "angle": 45
+        }
+      }
+    },
+    {
+      "id": "ambient_light_comp_7",
+      "type": "ambient_light_comp",
+      "position": {
+        "x": 1225,
+        "y": 0
+      },
+      "data": {
+        "label": "环境基础光",
+        "params": {
+          "color": "#bcc9ff",
+          "intensity": 1
+        }
+      }
+    },
+    {
+      "id": "camera_comp_8",
+      "type": "camera_comp",
+      "position": {
+        "x": 1470,
+        "y": 0
+      },
+      "data": {
+        "label": "相机",
+        "params": {
+          "x": 3,
+          "y": 3,
+          "z": 4,
+          "targetx": 0,
+          "targety": 0,
+          "targetz": 0,
+          "projection": "perspective",
+          "fov": 45,
+          "near": 0.01,
+          "far": 1000,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "id": "render_9",
+      "type": "render",
+      "position": {
+        "x": 1715,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a888ff",
+          "wireframe": true,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_10",
+      "type": "output",
+      "position": {
+        "x": 1960,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "raster_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "raster_sop_2",
+      "target": "texture_sop_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "texture_sop_3",
+      "target": "geometry_comp_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "pbr_mat_4",
+      "target": "geometry_comp_5",
+      "sourceHandle": "out",
+      "targetHandle": "material"
+    },
+    {
+      "id": "edge_5",
+      "source": "geometry_comp_5",
+      "target": "light_comp_6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_6",
+      "source": "light_comp_6",
+      "target": "ambient_light_comp_7",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_7",
+      "source": "ambient_light_comp_7",
+      "target": "camera_comp_8",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_8",
+      "source": "camera_comp_8",
+      "target": "render_9",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_9",
+      "source": "render_9",
+      "target": "output_10",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "top-to-heightfield"
+  }
+}

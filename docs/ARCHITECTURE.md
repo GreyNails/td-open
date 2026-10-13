@@ -30,10 +30,10 @@ flowchart LR
 | `frontend/src/types.ts` | TypeScript 项目、节点、端口和 API 类型 |
 | `frontend/src/Workbench.tsx`、`workspaceLayout.ts` | v2 分割树工作区、共享边界缩放、拖动停靠与标签合并；保存在项目 `settings.workspace` |
 | `frontend/src/NodeSearch.tsx` | 快捷节点搜索、分类和收藏；收藏保存在 `settings.favoriteNodes` |
-| `frontend/src/catalog.ts` | 205 个内置节点的汇总目录、默认参数、案例实例化和连接规则 |
-| `frontend/src/templates.ts`、`TemplateGallery.tsx` | 62 个可编辑案例的 recipe、分类、学习目标和搜索图库 |
+| `frontend/src/catalog.ts` | 699 个内置节点的汇总目录、默认参数、案例实例化和连接规则 |
+| `frontend/src/templates.ts`、`TemplateGallery.tsx` | 82 个可编辑案例的 recipe、分类、学习目标和搜索图库 |
 | `frontend/public/examples/` | 使用浏览器运行时渲染的案例 WebP 缩略图 |
-| `examples/`、`scripts/export-examples.mjs` | 从相同 recipe 导出的 62 份项目 JSON，另附空白项目 |
+| `examples/`、`scripts/export-examples.mjs` | 从相同 recipe 导出的 82 份项目 JSON，另附空白项目 |
 | `frontend/src/nodes/` | 按图像、信号、数据与几何拆分的节点目录和执行模块 |
 | `frontend/src/engine.ts` | Canvas/WebGL/Three.js 渲染、音频分析、素材加载与资源释放 |
 | `backend/main.py` | FastAPI 入口、项目/资源接口、前端静态文件 |
@@ -55,7 +55,7 @@ flowchart LR
 
 ## 项目数据模型
 
-项目 `version` 当前为 `1`。节点类型是稳定字符串，例如 `noise`、`constant`、`render`；显示名称位于 `data.label`，参数位于 `data.params`。连接保存节点 ID 与端口 ID，不保存运行时 GPU 句柄或浏览器对象。
+项目 `version` 当前为 `1`。节点类型是稳定字符串，例如 `noise`、`constant`、`render`；显示名称位于 `data.label`，参数位于 `data.params`。连接保存节点 ID 与端口 ID，不保存运行时 GPU 句柄或浏览器对象。组件的 `data.graph` 保存嵌套 Project；编辑器保留层级，运行时通过 `compileNetworks` 展开，路由四组 In/Out 和相对/绝对路径。
 
 ```json
 {
@@ -83,7 +83,7 @@ flowchart LR
 }
 ```
 
-节点和连接 ID 必须唯一。服务端检查不存在的节点/端口、类型不匹配、重复占用输入、非有限数值和循环依赖。当前上限为 500 个节点、2,000 条连接；这是输入保护上限，不是帧率承诺。一般循环连接被拒绝。`feedback` 已通过节点内部历史画布实现衰减、旋转与缩放拖影，`delay_chop` 通过节点内部时间样本实现信号延迟；这些节点不开放任意循环连线。
+节点和连接 ID 必须唯一。服务端检查不存在的节点/端口、类型不匹配、重复占用输入、非有限数值和循环依赖。当前上限为 5,000 个节点、20,000 条连接；这是输入保护上限，不是帧率承诺。一般循环连接被拒绝。`feedback` 已通过节点内部历史画布实现衰减、旋转与缩放拖影，`delay_chop` 通过节点内部时间样本实现信号延迟；这些节点不开放任意循环连线。
 
 保存、读取、校验和命令接口会返回规范化项目：补齐算子参数默认值，并将省略或为 `null` 的端口名解析为对应节点声明的第一个端口。例如，信号连接到噪声节点时默认目标端口为 `mod`。处理过程复制项目，不修改调用方对象；读取旧文件时不会隐式重写磁盘。`/api/validate` 的 `project` 字段提供规范化后的导入内容，导入器应使用该字段。已声明参数的类型和枚举选项也会校验。
 
@@ -113,11 +113,11 @@ flowchart LR
 
 ## 案例的单一来源
 
-`templates.ts` 声明 62 个案例的 ID、名称、分类、难度、说明、学习目标和外部能力要求。多数案例使用 `recipe.nodes` 与 `recipe.edges` 表示网络，原有起步案例由 `catalog.ts` 的 preset 分支保留。`preset(id)` 为节点分配新 ID、补齐默认参数，并按依赖关系安排画布列，用户打开后可以独立编辑和保存。
+`templates.ts` 与 `referenceTemplates.ts` 声明 82 个案例的 ID、名称、分类、难度、说明、学习目标和外部能力要求。多数案例使用 `recipe.nodes` 与 `recipe.edges` 表示网络，原有起步案例由 `catalog.ts` 的 preset 分支保留。`preset(id)` 为节点分配新 ID、补齐默认参数，并按依赖关系安排画布列，用户打开后可以独立编辑和保存。
 
-图库涵盖图案生成、图像处理、合成与遮罩、音频与信号、三维、数据与文字，以及 AI/MCP 接入。当前 62 个案例覆盖 107 种算子；案例覆盖率不等同于节点实现数量。AI/MCP 案例明确标出所需连接，打开案例不会自动调用收费服务。音频案例需要用户导入音源或授权麦克风，未提供音源时不伪造实时频谱。
+图库涵盖图案生成、图像处理、合成与遮罩、音频与信号、三维、数据与文字，以及 AI/MCP 接入。案例覆盖纹理、信号、表格、网格、材质、物理、嵌套组件与外部服务；案例覆盖率不等同于节点实现数量。AI/MCP 案例明确标出所需连接，打开案例不会自动调用收费服务。音频案例需要用户导入音源或授权麦克风，未提供音源时不伪造实时频谱。
 
-`scripts/export-examples.mjs` 读取同一 preset 生成 63 个公开项目文件（62 案例与 1 个空白项目），将随机节点/连接 ID 替换为稳定 ID，使重新导出可在 CI 中比较。`frontend/render-examples.mjs` 使用实际浏览器运行时输出预览素材，图片放在 `frontend/public/examples/`；图库缩略图是示例效果，不替代实时节点计算。新增案例须同步导出 JSON、生成缩略图并通过图结构与浏览器运行验证。
+`scripts/export-examples.mjs` 读取同一 preset 生成 83 个公开项目文件（82 案例与 1 个空白项目），将随机节点/连接 ID 替换为稳定 ID，使重新导出可在 CI 中比较。`frontend/render-examples.mjs` 使用实际浏览器运行时输出预览素材，图片放在 `frontend/public/examples/`；图库缩略图是示例效果，不替代实时节点计算。新增案例须同步导出 JSON、生成缩略图并通过图结构与浏览器运行验证。
 
 ## 图命令与可预览的 AI 修改
 
@@ -128,6 +128,7 @@ flowchart LR
 ```json
 {
   "op": "set_param",
+  "scope": [],
   "id": "constant_1",
   "key": "value",
   "value": 4
@@ -138,25 +139,36 @@ flowchart LR
 
 ## 两类运行时
 
-浏览器运行时每帧沿输入依赖读取节点输出，同一帧缓存已求值节点。输出值包括画布、单个数值、文本和几何描述。CHOP 当前仍以标量为核心，未实现 TouchDesigner 的完整多通道/时间切片模型。基础纹理源使用 WebGL 着色器，2D 合成和滤镜包含 Canvas 操作，几何通过 Three.js 渲染。因此整个网络不是统一 GPU 管线，Canvas 与 GPU 之间存在数据拷贝。
+浏览器运行时每帧沿输入依赖读取节点输出，同一帧缓存已求值节点。输出值包括画布、标量、文本、`ChannelBuffer`、`TableData`、网格/几何、材质与场景描述。新增 CHOP 使用带命名通道、采样率和起始时间的采样缓冲区；DAT 使用类型化行列。旧标量/文本节点由适配层读取首样本或 CSV，不代表完整 TouchDesigner 时间片调度。基础纹理源使用 WebGL 着色器，2D 合成和滤镜包含 Canvas 操作，几何通过 Three.js 渲染。因此整个网络不是统一 GPU 管线，Canvas 与 GPU 之间存在数据拷贝。
 
-当前输出画布和 3D 渲染为 640 × 360。程序化噪声源在 GPU 上以 320 × 180 计算，再缩放进入 640 × 360 画面管线，以减轻软件 WebGL 的负担。不能通过拉大预览面板推断项目已变成 4K，实际帧率取决于硬件与图的复杂度。
+默认输出画布和 3D 渲染为 640 × 360。Resolution 等 TOP 可调整自身结果；旧下游仍使用默认画幅，不是项目全链路任意分辨率承诺。程序化噪声源在 GPU 上以 320 × 180 计算，再缩放进入 640 × 360 画面管线，以减轻软件 WebGL 的负担。不能通过拉大预览面板推断项目已变成 4K，实际帧率取决于硬件与图的复杂度。
 
 暂停时冻结音频频谱、暂停文件音频与视频，并禁用麦克风音轨；改变参数仍可更新静态画面。切换项目停止当前音频，重开项目后需手动播放已保存的音频素材。未被图引用的媒体会被清理。多个 3D 渲染节点共享模型缓存的几何与材质资源，各自保留变换；缓存拥有这些 GPU 资源，单个实例移除时不会释放其他实例还在使用的资源。几何变形、边线与包围盒转换会创建独立可释放资源，避免修改缓存模型。Mesh、LineSegments 与 Points 的资源均纳入释放路径。
 
-PNG 和 WebM 从预览画布导出，经 API 保存到项目的 `data/exports/`。WebM 是浏览器实时录制，不含音轨，也不保证实际达到请求的帧率；它不等同于离线逐帧渲染。长期运行的资源预算、逐节点 profiler 和跨帧脏标记缓存仍在路线图中。
+PNG、PCM16 WAV 和 WebM 从运行结果导出，经 API 保存到项目的 `data/exports/`。WebM 是浏览器实时录制，不含音轨，也不保证实际达到请求的帧率；它不等同于离线逐帧渲染。长期运行的资源预算、逐节点 profiler 和跨帧脏标记缓存仍在路线图中。
 
-Python 的 `POST /api/evaluate` 用于无状态标量、文本与 Python evaluator，不用于代替浏览器渲染。返回 `values`、`errors`、`skipped`、`skip_reasons` 和 `time`。滞后、积分、计数器、包络、微分、采样保持、弹簧、延迟、窗口统计、迟滞、触发随机与计时依赖连续帧历史，只在浏览器运行；服务端明确跳过并说明原因，不用单帧假值冒充状态计算。上游跳过会传播到下游；独立分支仍然计算。新 Python 节点不会因此自动进入浏览器每帧循环。
+Python 的 `POST /api/evaluate` 用于无状态标量、文本、54 种无状态采样/表格运算与 Python evaluator，不用于代替浏览器渲染。返回 `values`、`errors`、`skipped`、`skip_reasons` 和 `time`。滞后、积分、计数器、包络、微分、采样保持、弹簧、延迟、窗口统计、迟滞、触发随机与计时依赖连续帧历史，只在浏览器运行；服务端明确跳过并说明原因，不用单帧假值冒充状态计算。上游跳过会传播到下游；独立分支仍然计算。新 Python 节点不会因此自动进入浏览器每帧循环。
 
 有状态算子按节点保存历史；节点参数、输入连接或类型变化时会重置对应状态，切换项目和时间回退也会清理历史。信号窗口最多保存 4096 个样本，暂停或重复时间戳不会无限追加记录。弹簧使用阻尼振子的解析积分，避免高频或长帧间隔导致显式积分发散。
 
 几何描述是可组合的树，支持参数化曲面、路径管道、实例阵列、顶点变形、硬边/三角边线与包围盒。执行器在序列化和分配 GPU 资源前检查展开后的复杂度，最多 4096 个描述对象、64 层，并检查有限数值；此上限不代表所有允许网络都能实时运行。反馈、CPU 像素滤镜、大型几何重建和高分辨率媒体仍会受浏览器与设备性能限制。
 
+## 层级、脚本和协议模块
+
+- `networks.ts` / `backend/networks.py` 负责子图展开、编号端口、Select/OP Viewer/Import Select 隐式依赖、局部时钟与 Replicator 独立副本；保存前检查跨层循环与总预算。`scope: [组件ID, ...]` 将命令作用到内部网络，整批命令仍原子执行。
+- `runtimeValues.ts` 定义最多 1,024 通道、262,144 总样本的 ChannelBuffer，以及有界 TableData。`channelDataRuntime.ts` 实现采样处理；`mediaRuntime.ts` 管理显式启用的 Web Audio、PCM 解码和 WebRTC。
+- `meshRuntime.ts`、`meshBoolean.ts`、`geometryV2Runtime.ts` 处理有限网格和属性；`sceneRuntime.ts`、`materialRuntime.ts`、`scenePhysics.ts` 生成 Three.js 场景及 cannon-es 刚体。导入模型缓存由 modelRegistry 协调资源所有权。
+- `backend/script_runtime.py` 在用户手动操作后启动受信任 Python 子进程；`cook(inputs,time)` 返回可序列化数值、采样、表格、网格或 RGBA。子进程有超时、输出限制和进程组清理，但 **不是宿主权限隔离沙箱**。源码保存在所选数据目录的 `scripts/`。
+- `backend/web_runtime.py` 调用 Chromium，输出 PNG 到 `exports/`。网页不能直接调用本机私密 API；它提供截图及有限显式动作，不是持续浏览器纹理流。
+- `backend/io_runtime.py` / `io_adapters.py` 管理实际协议会话；`ioRuntime.ts` 负责前端轮询/收发和节点释放。打开硬件桥接入口不代表驱动存在，详见 [I/O 协议与适配器](IO_PROTOCOLS.md)。
+
+切换项目或更换相同 ID 的节点类型/设备来源会关闭旧媒体会话和采集轨道；异步结果在所属状态失效后丢弃。设备权限由明确的界面启用操作触发。
+
 ## 共享节点目录
 
 内置节点定义只在 `frontend/src/catalog.ts` 与其导入的 `frontend/src/nodes/*Catalog.ts` 中维护。`node scripts/sync-catalog.mjs` 将目录写入 `backend/operator_catalog.json`，Python 启动时直接读取这个文件，无需安装 Node。前端构建会同步清单；`node scripts/sync-catalog.mjs --check` 只检查清单是否过期，`--stdout` 供跨语言合同测试读取。新增节点时实现浏览器运行分支和必要的服务端无状态分支，再重新生成清单。所有新目录模块均使用相对 TypeScript 导入。
 
-当前内置目录为 205 个节点：97 TOP、46 CHOP、30 SOP、26 DAT、5 AI 和 1 OUT。服务端还可额外注册本地 Python 插件，因此 `/api/health` 的算子总数可能大于内置目录数量。生成清单随源代码一起提交。不要手工修改 JSON 中的端口或参数：下次构建会按前端定义覆盖。`backend/plugins/` 仍允许注册额外的 Python 节点，不会被清单生成器覆盖。完整内置列表与使用示例见 [节点手册](NODES.md)。
+当前内置目录为 699 个入口：204 TOP、211 CHOP、129 SOP、96 DAT、40 COMP、13 MAT、5 AI 和 1 OUT，其中 92 个需要外部适配器。服务端还可额外注册本地 Python 插件，因此 `/api/health` 的算子总数可能大于内置目录数量。生成清单随源代码一起提交。不要手工修改 JSON 中的端口或参数：下次构建会按前端定义覆盖。`backend/plugins/` 仍允许注册额外的 Python 节点，不会被清单生成器覆盖。完整内置列表与使用示例见 [节点手册](NODES.md)。
 
 ## Python 扩展示例
 
@@ -200,7 +212,7 @@ register_operator(
 | `POST /api/evaluate` | 计算服务端支持的标量/文本节点 |
 | `POST /api/upload` | multipart 上传素材，单文件上限 100 MB |
 | `GET /api/assets/{filename}` | 读取已上传资源 |
-| `POST /api/artifacts` | multipart 保存 PNG / WebM / JSON 导出文件，单文件上限 100 MB |
+| `POST /api/artifacts` | multipart 保存 PNG / WebM / WAV / JSON 导出文件，单文件上限 100 MB |
 | `GET /api/exports/{filename}` | 以附件方式读取已保存的导出文件 |
 | `GET /api/providers` / `POST /api/providers` | 列举或保存 AI 连接 |
 | `POST /api/ai/generate` | 发起真实生成请求 |

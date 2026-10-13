@@ -26,20 +26,40 @@ def resolve_port(node_type: str, direction: str, handle: str | None):
     return next((p for p in ports if p["id"] == handle), None)
 
 
+def graph_tree_errors(project: Project) -> list[str]:
+    """Check global budgets before deepcopy or recursive graph traversal."""
+    stack = [(project, 0, frozenset())]
+    nodes = edges = 0
+    while stack:
+        graph, depth, ancestors = stack.pop()
+        if depth > 16: return ["组件嵌套最多 16 层"]
+        if id(graph) in ancestors: return ["组件网络不能循环嵌套自身"]
+        nodes += len(graph.nodes); edges += len(graph.edges)
+        if nodes > 5000: return ["项目总节点数不能超过 5000（包含内部网络）"]
+        if edges > 20000: return ["项目总连接数不能超过 20000（包含内部网络）"]
+        ancestry = ancestors | {id(graph)}
+        stack.extend((node.data.graph, depth + 1, ancestry) for node in graph.nodes if node.data.graph is not None)
+    return []
+
+
 def normalize_project(project: Project) -> Project:
-    """Fill operator defaults and implicit ports without changing the caller's graph."""
+    """Fill defaults with one deep copy after bounding the full graph tree."""
+    errors = graph_tree_errors(project)
+    if errors: raise GraphError(errors)
     normalized = project.model_copy(deep=True)
-    nodes = {node.id: node for node in normalized.nodes}
-    for node in normalized.nodes:
-        spec = NODE_TYPES.get(node.type)
-        if spec:
-            node.data.params = {**deepcopy(spec["defaults"]), **node.data.params}
-    for edge in normalized.edges:
-        for node_id, direction, attribute in ((edge.source, "outputs", "sourceHandle"), (edge.target, "inputs", "targetHandle")):
-            if getattr(edge, attribute) is None and node_id in nodes:
-                port = resolve_port(nodes[node_id].type, direction, None)
-                if port:
-                    setattr(edge, attribute, port["id"])
+    stack = [normalized]
+    while stack:
+        graph = stack.pop()
+        nodes = {node.id: node for node in graph.nodes}
+        for node in graph.nodes:
+            if node.data.graph is not None: stack.append(node.data.graph)
+            spec = NODE_TYPES.get(node.type)
+            if spec: node.data.params = {**deepcopy(spec["defaults"]), **node.data.params}
+        for edge in graph.edges:
+            for node_id, direction, attribute in ((edge.source, "outputs", "sourceHandle"), (edge.target, "inputs", "targetHandle")):
+                if getattr(edge, attribute) is None and node_id in nodes:
+                    port = resolve_port(nodes[node_id].type, direction, None)
+                    if port: setattr(edge, attribute, port["id"])
     return normalized
 
 
@@ -76,7 +96,12 @@ def _is_finite(value) -> bool:
     return True
 
 
-def validate_graph(project: Project) -> list[str]:
+def validate_graph(project: Project, _depth: int = 0, _check_compiled: bool = True) -> list[str]:
+    if _depth > 16:
+        return ["组件嵌套最多 16 层"]
+    if _depth == 0:
+        budget_errors = graph_tree_errors(project)
+        if budget_errors: return budget_errors
     errors = []
     nodes = {n.id: n for n in project.nodes}
     if len(nodes) != len(project.nodes):
@@ -84,6 +109,18 @@ def validate_graph(project: Project) -> list[str]:
     if len({e.id for e in project.edges}) != len(project.edges):
         errors.append("连接 ID 必须唯一")
     for node in project.nodes:
+        if node.data.graph is not None:
+            if node.type not in ("base_comp", "engine_comp", "container_comp", "widget_comp", "time_comp", "replicator_comp"):
+                errors.append(f"节点 {node.id} 不支持内部网络")
+            errors.extend(f"{node.id}/{error}" for error in validate_graph(node.data.graph, _depth + 1, False))
+        if node.type == "replicator_comp":
+            count = node.data.params.get("count", 4)
+            if isinstance(count, bool) or not isinstance(count, (int, float)) or not float(count).is_integer() or not 1 <= count <= 16:
+                errors.append(f"节点 {node.id} 的副本数量必须为 1–16 的整数")
+        if node.type.startswith(("network_in_", "network_out_")):
+            index = node.data.params.get("index", 1)
+            if isinstance(index, bool) or not isinstance(index, (int, float)) or not float(index).is_integer() or not 1 <= index <= 4:
+                errors.append(f"节点 {node.id} 的组件端口编号必须为 1–4 的整数")
         if node.type not in NODE_TYPES:
             errors.append(f"节点 {node.id} 的算子类型未注册：{node.type}")
         else:
@@ -133,18 +170,26 @@ def validate_graph(project: Project) -> list[str]:
         for error in exc.errors:
             if error not in errors:
                 errors.append(error)
+    if _depth == 0 and _check_compiled and not errors:
+        # Select dependencies and typed component boundaries are implicit in the
+        # stored graph. Validate the compiled network before saving/importing it.
+        from backend.networks import compile_networks
+        try:
+            topological_order(compile_networks(project))
+        except GraphError as exc:
+            errors.extend(error for error in exc.errors if error not in errors)
     return errors
 
 
-def require_valid(project: Project) -> Project:
+def require_valid(project: Project, *, check_networks: bool = True) -> Project:
     project = normalize_project(project)
-    errors = validate_graph(project)
+    errors = validate_graph(project, _check_compiled=check_networks)
     if errors:
         raise GraphError(errors)
     return project
 
 
-def apply_commands(project: Project, commands: list[dict]) -> Project:
+def apply_commands(project: Project, commands: list[dict], *, _nested: bool = False) -> Project:
     """Apply all commands to a copy, validate once, and return or fail atomically."""
     document = normalize_project(project).model_dump()
 
@@ -156,6 +201,20 @@ def apply_commands(project: Project, commands: list[dict]) -> Project:
         return node
 
     for command in commands:
+        scope = command.get("scope")
+        if scope:
+            if not isinstance(scope, list) or not all(isinstance(part, str) for part in scope) or len(scope)>16:
+                raise GraphError("scope 必须是组件 ID 数组（最多 16 层）")
+            current = document
+            owner = None
+            for part in scope:
+                owner = next((n for n in current["nodes"] if n["id"] == part), None)
+                if owner is None or not owner["data"].get("graph"):
+                    raise GraphError(f"组件网络不存在：{part}")
+                current = owner["data"]["graph"]
+            scoped = {key: value for key, value in command.items() if key != "scope"}
+            owner["data"]["graph"] = apply_commands(Project.model_validate(current), [scoped], _nested=True).model_dump()
+            continue
         op = command.get("op")
         if op == "add_node":
             raw = command.get("node", {})
@@ -180,6 +239,8 @@ def apply_commands(project: Project, commands: list[dict]) -> Project:
                 "data": {"label": data.get("label", command.get("label", spec["label"])),
                          "params": {**deepcopy(spec["defaults"]), **params}},
             }
+            if node_type in ("base_comp", "engine_comp", "container_comp", "widget_comp", "time_comp", "replicator_comp"):
+                new_node["data"]["graph"] = data.get("graph") or {"id": f"net_{node_id}"[:96], "name":"内部网络", "version":1, "nodes":[], "edges":[]}
             try:
                 new_node = Node.model_validate(new_node).model_dump()
             except ValidationError as exc:
@@ -242,4 +303,4 @@ def apply_commands(project: Project, commands: list[dict]) -> Project:
         result = Project.model_validate(document)
     except ValidationError as exc:
         raise GraphError(f"命令产生了无效项目：{exc}") from exc
-    return require_valid(result)
+    return normalize_project(result) if _nested else require_valid(result)

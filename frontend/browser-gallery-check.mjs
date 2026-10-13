@@ -29,8 +29,8 @@ page.on("pageerror", (e) => errors.push(e.message));
 try {
   await page.goto(base, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "示例作品", exact: true }).click();
-  await expect(page.locator(".example-card")).toHaveCount(62);
-  await expect(page.locator(".example-summary")).toContainText("62 个案例");
+  await expect(page.locator(".example-card")).toHaveCount(82);
+  await expect(page.locator(".example-summary")).toContainText("82 个案例");
   await expect(page.locator(".example-card img").first()).toHaveJSProperty(
     "complete",
     true,
@@ -46,7 +46,7 @@ try {
     path: path.join(root, "docs/images/example-browser.png"),
     fullPage: true,
   });
-  mark("62 searchable examples with real rendered preview images");
+  mark("82 searchable examples with real rendered preview images");
   await page.getByLabel("搜索案例", { exact: true }).fill("螺旋雕塑");
   await expect(page.locator(".example-card")).toHaveCount(1);
   await expect(page.locator(".example-card")).toHaveAttribute(
@@ -61,7 +61,7 @@ try {
     .click();
   const threeD = await page.locator(".example-card").count();
   expect(threeD).toBeGreaterThan(3);
-  expect(threeD).toBeLessThan(62);
+  expect(threeD).toBeLessThan(82);
   const categories = await page
     .locator(".example-card .example-meta span:first-child")
     .allTextContents();

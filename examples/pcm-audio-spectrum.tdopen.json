@@ -1,0 +1,88 @@
+{
+  "id": "example_pcm-audio-spectrum",
+  "name": "PCM 音频频谱分析",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "audio_oscillator_1",
+      "type": "audio_oscillator",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "音频振荡器",
+        "params": {
+          "wave": "sine",
+          "samples": 1024,
+          "sample_rate": 48000,
+          "frequency": 1500,
+          "amplitude": 0.5,
+          "phase": 0
+        }
+      }
+    },
+    {
+      "id": "audio_spectrum_chop_2",
+      "type": "audio_spectrum_chop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "音频频谱数据",
+        "params": {
+          "fft_size": 1024,
+          "mode": "magnitude",
+          "window": true
+        }
+      }
+    },
+    {
+      "id": "ref_top_op_viewer_3",
+      "type": "ref_top_op_viewer",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "OP Viewer",
+        "params": {
+          "source": "/audio_spectrum_chop_2",
+          "font_size": 14
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 245,
+        "y": 205
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "audio_oscillator_1",
+      "target": "audio_spectrum_chop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "ref_top_op_viewer_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "pcm-audio-spectrum"
+  }
+}

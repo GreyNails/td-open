@@ -1,0 +1,1744 @@
+{
+  "scope": "111 screenshot SOP + 13 MAT + 16 implemented scene COMP + 2 scene CHOP + Render Pick DAT reference entries",
+  "implementation": "CPU mesh topology / Three.js render and materials / Cannon-es rigid bodies",
+  "compatibility_claim": "Executable subsets and explicit external adapters only; none are asserted to be a full TouchDesigner replacement.",
+  "node_additions": {
+    "SOP": 88,
+    "MAT": 13,
+    "COMP": 16,
+    "CHOP": 2,
+    "DAT": 1
+  },
+  "tests": {
+    "unit": "frontend/src/nodes/geometryV2Runtime.test.ts",
+    "browser": "frontend/browser-geometry-v2-check.mjs",
+    "browser_artifacts": [
+      "data/artifacts/geometry-v2-browser.json",
+      "data/artifacts/geometry-v2-browser.png"
+    ]
+  },
+  "counts": {
+    "executable_subset": 136,
+    "external_adapter_required": 7
+  },
+  "entries": [
+    {
+      "family": "COMP",
+      "reference_name": "Ambient Light",
+      "node_types": [
+        "ambient_light_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "在场景中添加均匀环境光。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Blend",
+      "node_types": [
+        "blend_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "合并两路场景的对象和灯光，以权重插值相机。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Bone",
+      "node_types": [
+        "bone_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "创建具备父级标识、静止端点及欧拉姿态的骨骼，供 Capture/Deform 使用。"
+      ],
+      "limitations": "Editable bone endpoints, parents and Euler poses; no full DCC rig editor."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Camera",
+      "node_types": [
+        "camera_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "独立透视 / 正交相机，支持位置、目标、裁剪面和缩放。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Camera Blend",
+      "node_types": [
+        "camera_blend_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "混合两路相机的位置、朝向目标、视角和裁剪范围。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Environment Light",
+      "node_types": [
+        "environment_light_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "独立天空/地面半球光；当前不提供 HDR 环境贴图。"
+      ],
+      "limitations": "Editable hemisphere sky/ground light; no HDR environment-map lighting."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Geometry",
+      "node_types": [
+        "geometry_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将 SOP 几何与 MAT 材质加入场景，保留独立对象变换。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Geo Text",
+      "node_types": [
+        "geo_text_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "以带材质的三维拉丁文字对象加入场景。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Handle",
+      "node_types": [
+        "handle_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "对一个指定场景对象进行相对位移和旋转，保留其他对象变换。"
+      ],
+      "limitations": "Parameter-driven transforms on one scene object; a 3D drag gizmo is not yet provided."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Light",
+      "node_types": [
+        "light_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "可编辑方向光、点光或聚光及衰减、位置、照射目标。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Null",
+      "node_types": [
+        "null_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将场景对象组织到统一变换坐标中。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "FBX",
+      "node_types": [
+        "fbx_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "把 FBX、OBJ 或 GLTF 模型资源加入可编辑场景；保留导入层级。"
+      ],
+      "limitations": "Imports hierarchy and mesh via FBX/OBJ/GLTF loaders. Animation clips are retained on assets but not played by this node."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Constraint",
+      "node_types": [
+        "constraint_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将两个刚体用距离、点对点或铰链约束连接。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Actor",
+      "node_types": [
+        "actor_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将场景几何设为动态或静态刚体，以盒 / 球碰撞体参与 Cannon 求解。"
+      ],
+      "limitations": "Box/sphere rigid body collision shapes; no automatic convex decomposition or soft bodies."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Bullet Solver",
+      "node_types": [
+        "bullet_solver_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "使用开源 Cannon 兼容实现刚体碰撞、力和约束；不兼容原生 Bullet SDK 或 TD 参数全集。"
+      ],
+      "limitations": "Real Cannon-es rigid-body simulation with box/sphere collisions, gravity, forces and three constraint types; not native Bullet ABI."
+    },
+    {
+      "family": "COMP",
+      "reference_name": "Force",
+      "node_types": [
+        "force_comp"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "为刚体施加恒定方向、中心吸引或绕 Y 轴旋涡力。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "CHOP",
+      "reference_name": "Bullet Solver",
+      "node_types": [
+        "physics_state_chop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "读取场景刚体的位置、旋转与质量为命名多通道样本。"
+      ],
+      "limitations": "Exports scene object transform/mass channels from the Cannon compatibility solver; no Bullet native engine handle."
+    },
+    {
+      "family": "CHOP",
+      "reference_name": "Render Pick",
+      "node_types": [
+        "render_pick_chop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按场景相机和归一化屏幕坐标实际投射射线，输出命中、对象索引、位置、法线与距离。"
+      ],
+      "limitations": "Actual camera raycast against triangulated scene meshes. No selection event callback or per-pixel ID render pass."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Add",
+      "node_types": [
+        "add_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "由 JSON 点坐标和索引创建真正可编辑网格。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Alembic",
+      "node_types": [
+        "ref_sop_alembic"
+      ],
+      "status": "external_adapter_required",
+      "description": [
+        "外部适配器（未内置原生驱动）。依赖：Alembic native reader and animated mesh to scene JSON adapter。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Align",
+      "node_types": [
+        "align_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按包围盒中心或边界将第一路对齐第二路。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Arm",
+      "node_types": [
+        "arm_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "通过关节长度和局部角度构建平面正向运动学骨架折线。"
+      ],
+      "limitations": "Planar forward kinematics; not a full humanoid arm solver."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Attribute",
+      "node_types": [
+        "attribute_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "重命名或删除点属性，可归一化向量。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Attribute Create",
+      "node_types": [
+        "attribute_create_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "给点或面创建指定分量的数值属性。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Basis",
+      "node_types": [
+        "basis_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将控制点转换为线性、Catmull-Rom 或三次贝塞尔曲线。"
+      ],
+      "limitations": "Linear, Catmull-Rom and cubic Bezier curve evaluation; no general NURBS basis conversion."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Blend",
+      "node_types": [
+        "blend_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "混合拓扑一致的两套网格顶点。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Bone Group",
+      "node_types": [
+        "bone_group_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按捕获属性选择受指定骨骼影响的点，并创建命名组。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Boolean",
+      "node_types": [
+        "boolean_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "对封闭网格进行 BSP 并集、差集或交集，输入上限 6000 三角形。"
+      ],
+      "limitations": "BSP closed-mesh union/intersect/subtract; maximum 6000 input triangles, no robust CAD/NURBS boolean guarantees."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Box",
+      "node_types": [
+        "box"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "创建具有独立宽、高、深和网格细分的立方体。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Bridge",
+      "node_types": [
+        "bridge_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "连接两条边界环形成四边形带；可设置环偏移。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Cache",
+      "node_types": [
+        "cache_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "保存独立网格快照并按延迟帧读取，可冻结当前缓存。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Cap",
+      "node_types": [
+        "cap_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "自动识别开放边界环并添加三角形盖面。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Capture",
+      "node_types": [
+        "capture_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "根据点到骨骼段的距离生成最多四骨骼权重，供 Deform 线性蒙皮。"
+      ],
+      "limitations": "Up to four inverse-distance bone weights. No proprietary capture formats or automatic humanoid retargeting."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Capture Region",
+      "node_types": [
+        "capture_region_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按胶囊形区域计算指定骨骼的捕获权重并写入颜色。"
+      ],
+      "limitations": "Capsule-distance weight mask; this is a useful subset of TD capture volumes."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Carve",
+      "node_types": [
+        "carve_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按弧长比例截取曲线的起止区间。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "CHOP to",
+      "node_types": [
+        "chop_to_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "从多通道 x/y/z 样本生成点和折线，也接受数值数组。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Circle",
+      "node_types": [
+        "circle_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "创建 XY 平面的圆面，细分较低时形成规则多边形。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Clay",
+      "node_types": [
+        "clay_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "以球形衰减将顶点沿方向推拉，保留网格拓扑。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Clip",
+      "node_types": [
+        "clip_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "逐面裁剪多边形并生成切口顶点。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Convert",
+      "node_types": [
+        "convert_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "在三角网格、线框、点云之间转换。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Copy",
+      "node_types": [
+        "copy_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "沿三维偏移排列多个输入副本，每个副本可以递增旋转和缩放。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "CPlusPlus",
+      "node_types": [
+        "ref_sop_cplusplus"
+      ],
+      "status": "external_adapter_required",
+      "description": [
+        "外部适配器（未内置原生驱动）。依赖：Native C++ compiler + SDK/plugin host adapter; exports portable data over the open bridge, not binary ABI compatibility。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Creep",
+      "node_types": [
+        "creep_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将第一路 XY 参数坐标贴附到第二路曲面的最近三角形。"
+      ],
+      "limitations": "Nearest-triangle projection; not full TD surface parameter-space deformation."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Curveclay",
+      "node_types": [
+        "curveclay_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按控制点索引的高斯衰减移动曲线。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Curvesect",
+      "node_types": [
+        "curvesect_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "计算两条 XY 平面折线的线段交点，输出可编辑点云。"
+      ],
+      "limitations": "Segment intersections in XY plane; no exact NURBS intersection."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "DAT to",
+      "node_types": [
+        "dat_to_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "从 JSON 顶点/面对象、坐标数组或 CSV 创建网格。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Deform",
+      "node_types": [
+        "deform_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "使用 Capture 生成的四骨骼权重和 COMP 骨骼姿态做线性混合蒙皮。"
+      ],
+      "limitations": "Four-influence linear blend skinning with ordered bone parents; no dual-quaternion skinning."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Delete",
+      "node_types": [
+        "delete_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "删除指定组、索引范围或反选范围，并重建网格索引。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Divide",
+      "node_types": [
+        "divide_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将每个多边形拆为三角形并保留顶点属性。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Extrude",
+      "node_types": [
+        "extrude_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将二维 JSON 多边形轮廓沿 Z 轴挤出，可添加倒角。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Face Track",
+      "node_types": [
+        "ref_sop_face_track"
+      ],
+      "status": "external_adapter_required",
+      "description": [
+        "外部适配器（未内置原生驱动）。依赖：Computer vision tracking model/runtime and explicit coordinate schema。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Facet",
+      "node_types": [
+        "facet_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "计算平滑或平面法线，按距离焊接重合顶点。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "File In",
+      "node_types": [
+        "file_in_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "导入 GLB、GLTF、FBX 或 OBJ 模型；依赖资源需要允许跨域访问。"
+      ],
+      "limitations": "GLTF/GLB, FBX and OBJ via Three loaders; assets must be loaded before CPU topology cooks. No Alembic/native USD loader."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Fillet",
+      "node_types": [
+        "fillet_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "在折线内角插入二次贝塞尔圆角段。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Fit",
+      "node_types": [
+        "fit_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将几何缩放平移到指定尺寸，支持保持比例。"
+      ],
+      "limitations": "Bounding-box fit; not general polynomial/NURBS curve fitting."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Force",
+      "node_types": [
+        "force_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "为每个点计算方向、径向或旋涡力，写入 force 属性。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Fractal",
+      "node_types": [
+        "fractal_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "多层确定性分形噪声沿顶点法向近似位移。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Grid",
+      "node_types": [
+        "grid_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "生成 XZ 地面网格的实体细线，独立控制行列与间距。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Group",
+      "node_types": [
+        "group_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按索引范围或包围球创建命名点组或面组。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Hole",
+      "node_types": [
+        "hole_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按面中心到指定球心的距离移除面，适合规则曲面的开孔。"
+      ],
+      "limitations": "Deletes faces by center-in-sphere selection, not general nested trim-curve processing."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Import Select",
+      "node_types": [
+        "import_select_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "从场景中提取一个对象，将其位置/旋转/缩放带回 SOP。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "In",
+      "node_types": [
+        "network_in_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "从所属组件的指定编号输入端口读取数据。根网络无输入时返回空值。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Inverse Curve",
+      "node_types": [
+        "inverse_curve_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "反转曲线参数方向和面绕序。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Iso Surface",
+      "node_types": [
+        "iso_surface_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "对球、环面或 gyroid 标量场进行 marching tetrahedra 提取。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Join",
+      "node_types": [
+        "join_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将两条曲线端点相接，可自动翻转第二条以缩短距离。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Joint",
+      "node_types": [
+        "joint_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "围绕指定关节点旋转后续链条顶点。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Kinect",
+      "node_types": [
+        "ref_sop_kinect"
+      ],
+      "status": "external_adapter_required",
+      "description": [
+        "外部适配器（未内置原生驱动）。依赖：Microsoft Kinect SDK / libfreenect; a connected Kinect camera。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Lattice",
+      "node_types": [
+        "lattice_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "以包围盒三线性权重插值八个控制角的位移。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Limit",
+      "node_types": [
+        "limit_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "逐轴将顶点坐标截断或循环到指定范围。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Line",
+      "node_types": [
+        "line_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "连接两个三维坐标点，线宽以场景单位设置。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Line Thick",
+      "node_types": [
+        "line_thick_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将折线转为具有圆形截面的可渲染管道。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "LOD",
+      "node_types": [
+        "lod_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "根据细节比例进行空间顶点聚类，可减少远处几何复杂度。"
+      ],
+      "limitations": "Spatial clustering by detail ratio; no automatic distance-to-camera multi-LOD selection."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "LSystem",
+      "node_types": [
+        "lsystem_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "迭代字符串规则并用三维 turtle 解释 F、+、-、[、]。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Magnet",
+      "node_types": [
+        "magnet_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "在半径内按平滑权重将顶点吸向指定位置。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Material",
+      "node_types": [
+        "material_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "把 MAT 材质绑定到几何；Render 会使用其纹理和表面属性。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Merge",
+      "node_types": [
+        "merge_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "把两路几何体合并为同一场景组，保留各自的变换。"
+      ],
+      "limitations": "Existing Merge SOP preserves children; Object Merge bakes to a unified mesh. Neither merges arbitrary incompatible attributes."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Metaball",
+      "node_types": [
+        "metaball_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "累加多个球形势场并提取连续表面。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Model",
+      "node_types": [
+        "model_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "根据点云构造三维凸包多边形模型。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Noise",
+      "node_types": [
+        "noise_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "以连续的三维三角噪声扰动顶点，种子控制不同形态。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Null",
+      "node_types": [
+        "null_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "保留网格与属性，为网络提供稳定的输出节点。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Object Merge",
+      "node_types": [
+        "object_merge_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "把多个对象变换烘焙到世界坐标并合并为一套拓扑。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Oculus Rift",
+      "node_types": [
+        "ref_sop_oculus_rift"
+      ],
+      "status": "external_adapter_required",
+      "description": [
+        "外部适配器（未内置原生驱动）。依赖：Meta/Oculus SDK + supported headset and native runtime。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "OpenVR",
+      "node_types": [
+        "ref_sop_openvr"
+      ],
+      "status": "external_adapter_required",
+      "description": [
+        "外部适配器（未内置原生驱动）。依赖：OpenVR/SteamVR runtime + supported headset/controllers。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Out",
+      "node_types": [
+        "network_out_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将内部网络结果输出到组件外部的指定端口。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Particle",
+      "node_types": [
+        "particle_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "保存位置与速度，按重力、阻力与速度属性逐帧积分，倒放时重置。"
+      ],
+      "limitations": "Point particles with gravity, drag, force and lifetime; no particle collision or TD event callbacks."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Point",
+      "node_types": [
+        "point_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "仅对选定点组应用位移、缩放，并可设置点颜色。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Polyloft",
+      "node_types": [
+        "polyloft_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将两个轮廓按弧长重采样并放样为多层四边形面。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Polypatch",
+      "node_types": [
+        "polypatch_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将边界环与质心连接，并用细分和平滑生成补片。"
+      ],
+      "limitations": "Boundary cap followed by triangle subdivision/smoothing; not a full NURBS patch kernel."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Polyreduce",
+      "node_types": [
+        "polyreduce_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "通过空间顶点聚类合并小面，重建有效多边形。"
+      ],
+      "limitations": "Spatial vertex clustering, not attribute-constrained quadric-error simplification."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Polyspline",
+      "node_types": [
+        "polyspline_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "用 Catmull-Rom 样条平滑控制多边形。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Polystitch",
+      "node_types": [
+        "polystitch_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "合并两套网格并焊接容差范围内的顶点。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Primitive",
+      "node_types": [
+        "primitive_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将各面分离，围绕各自中心进行缩放和法线推挤。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Profile",
+      "node_types": [
+        "profile_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "计算三角网格与指定高度平面的相交线段。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Project",
+      "node_types": [
+        "project_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "把几何投影到 XY、XZ 或 YZ 平面。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Rails",
+      "node_types": [
+        "rails_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "把两条路径重采样并连接为带状曲面。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Raster",
+      "node_types": [
+        "raster_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "从输入图像亮度生成规则网格高度场。"
+      ],
+      "limitations": "Image-to-heightfield mesh; not all TD raster sampling modes."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Ray",
+      "node_types": [
+        "ray_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "沿指定方向发射射线，将点贴附到第二路三角网格。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Rectangle",
+      "node_types": [
+        "rectangle_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "创建矩形闭合曲线或填充四边形。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Refine",
+      "node_types": [
+        "refine_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "在线段上插入等间距点，保持原折线形状。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Resample",
+      "node_types": [
+        "resample_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按总弧长均匀重采样曲线。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Revolve",
+      "node_types": [
+        "revolve_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "绕 Y 轴旋转输入剖面，生成连续旋转网格。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Script",
+      "node_types": [
+        "script_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "执行 JSON 网格操作列表（translate、scale、rotate、subdivide），不执行导入项目中的任意代码。"
+      ],
+      "limitations": "Declarative JSON translate/scale/rotate/subdivide operations. It does not execute TouchDesigner Python SOP callbacks."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Select",
+      "node_types": [
+        "operator_select_sop",
+        "select_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "通过节点 ID 路径读取算子输出。支持 / 根路径、../ 父级路径以及组件内部路径。循环引用会显示运行错误。",
+        "保留指定面组或点组；通过命名组串联建模流程。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Sequence Blend",
+      "node_types": [
+        "sequence_blend_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按时间在两套匹配网格之间循环插值。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Skin",
+      "node_types": [
+        "skin_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "连接拓扑匹配的两个截面，并可封闭两端。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Sort",
+      "node_types": [
+        "sort_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按坐标、距离或逆序重排顶点，并同步更新面索引与属性。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Sphere",
+      "node_types": [
+        "sphere"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "创建可调半径和细分精度的球面网格。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Spring",
+      "node_types": [
+        "spring_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "各顶点以阻尼弹簧追随输入几何，保存独立速度状态。"
+      ],
+      "limitations": "Independent point springs following target positions; no edge/cloth spring constraints."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Sprinkle",
+      "node_types": [
+        "sprinkle_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按三角形面积加权分布点，使用可复现随机种子。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Sprite",
+      "node_types": [
+        "sprite_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将每个点扩展为 XY 朝向的小四边形并创建 UV。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Stitch",
+      "node_types": [
+        "stitch_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将两路网格的近距离顶点向中点拉合后焊接。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Subdivide",
+      "node_types": [
+        "subdivide_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "共享边中点进行三角细分，可附加拉普拉斯平滑。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Superquad",
+      "node_types": [
+        "superquad_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "生成由两个指数控制的球体、方球或星状超二次曲面。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Surfsect",
+      "node_types": [
+        "surfsect_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "对两组三角面计算逐面对平面的线段交点，输出交线。"
+      ],
+      "limitations": "Triangle-triangle intersection segments, maximum one million face pairs."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Sweep",
+      "node_types": [
+        "sweep_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "沿第一路路径扫描第二路截面，使用平行移动标架。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Switch",
+      "node_types": [
+        "switch_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "选择输入几何并保留属性和材质。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Text",
+      "node_types": [
+        "text_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "使用打包字体轮廓生成可挤出三维拉丁文字（当前字体不包含汉字）。"
+      ],
+      "limitations": "Bundled Helvetiker Latin font; Chinese glyphs and arbitrary font import are not available."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Texture",
+      "node_types": [
+        "texture_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "创建平面、柱面或球面 UV 坐标，供 MAT 图像纹理使用。"
+      ],
+      "limitations": "Planar, cylindrical and spherical UV generation; no automatic atlas unwrapping."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Torus",
+      "node_types": [
+        "torus"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "创建圆环，可分别控制主半径与管道半径。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Trace",
+      "node_types": [
+        "trace_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "阈值化输入图像并输出像素边界线段。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Trail",
+      "node_types": [
+        "trail_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "保存历史点位置，连接相同索引形成运动轨迹。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Transform",
+      "node_types": [
+        "transform_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "移动、旋转、缩放输入几何体；可串联变换后再合并。调制输入增加 Y 旋转。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Trim",
+      "node_types": [
+        "trim_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "用六个平面逐面裁剪网格，保留指定三维区间。"
+      ],
+      "limitations": "Axis-aligned 3D mesh clipping, not trim curves on NURBS surfaces."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Tristrip",
+      "node_types": [
+        "tristrip_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "根据邻接关系生成 triangle_strip 基元属性，网格保持可渲染。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Tube",
+      "node_types": [
+        "tube_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "沿 JSON 三维点列表的平滑曲线生成管道。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Twist",
+      "node_types": [
+        "twist_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "按顶点 Y 坐标绕纵轴扭转，细分越高越平滑。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Vertex",
+      "node_types": [
+        "vertex_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "分离共享顶点以创建独立面角属性，再对指定顶点施加位移。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "Wireframe",
+      "node_types": [
+        "wireframe_sop"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "将输入网格转换为真实线段边线，可选择保留三角网格或仅保留硬边。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "SOP",
+      "reference_name": "ZED",
+      "node_types": [
+        "ref_sop_zed"
+      ],
+      "status": "external_adapter_required",
+      "description": [
+        "外部适配器（未内置原生驱动）。依赖：Stereolabs ZED SDK + CUDA + connected ZED camera。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Constant",
+      "node_types": [
+        "constant_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "不受光照影响的颜色与图像纹理。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Depth",
+      "node_types": [
+        "depth_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "把片元相机深度写为 RGBA 深度值。"
+      ],
+      "limitations": "RGBA packed camera depth with Three shader conventions."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "GLSL",
+      "node_types": [
+        "glsl_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "可编辑顶点和片元着色器，提供 uTime/uColor/uTexture。"
+      ],
+      "limitations": "Three/WebGL shader inputs uTime,uColor,uTexture; not TouchDesigner shader ABI."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "In",
+      "node_types": [
+        "in_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "接受来自外部连接的材质值。"
+      ],
+      "limitations": "Material port passthrough; not arbitrary TouchDesigner parent parameter resolution."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Line",
+      "node_types": [
+        "line_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "用于 SOP 线段几何的颜色和透明度。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Null",
+      "node_types": [
+        "null_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "保留上游材质描述，提供稳定连接点。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Out",
+      "node_types": [
+        "out_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "导出上游材质值供场景使用。"
+      ],
+      "limitations": "Material port passthrough; not arbitrary TouchDesigner parent parameter resolution."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "PBR",
+      "node_types": [
+        "pbr_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "支持金属度、粗糙度、清漆、透射、折射率和法线贴图。"
+      ],
+      "limitations": "Three MeshPhysicalMaterial subset with map/normal map; no IBL/HDR environment input or TD shading ABI."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Phong",
+      "node_types": [
+        "phong_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "经典 Blinn-Phong 漫反射、高光、自发光和图像纹理。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Point Sprite",
+      "node_types": [
+        "point_sprite_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "为点云设置屏幕透视大小、颜色和图像纹理。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Select",
+      "node_types": [
+        "select_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "选择三路材质中的一路。"
+      ],
+      "limitations": "Selects among connected materials; no TD absolute operator path lookup."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Switch",
+      "node_types": [
+        "switch_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "通过 CHOP 索引或参数切换材质。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "MAT",
+      "reference_name": "Wireframe",
+      "node_types": [
+        "wireframe_mat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "以三角线框显示网格表面。"
+      ],
+      "limitations": "Independent open-source implementation of the described operation; no .toe/.tox compatibility or full TouchDesigner parameter/API equivalence is claimed."
+    },
+    {
+      "family": "DAT",
+      "reference_name": "Render Pick",
+      "node_types": [
+        "render_pick_dat"
+      ],
+      "status": "executable_subset",
+      "description": [
+        "真实相机射线拾取输出二维表格，允许选择命中、对象、坐标、法线和距离字段。"
+      ],
+      "limitations": "Same raycasting scope as Render Pick CHOP. No TouchDesigner event callbacks or render-buffer ID selection."
+    }
+  ]
+}

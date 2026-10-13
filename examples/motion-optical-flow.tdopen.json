@@ -1,0 +1,70 @@
+{
+  "id": "example_motion-optical-flow",
+  "name": "图像运动光流",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_1",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 3,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "ref_top_optical_flow_2",
+      "type": "ref_top_optical_flow",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "Optical Flow",
+        "params": {
+          "scale": 0.08,
+          "window": 2
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "ref_top_optical_flow_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "ref_top_optical_flow_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "motion-optical-flow"
+  }
+}

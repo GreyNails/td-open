@@ -3,7 +3,7 @@ export type GraphNode = {
   id: string;
   type: string;
   position: { x: number; y: number };
-  data: { label: string; params: Params };
+  data: { label: string; params: Params; graph?: Project };
 };
 export type GraphEdge = {
   id: string;
@@ -41,6 +41,12 @@ export type NodeSpec = {
   inputs: Port[];
   outputs: Port[];
   params: Param[];
+  reference?: {
+    family: string;
+    name: string;
+    level: "native" | "subset" | "bridge";
+    note?: string;
+  };
 };
 export type Command = Record<string, unknown> & { op: string };
 export type Provider = {
@@ -58,10 +64,14 @@ export async function api<T>(
   path: string,
   body?: unknown,
   method?: string,
+  headers?: Record<string, string>,
 ): Promise<T> {
   const response = await fetch("/api" + path, {
     method: method ?? (body === undefined ? "GET" : "POST"),
-    headers: body === undefined ? {} : { "Content-Type": "application/json" },
+    headers: {
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+      ...headers,
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!response.ok) {

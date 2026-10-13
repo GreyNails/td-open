@@ -307,7 +307,7 @@ export default function Workbench({
         <div className="workbench-title">
           <PanelsTopLeft size={17} />
           <strong>自由工作台</strong>
-          <span>{nodeCount} 个可用节点</span>
+          <span>{nodeCount} 个节点入口</span>
           <em>联动分区</em>
         </div>
         <div className="workbench-tools">

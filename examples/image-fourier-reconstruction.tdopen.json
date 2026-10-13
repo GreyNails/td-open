@@ -1,0 +1,94 @@
+{
+  "id": "example_image-fourier-reconstruction",
+  "name": "傅里叶变换与还原",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_1",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 3,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "ref_top_spectrum_2",
+      "type": "ref_top_spectrum",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "Spectrum",
+        "params": {
+          "mode": "magnitude",
+          "size": "128",
+          "gain": 0.18
+        }
+      }
+    },
+    {
+      "id": "ref_top_spectrum_3",
+      "type": "ref_top_spectrum",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "Spectrum",
+        "params": {
+          "mode": "inverse",
+          "size": "128",
+          "gain": 0.18
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "ref_top_spectrum_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "ref_top_spectrum_2",
+      "target": "ref_top_spectrum_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "ref_top_spectrum_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "image-fourier-reconstruction"
+  }
+}

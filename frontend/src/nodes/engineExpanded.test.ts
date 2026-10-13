@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { StudioEngine } from "../engine";
 import { makeNode } from "../catalog";
+import { makeChannels } from "../runtimeValues";
 import type { GraphNode, Params, Project } from "../types";
 
 const gpu = vi.hoisted(() => ({ scenes: [] as unknown[], disposed: 0 }));
@@ -123,6 +124,152 @@ afterEach(() => {
 });
 
 describe("expanded StudioEngine pipelines", () => {
+  async function activeDeviceResources() {
+    const camera = node("browser_video_device_in"),
+      audio = node("media_audio_play"),
+      engine = create([camera, audio]);
+    const track = Object.assign(new EventTarget(), {
+      readyState: "live",
+      stop: vi.fn(),
+    });
+    const stream = {
+      getTracks: () => [track],
+      getVideoTracks: () => [track],
+    };
+    const video = {
+      muted: false,
+      playsInline: false,
+      srcObject: null,
+      play: vi.fn(async () => undefined),
+      pause: vi.fn(),
+    };
+    const source = {
+      playbackRate: { value: 1 },
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+    };
+    const gain = {
+      gain: { value: 1 },
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    };
+    vi.stubGlobal(
+      "AudioContext",
+      class {
+        state = "running";
+        destination = {};
+        createGain = () => gain;
+        createBufferSource = () => source;
+        createBuffer(channels: number, length: number, sampleRate: number) {
+          return {
+            numberOfChannels: channels,
+            length,
+            sampleRate,
+            duration: length / sampleRate,
+            copyToChannel: vi.fn(),
+          };
+        }
+        close = vi.fn(async () => undefined);
+      },
+    );
+    vi.stubGlobal("navigator", {
+      mediaDevices: {
+        enumerateDevices: vi.fn(async () => []),
+        getUserMedia: vi.fn(async () => stream),
+      },
+    });
+    vi.stubGlobal("document", {
+      createElement: (tag: string) =>
+        tag === "video" ? video : new TestCanvas(),
+    });
+    await engine.browserInputs.capture(camera.id);
+    await engine.mediaRuntime.activate(
+      audio,
+      makeChannels({ mono: [0, 1, 0] }),
+    );
+    expect(engine.mediaRuntime.status(audio.id).active).toBe(true);
+    expect(source.start).toHaveBeenCalledOnce();
+    expect(video.srcObject).toBe(stream);
+    return { engine, camera, audio, track, video, source, gain };
+  }
+
+  it("releases active camera and audio on project switch even when node IDs and types are reused", async () => {
+    const { engine, camera, audio, track, video, source, gain } =
+      await activeDeviceResources();
+    // Ordinary volume edits must preserve the active sources and permission grant.
+    withParams(engine, audio.id, { volume: 0.25 });
+    expect(track.stop).not.toHaveBeenCalled();
+    expect(source.stop).not.toHaveBeenCalled();
+    expect(engine.mediaRuntime.status(audio.id).active).toBe(true);
+    engine.setProject({
+      ...engine.project,
+      id: "second-work-with-same-node-ids",
+    });
+    expect(engine.project.nodes.map((item) => item.id)).toEqual([
+      camera.id,
+      audio.id,
+    ]);
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(video.pause).toHaveBeenCalledOnce();
+    expect(video.srcObject).toBeNull();
+    expect(source.stop).toHaveBeenCalledOnce();
+    expect(source.disconnect).toHaveBeenCalledOnce();
+    expect(gain.disconnect).toHaveBeenCalledOnce();
+    expect(engine.mediaRuntime.status(audio.id).active).toBe(false);
+    // Repeated project updates cannot stop or retain an already released source.
+    engine.setProject({ ...engine.project, name: "renamed" });
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(source.stop).toHaveBeenCalledOnce();
+  });
+
+  it("releases active resources when nodes are replaced with another type under the same IDs", async () => {
+    const { engine, audio, track, source } = await activeDeviceResources();
+    engine.setProject({
+      ...engine.project,
+      nodes: engine.project.nodes.map((item) => ({
+        ...node("constant"),
+        id: item.id,
+      })),
+    });
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(source.stop).toHaveBeenCalledOnce();
+    expect(engine.mediaRuntime.status(audio.id).active).toBe(false);
+  });
+
+  it("invalidates only the resource whose camera device or audio source changes", async () => {
+    const { engine, camera, audio, track, source } =
+      await activeDeviceResources();
+    withParams(engine, camera.id, { device: 1 });
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(source.stop).not.toHaveBeenCalled();
+    expect(engine.mediaRuntime.status(audio.id).active).toBe(true);
+    withParams(engine, audio.id, { url: "/another-recording.wav" });
+    expect(source.stop).toHaveBeenCalledOnce();
+    expect(engine.mediaRuntime.status(audio.id).active).toBe(false);
+  });
+
+  it("cancels pending capture permissions when switching to a project that reuses the camera ID", async () => {
+    const camera = node("browser_video_device_in"),
+      engine = create([camera]);
+    let resolve!: (stream: unknown) => void;
+    const getUserMedia = vi.fn(
+      () =>
+        new Promise<unknown>((yes) => {
+          resolve = yes;
+        }),
+    );
+    vi.stubGlobal("navigator", { mediaDevices: { getUserMedia } });
+    const pending = engine.browserInputs.capture(camera.id);
+    expect(getUserMedia).toHaveBeenCalledOnce();
+    engine.setProject({ ...engine.project, id: "another-camera-project" });
+    const stop = vi.fn();
+    resolve({ getTracks: () => [{ stop }] });
+    await pending;
+    expect(stop).toHaveBeenCalledOnce();
+  });
+
   it("routes DAT transforms into the existing text TOP and output canvas", () => {
     const source = node("text_dat", { text: "hello 🌈" }),
       upper = node("case_text"),

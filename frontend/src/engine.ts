@@ -1,15 +1,45 @@
 import * as THREE from "three";
+import { loadSceneModel } from "./nodes/sceneModelLoader";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { api } from "./types";
 import type { GraphNode, Project } from "./types";
 import { byType } from "./catalog";
+import {
+  cookReferenceTopNode,
+  disposeReferenceTopState,
+} from "./nodes/referenceTopRuntime";
+import { cookCompatibilityTopNode } from "./nodes/compatibilityTopRuntime";
+import { registerSceneModel, forgetSceneModel } from "./nodes/modelRegistry";
+import { compileNetworks, operatorPath, networkTime } from "./networks";
+import { cookChannelDataNode } from "./nodes/channelDataRuntime";
+import { cookGeometryV2Node } from "./nodes/geometryV2Runtime";
+import { cookIONode, disposeIOState } from "./nodes/ioRuntime";
+import {
+  isChannelBuffer,
+  isTableData,
+  scalarValue,
+  textValue,
+  type ChannelBuffer,
+  type TableData,
+} from "./runtimeValues";
+import { buildScene, isSceneSpec, type SceneSpec } from "./nodes/sceneRuntime";
+import { isMaterialSpec, type MaterialSpec } from "./nodes/materialRuntime";
+import { MediaRuntime } from "./nodes/mediaRuntime";
+import { BrowserInputs } from "./nodes/browserRuntime";
+import { cookComponentNode } from "./nodes/componentRuntime";
 
 import { cookVisualNode } from "./nodes/visual";
 import { cookDataNode } from "./nodes/dataRuntime";
 import { cookAdvancedDataNode } from "./nodes/advancedDataRuntime";
 import { cookAdvancedVisualNode } from "./nodes/advancedVisual";
-import { buildGeometryObject, type GeometrySpec } from "./nodes/geometry";
+import {
+  buildGeometryObject,
+  isGeometrySpec,
+  type GeometrySpec,
+} from "./nodes/geometry";
 type Geo = GeometrySpec;
-type Value = HTMLCanvasElement | number | string | Geo;
+type LegacyValue = HTMLCanvasElement | number | string | Geo;
+type Value = LegacyValue | ChannelBuffer | TableData | MaterialSpec | SceneSpec;
 const W = 640,
   H = 360,
   NOISE_W = 320,
@@ -36,6 +66,12 @@ col*=.74+.26*smoothstep(.9,.1,length(vUv-.5));gl_FragColor=vec4(col,1.);}`;
 
 export class StudioEngine {
   project: Project;
+  browserInputs = new BrowserInputs();
+  mediaRuntime = new MediaRuntime();
+  viewPath: string[] = [];
+  resolveId(id: string) {
+    return [...this.viewPath, id].filter(Boolean).join("/");
+  }
   revision = 0;
   frames = new Map<string, HTMLCanvasElement>();
   values = new Map<string, Value>();
@@ -43,6 +79,24 @@ export class StudioEngine {
   gpu = "Canvas 2D";
   audioLevel = 0;
   frequencies = new Uint8Array(128);
+  private renderSources = new WeakMap<
+    HTMLCanvasElement,
+    { scene: THREE.Scene; camera: THREE.Camera }
+  >();
+  private sceneFrames = new Map<
+    string,
+    { key: string; built: ReturnType<typeof buildScene> }
+  >();
+  private releaseState(state: Map<string, unknown>) {
+    disposeIOState(state);
+    disposeReferenceTopState(state);
+    const dispose = state.get("dispose");
+    if (typeof dispose === "function") dispose();
+  }
+  private clearStates() {
+    for (const state of this.operatorStates.values()) this.releaseState(state);
+    this.operatorStates.clear();
+  }
   private operatorStates = new Map<string, Map<string, unknown>>();
   private lastTime = 0;
   private state(id: string) {
@@ -80,7 +134,7 @@ export class StudioEngine {
   private playing = true;
   private disposed = false;
   constructor(project: Project) {
-    this.project = project;
+    this.project = compileNetworks(project);
     this.camera.position.set(0, 0, 4.5);
     try {
       this.renderer = new THREE.WebGLRenderer({
@@ -113,6 +167,14 @@ export class StudioEngine {
       this.gpu = "Canvas 2D（WebGL 不可用）";
     }
   }
+  private stateParams(node: GraphNode) {
+    const params = { ...node.data.params };
+    if (node.type === "channel_record") {
+      delete params.recording;
+      delete params.reset;
+    }
+    return params;
+  }
   private setGPUSize(width: number, height: number) {
     if (
       this.renderer &&
@@ -121,11 +183,41 @@ export class StudioEngine {
     )
       this.renderer.setSize(width, height, false);
   }
-  setProject(project: Project) {
+  setProject(document: Project) {
+    let project: Project;
+    try {
+      project = compileNetworks(document);
+      this.errors.delete("__network");
+    } catch (error) {
+      this.errors.set("__network", String(error));
+      return;
+    }
     const previous = this.project;
     const switched = previous.id !== project.id;
     this.project = project;
     const ids = new Set(project.nodes.map((n) => n.id));
+    const previousNodes = new Map(previous.nodes.map((n) => [n.id, n]));
+    const resourceIds = new Set(
+      project.nodes
+        .filter((n) => {
+          const old = previousNodes.get(n.id);
+          return (
+            !switched &&
+            old?.type === n.type &&
+            ["url", "movie_node", "mode", "device_id", "device"].every(
+              (key) => old.data.params[key] === n.data.params[key],
+            )
+          );
+        })
+        .map((n) => n.id),
+    );
+    this.browserInputs.retain(resourceIds);
+    this.mediaRuntime.prune(resourceIds);
+    for (const [id, entry] of this.sceneFrames)
+      if (switched || !ids.has(id)) {
+        entry.built.dispose();
+        this.sceneFrames.delete(id);
+      }
     for (const id of this.operatorStates.keys()) {
       const current = project.nodes.find((n) => n.id === id),
         old = previous.nodes.find((n) => n.id === id);
@@ -133,12 +225,14 @@ export class StudioEngine {
         switched ||
         !current ||
         current.type !== old?.type ||
-        JSON.stringify(current.data.params) !==
-          JSON.stringify(old?.data.params) ||
+        JSON.stringify(this.stateParams(current)) !==
+          JSON.stringify(old && this.stateParams(old)) ||
         JSON.stringify(project.edges.filter((e) => e.target === id)) !==
           JSON.stringify(previous.edges.filter((e) => e.target === id))
-      )
+      ) {
+        this.releaseState(this.operatorStates.get(id)!);
         this.operatorStates.delete(id);
+      }
     }
     const imageUrls = new Set(
       project.nodes
@@ -151,8 +245,12 @@ export class StudioEngine {
     );
     const modelUrls = new Set(
       project.nodes
-        .filter((n) => n.type === "ai_3d")
-        .map((n) => String(n.data.params.result_url || "")),
+        .filter((n) => ["ai_3d", "file_in_sop", "fbx_comp"].includes(n.type))
+        .map((n) =>
+          String(
+            n.data.params[n.type === "ai_3d" ? "result_url" : "url"] || "",
+          ),
+        ),
     );
     const audioNodes = project.nodes.filter(
       (n) => n.type === "audio" || n.type === "ai_music",
@@ -187,6 +285,7 @@ export class StudioEngine {
       if (!modelUrls.has(url)) {
         this.releaseObject(model);
         this.modelLoads.delete(url);
+        forgetSceneModel(url);
       }
     for (const url of this.loadingModels.keys())
       if (!modelUrls.has(url)) this.loadingModels.delete(url);
@@ -300,10 +399,11 @@ export class StudioEngine {
       context.createMediaElementSource(audio).connect(this.analyser);
       this.analyser.connect(context.destination);
       if (this.playing) {
-        await context.resume();
+        // Request both while the initiating user gesture is still available.
+        // A suspended/output-blocked AudioContext must not delay media.play().
+        await Promise.all([context.resume(), audio.play()]);
         if (generation !== this.audioGeneration)
           throw new Error("音频请求已取消");
-        if (this.playing) await audio.play();
         if (!this.playing) audio.pause();
       } else await context.suspend();
     } catch (error) {
@@ -374,7 +474,8 @@ export class StudioEngine {
         });
   }
   render(time: number, previewId?: string): HTMLCanvasElement {
-    if (time < this.lastTime) this.operatorStates.clear();
+    if (previewId) previewId = this.resolveId(previewId);
+    if (time < this.lastTime) this.clearStates();
     this.lastTime = time;
     this.values.clear();
     if (this.playing && this.analyser) {
@@ -415,7 +516,16 @@ export class StudioEngine {
       };
       let result: Value = 0;
       try {
-        result = this.cook(n, time, inp);
+        result = this.cook(n, networkTime(time, n.data.params), inp, (path) =>
+          evalNode(
+            operatorPath(
+              n.id.includes("/")
+                ? n.id.slice(0, n.id.lastIndexOf("/") + 1)
+                : "",
+              path,
+            ),
+          ),
+        );
         if (typeof result === "number" && !Number.isFinite(result))
           throw new Error("运算结果不是有限数值");
         this.errors.delete(id);
@@ -428,14 +538,56 @@ export class StudioEngine {
       return result;
     };
     for (const n of this.project.nodes) evalNode(n.id);
+    const visibleNodes = this.project.nodes.filter(
+      (n) => n.id.split("/").slice(0, -1).join("/") === this.viewPath.join("/"),
+    );
     const target =
       (previewId && this.project.nodes.some((n) => n.id === previewId)
         ? previewId
         : undefined) ||
-      this.project.nodes.find((n) => n.type === "output")?.id ||
-      this.project.nodes[0]?.id;
+      visibleNodes.find(
+        (n) => n.type === "output" || n.type.startsWith("network_out_"),
+      )?.id ||
+      visibleNodes[0]?.id;
     const v = target ? evalNode(target) : undefined;
     if (isCanvas(v)) return v;
+    if (isGeometrySpec(v) || isMaterialSpec(v) || isSceneSpec(v)) {
+      const canvas = this.canvas("__value");
+      const ctx = canvas.getContext("2d")!;
+      const scene: SceneSpec = isSceneSpec(v)
+        ? v
+        : {
+            kind: "scene",
+            objects: [
+              {
+                geometry: isGeometrySpec(v)
+                  ? v
+                  : { shape: "sphere", detail: 32 },
+                material: isMaterialSpec(v) ? v : undefined,
+              },
+            ],
+            lights: [
+              {
+                type: "ambient",
+                color: "#ffffff",
+                intensity: 1,
+                position: [0, 0, 0],
+              },
+              {
+                type: "directional",
+                color: "#ffffff",
+                intensity: 3,
+                position: [3, 4, 5],
+              },
+            ],
+          };
+      try {
+        this.drawScene("__value", scene, ctx);
+        return canvas;
+      } catch (error) {
+        this.errors.set("__value", String(error));
+      }
+    }
     const c = this.canvas("__empty");
     const ctx = c.getContext("2d")!;
     ctx.fillStyle = "#101116";
@@ -444,21 +596,181 @@ export class StudioEngine {
     ctx.font = "16px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(
-      typeof v === "number"
-        ? `信号值  ${v.toFixed(3)}`
-        : typeof v === "string"
-          ? v.slice(0, 55)
-          : "连接节点，开始创作",
+      isChannelBuffer(v)
+        ? `${v.channels.length} 通道 × ${v.channels[0]?.samples.length || 0} 样本 · ${v.sampleRate} Hz`
+        : isTableData(v)
+          ? `${v.rows.length} 行 · ${v.rows[0]?.join(" | ").slice(0, 65) || "空表"}`
+          : typeof v === "number"
+            ? `信号值  ${v.toFixed(3)}`
+            : typeof v === "string"
+              ? v.slice(0, 55)
+              : "连接节点，开始创作",
       W / 2,
       H / 2,
     );
     return c;
   }
+  async activateMedia(id: string) {
+    const fullId = this.resolveId(id),
+      node = this.project.nodes.find((n) => n.id === fullId);
+    if (!node) throw new Error("节点不存在");
+    const input = this.project.edges.find(
+      (e) => e.target === fullId && (e.targetHandle || "in") === "in",
+    );
+    const result = await this.mediaRuntime.activate(
+      node,
+      input ? this.values.get(input.source) : undefined,
+    );
+    this.revision++;
+    return result;
+  }
+  async runPython(id: string, time: number) {
+    const fullId = this.resolveId(id),
+      node = this.project.nodes.find((n) => n.id === fullId);
+    if (!node || !node.type.startsWith("python_script_"))
+      throw new Error("Python 节点不存在");
+    const inputs: Record<string, unknown> = {};
+    for (const edge of this.project.edges.filter((e) => e.target === fullId)) {
+      const value = this.values.get(edge.source);
+      if (isCanvas(value)) {
+        const bytes = value
+          .getContext("2d")!
+          .getImageData(0, 0, value.width, value.height).data;
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++)
+          binary += String.fromCharCode(bytes[i]);
+        inputs[edge.targetHandle || "in"] = {
+          kind: "image",
+          width: value.width,
+          height: value.height,
+          rgba: btoa(binary),
+        };
+      } else inputs[edge.targetHandle || "in"] = value ?? null;
+    }
+    const state = this.state(fullId),
+      code = String(node.data.params.code || "");
+    const intent = await api<{ token: string }>(
+      "/scripts/intent",
+      undefined,
+      "POST",
+    );
+    const result = await api<{
+      value:
+        Value | { kind: "image"; width: number; height: number; rgba: string };
+      log: string;
+    }>("/scripts/run", { code, inputs, time }, "POST", {
+      "X-TD-Script-Intent": intent.token,
+    });
+    if (this.disposed || this.operatorStates.get(fullId) !== state)
+      throw new Error("节点已更改，已丢弃旧脚本结果");
+    let value: Value;
+    if (
+      result.value &&
+      typeof result.value === "object" &&
+      "kind" in result.value &&
+      result.value.kind === "image"
+    ) {
+      const image = result.value,
+        w = Math.floor(image.width),
+        h = Math.floor(image.height);
+      if (w < 1 || h < 1 || w * h > 4194304)
+        throw new Error("脚本图像尺寸无效或超过 4096K 像素");
+      const bytes = Uint8ClampedArray.from(atob(image.rgba), (c) =>
+        c.charCodeAt(0),
+      );
+      if (bytes.length !== w * h * 4) throw new Error("RGBA 图像长度不匹配");
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.putImageData(new ImageData(bytes, w, h), 0, 0);
+      value = canvas;
+    } else if (
+      isChannelBuffer(result.value) ||
+      isTableData(result.value) ||
+      isGeometrySpec(result.value) ||
+      typeof result.value === "number" ||
+      typeof result.value === "string"
+    )
+      value = result.value;
+    else
+      throw new Error("脚本结果必须是通道、表格、网格、RGBA 图像、数字或文本");
+    state.set("python_result", value);
+    state.set("python_log", result.log);
+    this.errors.delete(fullId);
+    this.revision++;
+    return result.log;
+  }
   private cook(
     n: GraphNode,
     time: number,
-    inp: (handle?: string) => Value | undefined,
+    rawInput: (handle?: string) => Value | undefined,
+    resolveNode: (path: string) => Value,
   ): Value {
+    const state = this.state(n.id);
+    if (n.type === "web_render_top") {
+      const url = state.get("web_url") as string | undefined;
+      if (!url) throw new Error("点击捕获网页以加载页面");
+      const img = this.image(url),
+        c = this.canvas(n.id);
+      if (img instanceof HTMLImageElement && img.complete)
+        c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+      return c;
+    }
+    if (n.type === "movie_file_out_top") return rawInput() ?? this.canvas(n.id);
+    if (n.type.startsWith("python_script_")) {
+      if (!state.has("python_result"))
+        throw new Error("点击运行 Python 以执行脚本");
+      return state.get("python_result") as Value;
+    }
+    const media = this.mediaRuntime.cook(n, time, rawInput, state, {
+      project: this.project,
+      videoForNode: (id) => {
+        const node = this.project.nodes.find((x) => x.id === id);
+        const el = node
+          ? this.image(
+              String(node.data.params.url || node.data.params.result_url || ""),
+            )
+          : undefined;
+        return el instanceof HTMLVideoElement ? el : undefined;
+      },
+    });
+    if (media.handled) return media.value;
+    const io = cookIONode(n, time, rawInput, state);
+    if (io.handled) return io.value;
+    const channels = cookChannelDataNode(n, time, rawInput, state, {
+      project: this.project,
+    });
+    if (channels.handled) return channels.value;
+    const geometry = cookGeometryV2Node(n, time, rawInput, state);
+    if (geometry.handled) {
+      if (isGeometrySpec(geometry.value) && geometry.value.url)
+        this.loadModel(geometry.value.url);
+      return geometry.value;
+    }
+    const inp = (handle?: string): LegacyValue | undefined => {
+      const value = rawInput(handle);
+      return isChannelBuffer(value)
+        ? scalarValue(value)
+        : isTableData(value)
+          ? textValue(value)
+          : (value as LegacyValue | undefined);
+    };
+    const waveform =
+      n.type === "browser_audio_device_in" && this.analyser
+        ? new Float32Array(this.analyser.fftSize)
+        : undefined;
+    if (waveform) this.analyser?.getFloatTimeDomainData(waveform);
+    const browser = this.browserInputs.cook(
+      n,
+      rawInput,
+      this.project,
+      waveform,
+      this.context?.sampleRate,
+      this.context?.currentTime,
+    );
+    if (browser.handled) return browser.value as Value;
+    const component = cookComponentNode(n, time, rawInput, this.state(n.id));
+    if (component.handled) return component.value as Value;
     const p = n.data.params;
     const v = (key: string, def = 0) => Number(p[key] ?? def);
     const s = (key: string, def = "") => String(p[key] ?? def);
@@ -519,13 +831,29 @@ export class StudioEngine {
       const mod = Number(inp("mod") ?? 0);
       const second = inp("in2");
       if (
-        [cookAdvancedVisualNode, cookVisualNode].some((cook) =>
+        [
+          cookCompatibilityTopNode,
+          cookReferenceTopNode,
+          cookAdvancedVisualNode,
+          cookVisualNode,
+        ].some((cook) =>
           cook({
-            node: n,
+            node: n.type === "glsl_comp" ? { ...n, type: "ref_top_glsl" } : n,
             ctx,
             canvas: c,
+            rawInput: rawInput(),
+            resolveNode,
+            resolveRenderPass: (
+              src: HTMLCanvasElement,
+              pass: "color" | "depth" | "normal",
+            ) => this.renderPass(src, pass),
+            resolveImportedTexture: (path: string, name: string) =>
+              this.importedTexture(resolveNode(path), name),
             input: source,
             input2: isCanvas(second) ? second : undefined,
+            input3: isCanvas(inp("in3"))
+              ? (inp("in3") as HTMLCanvasElement)
+              : undefined,
             time,
             mod,
             width: W,
@@ -712,10 +1040,12 @@ export class StudioEngine {
           ctx.fillText("连接音频输入，并启用麦克风或播放音频", W / 2, H / 2);
         }
       } else if (type === "render") {
-        const geo =
-          src && typeof src === "object" && !isCanvas(src)
-            ? (src as Geo)
-            : undefined;
+        const raw = rawInput();
+        if (isSceneSpec(raw)) {
+          this.drawScene(n.id, raw, ctx);
+          return c;
+        }
+        const geo = isGeometrySpec(src) ? src : undefined;
         if (!geo) {
           ctx.fillStyle = "#777581";
           ctx.font = "15px sans-serif";
@@ -735,6 +1065,10 @@ export class StudioEngine {
             Math.sin(time * 0.2) * 0.12,
           );
           this.renderer.render(scene.scene, this.camera);
+          this.renderSources.set(c, {
+            scene: scene.scene,
+            camera: this.camera,
+          });
           ctx.drawImage(this.renderer.domElement, 0, 0, W, H);
         } else throw new Error("3D 渲染需要 WebGL 2");
       } else if (source) ctx.drawImage(source, 0, 0);
@@ -742,6 +1076,172 @@ export class StudioEngine {
     } finally {
       ctx.restore();
     }
+  }
+  private renderPass(
+    source: HTMLCanvasElement,
+    pass: "color" | "depth" | "normal",
+  ): HTMLCanvasElement | undefined {
+    if (pass === "color") return source;
+    const cached = this.renderSources.get(source);
+    if (!cached || !this.renderer) return undefined;
+    const material =
+      pass === "depth"
+        ? new THREE.MeshDepthMaterial()
+        : new THREE.MeshNormalMaterial();
+    const previous = cached.scene.overrideMaterial;
+    cached.scene.overrideMaterial = material;
+    const canvas = this.canvas("__pass_" + pass);
+    try {
+      this.setGPUSize(W, H);
+      this.renderer.render(cached.scene, cached.camera);
+      canvas.getContext("2d")!.drawImage(this.renderer.domElement, 0, 0, W, H);
+    } finally {
+      cached.scene.overrideMaterial = previous;
+      material.dispose();
+    }
+    return canvas;
+  }
+  private importedTexture(
+    value: Value,
+    name: string,
+  ): HTMLCanvasElement | undefined {
+    const urls: string[] = [];
+    const collect = (g: GeometrySpec) => {
+      if (g.url) urls.push(g.url);
+      g.children?.forEach(collect);
+    };
+    if (isGeometrySpec(value)) collect(value);
+    else if (isSceneSpec(value))
+      value.objects.forEach((o) => collect(o.geometry));
+    for (const url of urls) {
+      let found: CanvasImageSource | undefined;
+      this.modelLoads.get(url)?.traverse((object) => {
+        if (!(object instanceof THREE.Mesh) || found) return;
+        for (const material of Array.isArray(object.material)
+          ? object.material
+          : [object.material]) {
+          const texture = (material as unknown as Record<string, unknown>)[
+            name || "map"
+          ];
+          if (texture instanceof THREE.Texture && texture.image)
+            found = texture.image as CanvasImageSource;
+        }
+      });
+      if (found) {
+        const canvas = this.canvas("__texture_" + url + name);
+        canvas.getContext("2d")!.drawImage(found, 0, 0, W, H);
+        return canvas;
+      }
+    }
+    return undefined;
+  }
+  async captureWeb(id: string) {
+    const fullId = this.resolveId(id),
+      node = this.project.nodes.find((n) => n.id === fullId);
+    if (!node) throw new Error("节点不存在");
+    const state = this.state(fullId),
+      p = node.data.params;
+    const result = await api<{ image_url: string }>("/web-render/capture", {
+      url: p.url,
+      html: p.html,
+      width: p.width,
+      height: p.height,
+      actions: JSON.parse(String(p.actions || "[]")),
+    });
+    if (this.disposed || this.operatorStates.get(fullId) !== state) return;
+    state.set("web_url", result.image_url);
+    this.image(result.image_url);
+    this.revision++;
+  }
+  toggleMovie(id: string): boolean {
+    const fullId = this.resolveId(id),
+      state = this.state(fullId),
+      old = state.get("recorder") as MediaRecorder | undefined;
+    if (old?.state === "recording") {
+      old.stop();
+      state.delete("recorder");
+      return false;
+    }
+    const node = this.project.nodes.find((n) => n.id === fullId),
+      source = this.values.get(fullId);
+    if (!isCanvas(source)) throw new Error("请先连接要录制的 TOP");
+    const stream = source.captureStream(
+      Math.max(1, Math.min(60, Number(node?.data.params.fps) || 30)),
+    );
+    const mime = [
+      "video/webm;codecs=vp9",
+      "video/webm;codecs=vp8",
+      "video/webm",
+    ].find((x) => MediaRecorder.isTypeSupported(x));
+    if (!mime) throw new Error("此浏览器不支持 WebM");
+    const recorder = new MediaRecorder(stream, { mimeType: mime }),
+      chunks: Blob[] = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size) chunks.push(e.data);
+    };
+    recorder.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      const form = new FormData();
+      form.append(
+        "file",
+        new Blob(chunks, { type: "video/webm" }),
+        "capture.webm",
+      );
+      void fetch("/api/artifacts", { method: "POST", body: form })
+        .then(async (r) => {
+          if (!r.ok) throw new Error("视频保存失败");
+          const value = await r.json();
+          state.set("movie_url", value.url);
+          this.revision++;
+        })
+        .catch((error) => {
+          if (!this.disposed) this.errors.set(fullId, String(error));
+        });
+    };
+    recorder.start(1000);
+    state.set("recorder", recorder);
+    state.set("dispose", () => {
+      if (recorder.state === "recording") recorder.stop();
+    });
+    return true;
+  }
+  private drawScene(
+    id: string,
+    spec: SceneSpec,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    if (!this.renderer) throw new Error("3D 渲染需要 WebGL 2");
+    const urls: string[] = [];
+    const collect = (g: GeometrySpec) => {
+      if (g.url) {
+        urls.push(g.url);
+        this.loadModel(g.url);
+      }
+      g.children?.forEach(collect);
+    };
+    spec.objects.forEach((o) => collect(o.geometry));
+    const key = JSON.stringify([
+      spec,
+      urls.map((url) => this.modelLoads.has(url)),
+    ]);
+    let cache = this.sceneFrames.get(id);
+    if (!cache || cache.key !== key) {
+      cache?.built.dispose();
+      const built = buildScene(spec, W, H, (url) => {
+        this.loadModel(url);
+        return this.modelLoads.get(url);
+      });
+      cache = { key, built };
+      this.sceneFrames.set(id, cache);
+    }
+    this.setGPUSize(W, H);
+    this.renderer.render(cache.built.scene, cache.built.camera);
+    this.renderSources.set(ctx.canvas, {
+      scene: cache.built.scene,
+      camera: cache.built.camera,
+    });
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(this.renderer.domElement, 0, 0, W, H);
   }
   private loadModel(url: string) {
     if (
@@ -752,37 +1252,37 @@ export class StudioEngine {
       return;
     const token = Symbol(url);
     this.loadingModels.set(url, token);
-    new GLTFLoader().load(
-      url,
-      (gltf) => {
-        if (this.disposed || this.loadingModels.get(url) !== token) {
-          this.releaseObject(gltf.scene);
-          return;
-        }
-        this.loadingModels.delete(url);
-        this.modelRetryAt.delete(url);
-        this.errors.delete(url);
-        const box = new THREE.Box3().setFromObject(gltf.scene),
-          size = box.getSize(new THREE.Vector3()),
-          center = box.getCenter(new THREE.Vector3());
-        gltf.scene.position.sub(center);
-        const group = new THREE.Group();
-        group.add(gltf.scene);
-        group.scale.setScalar(2.5 / Math.max(size.x, size.y, size.z, 0.001));
-        this.modelLoads.set(url, group);
-        this.revision++;
-      },
-      undefined,
-      () => {
-        if (this.disposed || this.loadingModels.get(url) !== token) return;
-        this.loadingModels.delete(url);
-        this.modelRetryAt.set(url, Date.now() + 10000);
-        this.errors.set(
-          url,
-          "3D 模型加载失败，仅支持 glTF/GLB，远程服务需允许跨域；10 秒后重试",
-        );
-      },
-    );
+    const loaded = (gltf: { scene: THREE.Group }) => {
+      if (this.disposed || this.loadingModels.get(url) !== token) {
+        this.releaseObject(gltf.scene);
+        return;
+      }
+      this.loadingModels.delete(url);
+      this.modelRetryAt.delete(url);
+      this.errors.delete(url);
+      const box = new THREE.Box3().setFromObject(gltf.scene),
+        size = box.getSize(new THREE.Vector3()),
+        center = box.getCenter(new THREE.Vector3());
+      gltf.scene.position.sub(center);
+      const group = new THREE.Group();
+      group.add(gltf.scene);
+      group.scale.setScalar(2.5 / Math.max(size.x, size.y, size.z, 0.001));
+      this.modelLoads.set(url, group);
+      registerSceneModel(url, group);
+      this.revision++;
+    };
+    const failed = () => {
+      if (this.disposed || this.loadingModels.get(url) !== token) return;
+      this.loadingModels.delete(url);
+      this.modelRetryAt.set(url, Date.now() + 10000);
+      this.errors.set(
+        url,
+        "3D 模型加载失败，支持 glTF/GLB/FBX/OBJ，远程服务需允许跨域；10 秒后重试",
+      );
+    };
+    if (/\.(fbx|obj)([?#]|$)/i.test(url))
+      void loadSceneModel(url).then((scene) => loaded({ scene }), failed);
+    else new GLTFLoader().load(url, loaded, undefined, failed);
   }
   private geometryScene(id: string, g: Geo, color: string, wireframe: boolean) {
     const urls: string[] = [];
@@ -860,6 +1360,10 @@ export class StudioEngine {
     geometries.forEach((geometry) => geometry.dispose());
   }
   dispose() {
+    this.browserInputs.dispose();
+    this.mediaRuntime.dispose();
+    for (const entry of this.sceneFrames.values()) entry.built.dispose();
+    this.sceneFrames.clear();
     this.disposed = true;
     this.stopAudio();
     this.images.forEach((media) => this.releaseMedia(media));
@@ -869,6 +1373,7 @@ export class StudioEngine {
     });
     this.scenes.clear();
     this.modelLoads.forEach((model) => this.releaseObject(model));
+    for (const url of this.modelLoads.keys()) forgetSceneModel(url);
     this.modelLoads.clear();
     this.loadingModels.clear();
     this.modelRetryAt.clear();
@@ -880,7 +1385,7 @@ export class StudioEngine {
     this.renderer?.forceContextLoss();
     this.frames.clear();
     this.values.clear();
-    this.operatorStates.clear();
+    this.clearStates();
     this.errors.clear();
   }
 }

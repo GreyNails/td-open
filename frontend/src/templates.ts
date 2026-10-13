@@ -1,3 +1,4 @@
+import { referenceTemplates } from "./referenceTemplates";
 import type { Params } from "./types";
 export type RecipeNode = string | [string, Params];
 export type Recipe = {
@@ -43,6 +44,7 @@ const t = (
   requires,
 });
 export const templates: ExampleTemplate[] = [
+  ...referenceTemplates,
   t(
     "flow",
     "流光实验",

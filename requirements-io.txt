@@ -1,0 +1,2 @@
+# Included in pyproject dependencies; WebSocket node and adapter transport.
+websockets==15.0.1

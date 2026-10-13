@@ -2,15 +2,17 @@
 
 一个以中文新手体验为起点的开源节点创作工作台：连接节点、实时调整画面，把 AI 服务和 MCP 工具接入同一张创作图。
 
-**205 个内置节点 · 62 个可编辑案例 · 联动停靠工作区 · Python + TypeScript · MIT**
+**699 个节点入口 · 82 个可编辑案例 · 联动停靠工作区 · Python + TypeScript · MIT**
 
 Open-source visual programming studio with a dockable workspace, real-time graphics, AI APIs and MCP.
 
-**当前为可运行的 0.3 Alpha，尚未实现 TouchDesigner 全功能等价。** 这是独立实现的项目，与 Derivative 无隶属关系，不包含其程序、图标或源码，也不兼容 `.toe` / `.tox`。详细支持范围和未完成项见 [功能矩阵](docs/FEATURE_MATRIX.md)。
+**当前为可运行的 0.4 Alpha，尚未实现 TouchDesigner 全功能等价。** 这是独立实现的项目，与 Derivative 无隶属关系，不包含其程序、图标或源码，也不兼容 `.toe` / `.tox`。对参考截图的 531 项逐项核对：432 项已有可运行子集、7 项由已有相关节点覆盖、92 项需要外部适配器。详细支持范围和未完成项见 [功能矩阵](docs/FEATURE_MATRIX.md)，可检索的 [逐项清单](docs/REFERENCE_COVERAGE.md) 保留每项限制。
 
-![TD Open 0.3：实时输出、联动分栏与节点编辑](docs/images/studio-docked.png)
+![TD Open 0.4：实时输出、联动分栏与节点编辑](docs/images/studio-docked.png)
 
-![部分案例的真实 Canvas / WebGL 输出](docs/images/example-showcase.png)
+![新增案例：网格布尔、曲面、刚体、GLSL、信号处理](docs/images/reference-examples.png)
+
+![嵌套组件、局部时钟与复制模板](docs/images/component-scopes.png)
 
 上图均由项目内置引擎实际渲染。图库另有 AI / MCP 工作流，明确标注需连接服务，未填入虚构的生成结果。
 
@@ -18,11 +20,14 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 
 - **类似 Blender 的联动停靠布局**：节点资源、实时预览、节点画布、参数、创作助手共用边界；拖动分隔线时相邻区域同步增减，支持上下/左右拆分、拖动合并标签、隐藏、最大化和按作品保存。
 - 在无限节点画布上添加、移动、框选、多选复制、删除、连接节点；复制多选节点时保留内部连线，支持撤销、重做和整理布局。
-- **205 个可执行内置节点**：97 TOP、46 CHOP、30 SOP、26 DAT、5 AI、1 OUT。本轮新增 106 个，包括分形、细胞纹理、光学变形、8 种合成、弹簧、ADSR、延迟、表格操作、曲面生成和几何变形；完整参数见 [节点手册](docs/NODES.md)。
-- **62 个代表性案例**：纹理与分形、图像处理、合成与遮罩、三维雕塑、音频与信号、文字数据、AI 与 MCP。支持搜索、分类、入门筛选；附真实缩略图和动手提示。另提供 1 份空白作品，全部可从 [案例索引](docs/EXAMPLES.md) 下载。
+- **699 个节点入口**：TOP 204、CHOP 211、SOP 129、DAT 96、COMP 40、MAT 13、AI 5、OUT 1。包含 **92 个需要外部 SDK/硬件适配器的入口**，其余也按实际实现子集说明；数量不代表商业软件完整兼容。详见 [逐项对照](docs/REFERENCE_COVERAGE.md) 与 [节点手册](docs/NODES.md)。
+- **真正可编辑的组件内部网络**：双击进入 Base / Container / Time 等组件，通过 In/Out 与父级连接，使用绝对/相对节点引用；支持独立时钟和 Replicator 模板复制。
+- **真实采样、网格和着色器**：命名多通道 CHOP、表格 DAT、音频 PCM/FFT/WAV、布尔/曲线/蒙皮 SOP、13 个 MAT、相机灯光与刚体场景、WebGL 2 GLSL。
+- **Python、网页与协议**：手动运行 Python TOP/CHOP/SOP/DAT；Chromium 捕获网页；OSC、UDP/TCP、WebSocket、MQTT、Art-Net、串口、文件与共享内存；授权后使用 MIDI、摄像头、屏幕捕获和浏览器音频。
+- **82 个代表性案例**：纹理与分形、图像处理、合成与遮罩、三维雕塑、音频与信号、文字数据、AI 与 MCP。支持搜索、分类、入门筛选；附真实缩略图和动手提示。另提供 1 份空白作品，全部可从 [案例索引](docs/EXAMPLES.md) 下载。
 - 通过中文/英文快捷搜索添加节点、收藏常用节点，并自动连接选中节点的兼容输出。
 - 使用 LFO、常量和数学节点驱动参数；导入音频或授权麦克风后，让频谱和粒子跟随声音。音频导入后可保存 URL 并手动重新播放。
-- 通过 WebGL / Three.js 渲染几何体，以及符合条件的 glTF / GLB 生成资源。
+- 通过 WebGL / Three.js 渲染几何体、材质与场景，以及可访问的 glTF / GLB / OBJ / FBX 资源。
 - 保存作品、自动保存、导入 JSON；导出 PNG 和无音轨 WebM 录像，导出文件保留在本地 `data/exports`。
 - 配置 OpenAI 兼容的文本/图片服务；通过自定义 HTTP 模板连接音乐、3D 和其他生成服务。实际请求仅在手动运行时发送。
 - 在助手中预览并应用图编辑指令。未配置模型时使用明确标注的本地中文/英文指令解析器；连接语言模型后可让模型提出结构化图编辑。
@@ -68,10 +73,22 @@ npm run build
 
 开发时分别运行 Python 后端和 `frontend` 内的 `npm run dev`。开发界面使用 `http://127.0.0.1:5178`，API 通过 Vite 转发到后端。
 
+### 可选的网页渲染依赖
+
+Web Render 需要 Chromium。安装文件同样保存在项目目录内：
+
+```bash
+export PLAYWRIGHT_BROWSERS_PATH="$PWD/.cache/ms-playwright"
+cd frontend
+npx playwright install chromium
+```
+
+启动脚本会设置项目内浏览器缓存路径，也可用 `TD_CHROMIUM=/path/to/chromium ./scripts/start.sh` 指定已有浏览器。Python Script 是手动运行的受信任本机代码，可使用当前用户的文件和网络权限，不是沙箱。
+
 ## 第一个作品
 
 1. 点击“示例作品”，选择“流光实验”；它不需要任何 AI API。
-2. 点击“流动噪声”，在右侧调整尺度和速度。双击节点可预览中间画面。
+2. 点击“流动噪声”，在右侧调整尺度和速度。双击普通节点预览中间画面，双击组件进入内部网络。
 3. 从左侧添加节点，拖动左右两端的圆点连线。图像连接到图像，数值连接到调制端口。
 4. 点击保存。预览栏的下载图标保存 PNG；录像按钮开始/停止保存 WebM。
 
@@ -86,7 +103,7 @@ npm run build
 
 ![拖动合并后的标签工作区](docs/images/studio-merged.png)
 
-“示例作品”收录 62 个完整节点网络。无须密钥即可运行大多数程序图像、信号和三维案例；声音案例可导入音频或使用麦克风。AI / MCP 案例需要配置服务并手动执行。
+“示例作品”收录 82 个完整节点网络。无须密钥即可运行大多数程序图像、信号和三维案例；声音案例可导入音频或使用麦克风。AI / MCP 案例需要配置服务并手动执行。
 
 ![可搜索、分类与筛选的案例库](docs/images/example-browser.png)
 
@@ -123,9 +140,9 @@ MCP 客户端示例配置（请把路径替换为自己的安装目录）：
 | `data/projects` | 作品 JSON |
 | `data/assets` | 导入素材与服务直接返回的 base64 媒体 |
 | `data/config` | 服务配置与密钥，文件权限限制且 Git 忽略 |
-| `data/exports` | PNG、WebM、JSON 导出文件 |
+| `data/exports` | PNG、WebM、WAV、JSON 导出文件 |
 | `data/artifacts` | 验证报告与界面截图 |
-| `examples` | 62 个案例 + 1 个空白项目 JSON |
+| `examples` | 82 个案例 + 1 个空白项目 JSON |
 | `frontend/public/examples` | 实际渲染的案例缩略图；AI 卡片明确显示连接说明 |
 | `docs/images` | README 展示截图与渲染总览 |
 | `.tools`、`.venv`、`.cache` | 本项目工具、虚拟环境、依赖缓存和隔离测试数据 |
@@ -136,7 +153,7 @@ MCP 客户端示例配置（请把路径替换为自己的安装目录）：
 
 ## 扩展与验证
 
-项目校验、后端信号求值、服务接入与存储使用 Python，交互和实时图形使用 TypeScript，避免把每一帧图像通过 HTTP 往返传输。完整 GPU 纹理管线、嵌套组件、POP/MAT 全族、GLSL 编辑、OSC/MIDI/NDI/Spout/DMX、投影映射、专业编解码和原生桌面壳仍在路线图中。
+项目校验、后端信号求值、服务接入与存储使用 Python，交互和实时图形使用 TypeScript，避免把每一帧图像通过 HTTP 往返传输。完整 GPU 浮点纹理管线、POP、原生厂商驱动、专业音视频/同步、完整参数绑定和原生桌面壳仍需继续开发；现有实现与边界逐项公开，不把桥接入口当成已内置驱动。
 
 - [架构与插件开发](docs/ARCHITECTURE.md)
 - [功能对照矩阵](docs/FEATURE_MATRIX.md)

@@ -1,0 +1,115 @@
+{
+  "id": "example_curve-sweep-surface",
+  "name": "沿路径扫描截面",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "add_sop_1",
+      "type": "add_sop",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "添加点与面",
+        "params": {
+          "points": "[[-1,-1,0],[-0.6,0,0.4],[0.5,0.7,0],[1,1,-0.5]]",
+          "faces": "[]",
+          "connect": true
+        }
+      }
+    },
+    {
+      "id": "rectangle_sop_2",
+      "type": "rectangle_sop",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "矩形轮廓",
+        "params": {
+          "width": 1,
+          "height": 0.5,
+          "fill": false
+        }
+      }
+    },
+    {
+      "id": "sweep_sop_3",
+      "type": "sweep_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "截面扫描",
+        "params": {
+          "scale": 0.2,
+          "closed": false
+        }
+      }
+    },
+    {
+      "id": "render_4",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#b4dccc",
+          "wireframe": false,
+          "speed": 0.15
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "add_sop_1",
+      "target": "sweep_sop_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "rectangle_sop_2",
+      "target": "sweep_sop_3",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_3",
+      "source": "sweep_sop_3",
+      "target": "render_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "render_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "curve-sweep-surface"
+  }
+}

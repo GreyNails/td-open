@@ -20,6 +20,11 @@ def test_example_is_valid_complete_and_contains_only_declared_parameters(path: P
     contributing = {outputs[0].id}
     for _ in project.nodes:
         contributing.update(edge.source for edge in project.edges if edge.target in contributing)
+        for node in project.nodes:
+            if node.id in contributing and node.type in ("ref_top_op_viewer","ref_top_import_select"):
+                operator_path = node.data.params.get("source", node.data.params.get("parent", ""))
+                if isinstance(operator_path, str) and operator_path.startswith("/"):
+                    contributing.add(operator_path.strip("/").split("/")[0])
     assert contributing == {node.id for node in project.nodes}
     for node in project.nodes:
         assert set(node.data.params) <= set(NODE_TYPES[node.type]['defaults'])

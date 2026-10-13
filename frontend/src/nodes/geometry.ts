@@ -1,7 +1,23 @@
+import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import * as THREE from "three";
+import { buildMaterial, type MaterialSpec } from "./materialRuntime";
 
 export type Vec3 = [number, number, number];
+export type MeshData = {
+  positions: Vec3[];
+  faces: number[][];
+  lines?: number[][];
+  triangleStrips?: number[][];
+  pointAttributes?: Record<string, number[][]>;
+  primitiveAttributes?: Record<string, number[][]>;
+  groups?: {
+    points?: Record<string, number[]>;
+    primitives?: Record<string, number[]>;
+  };
+};
 export type GeometrySpec = {
+  mesh?: MeshData;
+  material?: MaterialSpec;
   shape: string;
   detail: number;
   url?: string;
@@ -119,18 +135,25 @@ export function buildGeometryObject(
   const ownedGeometries: THREE.BufferGeometry[] = [];
   const ownedMaterials: THREE.Material[] = [];
   let objectCount = 0;
-  const materialFor = () => {
-    const material = new THREE.MeshStandardMaterial({
-      color,
-      wireframe,
-      metalness: 0.3,
-      roughness: 0.3,
-      side: THREE.DoubleSide,
-    });
+  const materialFor = (spec?: MaterialSpec) => {
+    const material = spec
+      ? buildMaterial(spec)
+      : new THREE.MeshStandardMaterial({
+          color,
+          wireframe,
+          metalness: 0.3,
+          roughness: 0.3,
+          side: THREE.DoubleSide,
+        });
     ownedMaterials.push(material);
     return material;
   };
-  const build = (item: GeometrySpec, depth: number): THREE.Object3D => {
+  const build = (
+    item: GeometrySpec,
+    depth: number,
+    inheritedMaterial?: MaterialSpec,
+  ): THREE.Object3D => {
+    const effectiveMaterial = item.material ?? inheritedMaterial;
     if (++objectCount > 4096)
       throw new Error("几何副本超过 4096 个，请减少阵列嵌套");
     if (depth > 64) throw new Error("几何层级超过 64 层，请简化变换与合并网络");
@@ -143,14 +166,31 @@ export function buildGeometryObject(
     if (item.scale) holder.scale.fromArray(item.scale);
     if (item.shape === "group") {
       for (const child of item.children ?? [])
-        holder.add(build(child, depth + 1));
+        holder.add(build(child, depth + 1, effectiveMaterial));
       return holder;
     }
     if (item.shape === "model") {
       const instance = item.url ? resolveModel?.(item.url) : undefined;
       if (instance) {
-        const borrowed = instance.clone(true);
-        borrowed.userData = { ...borrowed.userData, tdBorrowedResources: true };
+        const borrowed = cloneSkeleton(instance);
+        if (effectiveMaterial) {
+          borrowed.traverse((child) => {
+            delete child.userData.tdBorrowedResources;
+            if (
+              child instanceof THREE.Mesh ||
+              child instanceof THREE.Line ||
+              child instanceof THREE.Points
+            ) {
+              child.geometry = child.geometry.clone();
+              ownedGeometries.push(child.geometry);
+              child.material = materialFor(effectiveMaterial);
+            }
+          });
+        } else
+          borrowed.userData = {
+            ...borrowed.userData,
+            tdBorrowedResources: true,
+          };
         holder.add(borrowed);
       }
       return holder;
@@ -162,7 +202,7 @@ export function buildGeometryObject(
         materialStart = ownedMaterials.length;
       const source = new THREE.Group();
       for (const child of item.children ?? [])
-        source.add(build(child, depth + 1));
+        source.add(build(child, depth + 1, effectiveMaterial));
       source.updateMatrixWorld(true);
       const converted: { geometry: THREE.BufferGeometry; lines: boolean }[] =
         [];
@@ -277,8 +317,93 @@ export function buildGeometryObject(
           const material = new THREE.LineBasicMaterial({ color });
           ownedMaterials.push(material);
           holder.add(new THREE.LineSegments(entry.geometry, material));
-        } else holder.add(new THREE.Mesh(entry.geometry, materialFor()));
+        } else
+          holder.add(
+            new THREE.Mesh(entry.geometry, materialFor(effectiveMaterial)),
+          );
       }
+      return holder;
+    }
+    if (item.shape === "mesh") {
+      if (!item.mesh) throw new Error("Mesh 缺少顶点数据");
+      const data = item.mesh;
+      if (data.positions.length > 250000 || data.faces.length > 500000)
+        throw new Error("网格超出安全顶点或面数上限");
+      const checkIndex = (index: number) => {
+        if (
+          !Number.isInteger(index) ||
+          index < 0 ||
+          index >= data.positions.length
+        )
+          throw new Error("网格索引超出顶点范围");
+        return index;
+      };
+      const geometry = new THREE.BufferGeometry();
+      ownedGeometries.push(geometry);
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(data.positions.flat(), 3),
+      );
+      for (const [name, values] of Object.entries(data.pointAttributes ?? {})) {
+        if (values.length !== data.positions.length)
+          throw new Error(`属性 ${name} 的点数不匹配`);
+        const size = values[0]?.length ?? 1;
+        if (
+          size < 1 ||
+          size > 4 ||
+          values.some((value) => value.length !== size)
+        )
+          throw new Error(`属性 ${name} 分量数不一致`);
+        geometry.setAttribute(
+          name === "Cd" ? "color" : name === "N" ? "normal" : name,
+          new THREE.Float32BufferAttribute(values.flat(), size),
+        );
+      }
+      const triangles: number[] = [];
+      for (const face of data.faces) {
+        face.forEach(checkIndex);
+        for (let i = 1; i < face.length - 1; i++)
+          triangles.push(face[0], face[i], face[i + 1]);
+      }
+      if (triangles.length) {
+        geometry.setIndex(triangles);
+        if (!geometry.hasAttribute("normal")) geometry.computeVertexNormals();
+        const material = materialFor(effectiveMaterial);
+        if (geometry.hasAttribute("color") && "vertexColors" in material)
+          material.vertexColors = true;
+        holder.add(new THREE.Mesh(geometry, material));
+      } else if (!data.lines?.length) {
+        const material = item.material
+          ? buildMaterial(item.material)
+          : new THREE.PointsMaterial({
+              color,
+              size: 0.04,
+              sizeAttenuation: true,
+            });
+        ownedMaterials.push(material);
+        holder.add(new THREE.Points(geometry, material));
+      }
+      if (data.lines?.length) {
+        const points: number[] = [];
+        for (const line of data.lines)
+          for (let i = 1; i < line.length; i++)
+            points.push(
+              ...data.positions[checkIndex(line[i - 1])],
+              ...data.positions[checkIndex(line[i])],
+            );
+        const lineGeometry = new THREE.BufferGeometry();
+        ownedGeometries.push(lineGeometry);
+        lineGeometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(points, 3),
+        );
+        const material = item.material
+          ? buildMaterial(item.material)
+          : new THREE.LineBasicMaterial({ color });
+        ownedMaterials.push(material);
+        holder.add(new THREE.LineSegments(lineGeometry, material));
+      }
+      validateVertices(geometry);
       return holder;
     }
     const detail = Math.round(bounded(item.detail, 32, 3, 128));
@@ -482,7 +607,7 @@ export function buildGeometryObject(
     }
     ownedGeometries.push(geometry);
     validateVertices(geometry);
-    const material = materialFor();
+    const material = materialFor(effectiveMaterial);
     holder.add(new THREE.Mesh(geometry, material));
     return holder;
   };

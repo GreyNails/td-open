@@ -1,0 +1,155 @@
+{
+  "id": "example_glsl-surface-study",
+  "name": "编写三维着色器",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "sphere_1",
+      "type": "sphere",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "球体",
+        "params": {
+          "radius": 1.2,
+          "detail": 32
+        }
+      }
+    },
+    {
+      "id": "glsl_mat_2",
+      "type": "glsl_mat",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "GLSL 材质",
+        "params": {
+          "color": "#a8c9ed",
+          "opacity": 1,
+          "double_side": true,
+          "vertex_shader": "varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
+          "fragment_shader": "uniform float uTime; uniform float uOpacity; uniform vec3 uColor; varying vec2 vUv; void main(){gl_FragColor=vec4(uColor*(0.5+0.5*sin(vUv.x*20.0+uTime)),uOpacity);}"
+        }
+      }
+    },
+    {
+      "id": "geometry_comp_3",
+      "type": "geometry_comp",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "场景几何对象",
+        "params": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1,
+          "visible": true
+        }
+      }
+    },
+    {
+      "id": "camera_comp_4",
+      "type": "camera_comp",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "相机",
+        "params": {
+          "x": 4,
+          "y": 3,
+          "z": 6,
+          "targetx": 0,
+          "targety": 0,
+          "targetz": 0,
+          "projection": "perspective",
+          "fov": 45,
+          "near": 0.01,
+          "far": 1000,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "id": "render_5",
+      "type": "render",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a888ff",
+          "wireframe": true,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_6",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "sphere_1",
+      "target": "geometry_comp_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "glsl_mat_2",
+      "target": "geometry_comp_3",
+      "sourceHandle": "out",
+      "targetHandle": "material"
+    },
+    {
+      "id": "edge_3",
+      "source": "geometry_comp_3",
+      "target": "camera_comp_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "camera_comp_4",
+      "target": "render_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_5",
+      "source": "render_5",
+      "target": "output_6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "glsl-surface-study"
+  }
+}

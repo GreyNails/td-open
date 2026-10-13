@@ -1,4 +1,20 @@
 import type { GraphNode, NodeSpec, Param, Port, Project } from "./types";
+import { decorateReferenceProject } from "./referenceTemplates";
+import { mediaCatalog } from "./nodes/mediaCatalog";
+import { referenceTopCatalog } from "./nodes/referenceTopCatalog";
+import { compatibilityTopCatalog } from "./nodes/compatibilityTopCatalog";
+import { browserOutputCatalog } from "./nodes/browserOutputCatalog";
+import { pythonCatalog } from "./nodes/pythonCatalog";
+import { channelDataCatalog } from "./nodes/channelDataCatalog";
+import {
+  geometryV2Catalog,
+  materialCatalog,
+  sceneCatalog,
+} from "./nodes/geometryV2Catalog";
+import { ioCatalog } from "./nodes/ioCatalog";
+import { browserCatalog } from "./nodes/browserCatalog";
+import { componentCatalog } from "./nodes/componentCatalog";
+import { networkTypes, emptyNetwork } from "./networks";
 import { uid } from "./types";
 import { visualCatalog } from "./nodes/visualCatalog";
 import { dataCatalog } from "./nodes/dataCatalog";
@@ -339,13 +355,70 @@ export const catalog: NodeSpec[] = [
   ),
 ];
 catalog.push(
+  ...componentCatalog,
+  ...browserCatalog,
+  ...pythonCatalog,
+  ...referenceTopCatalog,
+  ...compatibilityTopCatalog,
+  ...browserOutputCatalog,
+  ...mediaCatalog,
+  ...channelDataCatalog,
+  ...geometryV2Catalog,
+  ...materialCatalog,
+  ...sceneCatalog,
+  ...ioCatalog,
   ...visualCatalog,
   ...dataCatalog,
   ...advancedVisualCatalog,
   ...advancedDataCatalog,
 );
+for (const item of [
+  ...channelDataCatalog,
+  ...geometryV2Catalog,
+  ...materialCatalog,
+  ...sceneCatalog,
+  ...referenceTopCatalog,
+])
+  item.reference ??= {
+    family: item.family,
+    name: item.english.replace(/ (TOP|SOP|CHOP|DAT|COMP|MAT)$/, ""),
+    level: "subset",
+    note: item.description,
+  };
+for (const shader of referenceTopCatalog.filter((n) =>
+  ["ref_top_glsl", "ref_top_glsl_multi"].includes(n.type),
+))
+  if (!shader.inputs.some((p) => p.id === "mod"))
+    shader.inputs.push({ id: "mod", kind: "CHOP", label: "调制信号" });
+const glslPanel = referenceTopCatalog.find((n) => n.type === "ref_top_glsl");
+if (glslPanel)
+  catalog.push({
+    ...glslPanel,
+    type: "glsl_comp",
+    label: "GLSL 面板",
+    english: "GLSL",
+    family: "COMP",
+    reference: {
+      family: "COMP",
+      name: "GLSL",
+      level: "subset",
+      note: "WebGL2片元着色器面板；不实现TD整个面板绘制ABI。",
+    },
+  });
+const renderSpec = catalog.find((n) => n.type === "render");
+if (renderSpec) {
+  renderSpec.inputs[0].kind = "any";
+  renderSpec.reference = {
+    family: "TOP",
+    name: "Render",
+    level: "subset",
+    note: "Three.js WebGL 场景、可编辑相机/灯光/MAT 与颜色/深度/法线通道；不兼容原软件 GPU 管线、全部渲染参数或文件格式。",
+  };
+}
 export const byType = Object.fromEntries(catalog.map((n) => [n.type, n]));
 export const familyColors: Record<string, string> = {
+  COMP: "#e59676",
+  MAT: "#68cbd1",
   TOP: "#b29af7",
   CHOP: "#73cda8",
   SOP: "#74b9e8",
@@ -355,11 +428,13 @@ export const familyColors: Record<string, string> = {
 };
 export function makeNode(type: string, x = 0, y = 0): GraphNode {
   const s = byType[type];
+  const id = uid(type);
   return {
-    id: uid(type),
+    id,
     type,
     position: { x, y },
     data: {
+      ...(networkTypes.has(type) ? { graph: emptyNetwork(id) } : {}),
       label: s.label,
       params: Object.fromEntries(s.params.map((p) => [p.key, p.default])),
     },
@@ -513,14 +588,17 @@ export function preset(kind = "flow"): Project {
     name = "未命名作品";
     add("output", 490, 25);
   }
-  return {
-    id: uid("project"),
-    name,
-    version: 1,
-    nodes: ns,
-    edges: es,
-    settings: { preset: kind },
-  };
+  return decorateReferenceProject(
+    {
+      id: uid("project"),
+      name,
+      version: 1,
+      nodes: ns,
+      edges: es,
+      settings: { preset: kind },
+    },
+    makeNode,
+  );
 }
 export function connectionError(
   p: Project,
@@ -536,7 +614,7 @@ export function connectionError(
   const sp = byType[s.type]?.outputs.find((x) => x.id === sh),
     tp = byType[t.type]?.inputs.find((x) => x.id === th);
   if (!sp || !tp) return "接口不存在";
-  if (sp.kind !== tp.kind)
+  if (sp.kind !== tp.kind && sp.kind !== "any" && tp.kind !== "any")
     return `${sp.kind} 无法直接连接到 ${tp.kind}，请选择对应的转换节点`;
   const seen = new Set<string>();
   const visit = (id: string): boolean => {

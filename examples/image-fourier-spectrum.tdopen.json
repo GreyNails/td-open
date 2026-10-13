@@ -1,0 +1,71 @@
+{
+  "id": "example_image-fourier-spectrum",
+  "name": "图像二维傅里叶频谱",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "checkerboard_1",
+      "type": "checkerboard",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "棋盘格",
+        "params": {
+          "columns": 12,
+          "rows": 7,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "ref_top_spectrum_2",
+      "type": "ref_top_spectrum",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "Spectrum",
+        "params": {
+          "mode": "magnitude",
+          "size": "128",
+          "gain": 0.4
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "checkerboard_1",
+      "target": "ref_top_spectrum_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "ref_top_spectrum_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "image-fourier-spectrum"
+  }
+}

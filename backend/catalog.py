@@ -8,6 +8,7 @@ from collections.abc import Callable
 from typing import Any
 
 from backend.data_runtime import STATELESS_TYPES
+from backend.channel_runtime import CHANNEL_STATELESS_TYPES
 
 NODE_TYPES: dict[str, dict[str, Any]] = {}
 NODE_EVALUATORS: dict[str, Callable] = {}
@@ -41,7 +42,7 @@ def register_operator(spec: dict, evaluator: Callable | None = None) -> None:
 # startup independent of Node/npm, including source ZIP and Python-only installs.
 # Regenerate after editing catalog.ts or nodes/*Catalog.ts using:
 #   node scripts/sync-catalog.mjs
-SERVER_BUILTINS = STATELESS_TYPES | {"constant", "lfo", "math"}
+SERVER_BUILTINS = STATELESS_TYPES | CHANNEL_STATELESS_TYPES | {"constant", "lfo", "math"}
 for _spec in json.loads(Path(__file__).with_name("operator_catalog.json").read_text(encoding="utf-8")):
     if _spec["type"].startswith("ai_") or _spec["type"] == "mcp_tool":
         _spec["runtime"] = "provider"

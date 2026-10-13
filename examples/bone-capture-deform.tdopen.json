@@ -1,0 +1,238 @@
+{
+  "id": "example_bone-capture-deform",
+  "name": "骨骼捕获与蒙皮",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "plane_1",
+      "type": "plane",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "网格平面",
+        "params": {
+          "width": 1,
+          "height": 2,
+          "detail": 16
+        }
+      }
+    },
+    {
+      "id": "capture_sop_2",
+      "type": "capture_sop",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "骨骼捕获",
+        "params": {
+          "falloff": 2
+        }
+      }
+    },
+    {
+      "id": "bone_comp_3",
+      "type": "bone_comp",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "骨骼",
+        "params": {
+          "name": "lower",
+          "parent": "",
+          "startx": 0,
+          "starty": -1,
+          "startz": 0,
+          "endx": 0,
+          "endy": 0,
+          "endz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "display": false
+        }
+      }
+    },
+    {
+      "id": "bone_comp_4",
+      "type": "bone_comp",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "骨骼",
+        "params": {
+          "name": "upper",
+          "parent": "lower",
+          "startx": 0,
+          "starty": 0,
+          "startz": 0,
+          "endx": 0,
+          "endy": 1,
+          "endz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "display": false
+        }
+      }
+    },
+    {
+      "id": "deform_sop_5",
+      "type": "deform_sop",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "骨骼蒙皮变形",
+        "params": {}
+      }
+    },
+    {
+      "id": "bone_comp_6",
+      "type": "bone_comp",
+      "position": {
+        "x": 0,
+        "y": 410
+      },
+      "data": {
+        "label": "骨骼",
+        "params": {
+          "name": "lower",
+          "parent": "",
+          "startx": 0,
+          "starty": -1,
+          "startz": 0,
+          "endx": 0,
+          "endy": 0,
+          "endz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "display": false
+        }
+      }
+    },
+    {
+      "id": "bone_comp_7",
+      "type": "bone_comp",
+      "position": {
+        "x": 245,
+        "y": 205
+      },
+      "data": {
+        "label": "骨骼",
+        "params": {
+          "name": "upper",
+          "parent": "lower",
+          "startx": 0,
+          "starty": 0,
+          "startz": 0,
+          "endx": 0,
+          "endy": 1,
+          "endz": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 65,
+          "display": false
+        }
+      }
+    },
+    {
+      "id": "render_8",
+      "type": "render",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a6d3ff",
+          "wireframe": true,
+          "speed": 0
+        }
+      }
+    },
+    {
+      "id": "output_9",
+      "type": "output",
+      "position": {
+        "x": 1225,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "plane_1",
+      "target": "capture_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "bone_comp_3",
+      "target": "bone_comp_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "bone_comp_4",
+      "target": "capture_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "bones"
+    },
+    {
+      "id": "edge_4",
+      "source": "capture_sop_2",
+      "target": "deform_sop_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_5",
+      "source": "bone_comp_6",
+      "target": "bone_comp_7",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_6",
+      "source": "bone_comp_7",
+      "target": "deform_sop_5",
+      "sourceHandle": "out",
+      "targetHandle": "bones"
+    },
+    {
+      "id": "edge_7",
+      "source": "deform_sop_5",
+      "target": "render_8",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_8",
+      "source": "render_8",
+      "target": "output_9",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "bone-capture-deform"
+  }
+}

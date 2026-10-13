@@ -137,6 +137,7 @@ export type VisualCook = {
   canvas: HTMLCanvasElement;
   input: HTMLCanvasElement | undefined;
   input2: HTMLCanvasElement | undefined;
+  input3?: HTMLCanvasElement;
   time: number;
   mod: number;
   width: number;

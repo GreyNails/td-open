@@ -142,7 +142,7 @@ try {
     );
   }
   const showcase = await page.evaluate(() => {
-    const { images } = window.gallery,
+    const { images, templates } = window.gallery,
       selected = [
         "flow",
         "cell-lights",
@@ -173,7 +173,7 @@ try {
     ctx.fillStyle = "#a598b3";
     ctx.font = "16px sans-serif";
     ctx.fillText(
-      "62 editable examples · actual Canvas / WebGL output · no external API required for these examples",
+      `${templates.length} editable examples · actual Canvas / WebGL output · no external API required for the selection below`,
       40,
       88,
     );

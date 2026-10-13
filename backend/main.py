@@ -22,9 +22,9 @@ ALLOWED_ASSETS = {
     ".png": "image", ".jpg": "image", ".jpeg": "image", ".webp": "image", ".gif": "image", ".avif": "image",
     ".mp4": "video", ".webm": "video", ".mov": "video",
     ".mp3": "audio", ".wav": "audio", ".ogg": "audio", ".m4a": "audio", ".flac": "audio",
-    ".glb": "3d", ".gltf": "3d", ".obj": "3d", ".stl": "3d",
+    ".glb": "3d", ".gltf": "3d", ".obj": "3d", ".stl": "3d", ".fbx": "3d",
 }
-ALLOWED_EXPORTS = {".png": "image/png", ".webm": "video/webm", ".json": "application/json"}
+ALLOWED_EXPORTS = {".wav": "audio/wav",".png": "image/png", ".webm": "video/webm", ".json": "application/json"}
 
 
 def create_app(data_dir: Path | None = None, include_integrations: bool = True) -> FastAPI:
@@ -34,9 +34,15 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
     temporary_dir.mkdir(parents=True, exist_ok=True)
     tempfile.tempdir = str(temporary_dir)
     os.environ["TMPDIR"] = str(temporary_dir)
-    app = FastAPI(title="TD Open API", version="0.3.0", description="Local-first visual programming workspace")
+    app = FastAPI(title="TD Open API", version="0.4.0", description="Local-first visual programming workspace")
     store = ProjectStore(data_dir)
     app.state.store = store
+    from backend.io_runtime import create_io_router
+    app.include_router(create_io_router(store.data_dir))
+    from backend.script_runtime import create_script_router
+    app.include_router(create_script_router(store.data_dir))
+    from backend.web_runtime import create_web_router
+    app.include_router(create_web_router(store.data_dir))
 
     @app.middleware("http")
     async def local_origin_guard(request: Request, call_next):
@@ -70,11 +76,11 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "version": "0.3.0", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
+        return {"status": "ok", "version": "0.4.0", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
 
     @app.get("/api/catalog")
     def catalog():
-        return {"nodes": list(NODE_TYPES.values()), "families": ["TOP", "CHOP", "SOP", "DAT", "AI", "OUT"]}
+        return {"nodes": list(NODE_TYPES.values()), "families": ["COMP", "TOP", "CHOP", "SOP", "MAT", "DAT", "AI", "OUT"]}
 
     @app.get("/api/projects")
     def list_projects():

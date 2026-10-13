@@ -2,7 +2,7 @@
 
 TD Open 自行编写的代码使用 [MIT](LICENSE) 许可证。下列第三方软件保留其各自许可与版权，TD Open 的 MIT 许可不替代它们。
 
-清单于 2026-10-13 从本项目已安装 Python distribution 的 `METADATA` / 许可文件，以及前端包的 `package.json` / 许可文件核对。版本为本次安装的实际版本；完整解析结果见 [requirements.lock](requirements.lock) 和 [frontend/package-lock.json](frontend/package-lock.json)。这份清单列出直接运行、开发及构建依赖，不是所有传递依赖的完整许可证汇编。
+清单于 2026-10-14 从本项目已安装 Python distribution 的 `METADATA` / 许可文件，以及前端包的 `package.json` / 许可文件核对。版本为本次安装的实际版本；完整解析结果见 [requirements.lock](requirements.lock) 和 [frontend/package-lock.json](frontend/package-lock.json)。这份清单列出直接运行、开发及构建依赖，不是所有传递依赖的完整许可证汇编。
 
 ## Python 直接依赖
 
@@ -11,6 +11,7 @@ TD Open 自行编写的代码使用 [MIT](LICENSE) 许可证。下列第三方�
 | [FastAPI](https://github.com/fastapi/fastapi) | 0.143.0 | MIT | HTTP API |
 | [Pydantic](https://github.com/pydantic/pydantic) | 2.14.1 | MIT | 数据模型与校验 |
 | [Uvicorn](https://github.com/Kludex/uvicorn) | 0.54.0 | BSD-3-Clause | ASGI 服务 |
+| [websockets](https://github.com/python-websockets/websockets) | 15.0.1 | BSD-3-Clause | WebSocket 传输 |
 | [HTTPX](https://github.com/encode/httpx) | 0.28.1 | BSD-3-Clause | HTTP 客户端 |
 | [python-multipart](https://github.com/Kludex/python-multipart) | 0.0.32 | Apache-2.0 | 文件上传解析 |
 | [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) | 1.30.0 | MIT | MCP 客户端与服务端 |
@@ -28,6 +29,7 @@ Python 安装包的许可原文保存在其 `*.dist-info/licenses/` 或 `*.dist-
 | [lucide-react](https://github.com/lucide-icons/lucide) | 0.468.0 | ISC |
 | [React](https://github.com/react/react) | 19.3.0 | MIT |
 | [React DOM](https://github.com/react/react) | 19.3.0 | MIT |
+| [cannon-es](https://github.com/pmndrs/cannon-es) | 0.20.0 | MIT |
 | [Three.js](https://github.com/mrdoob/three.js) | 0.180.0 | MIT |
 
 Lucide 的附带 LICENSE 还说明部分图标来源于 Cole Bemis 的 Feather（MIT），其余版权属于 Lucide Contributors；分发时应保留该完整声明。
@@ -53,3 +55,5 @@ Lucide 的附带 LICENSE 还说明部分图标来源于 Cole Bemis 的 Feather�
 锁文件中的传递依赖、安装用 Node.js、Python、测试浏览器，以及使用者接入的模型与素材各自适用其许可。`.tools/`、`.venv/`、`node_modules/`、测试数据和构建产物默认不纳入源码仓库。若后续分发包含这些内容的安装包或前端构建包，应按实际打包内容收集并保留完整许可与 NOTICE；本索引不替代该步骤。
 
 TouchDesigner / Derivative 仅用于描述参照领域；本仓库不因功能对照而取得或授予其商标、程序或素材的权利。
+
+内置三维文字使用 Three.js 示例 Helvetiker 字体，保留 [字体声明](frontend/public/licenses/helvetiker.txt)。cannon-es 声明随前端分发保存在 [public/licenses](frontend/public/licenses/)。这些许可也随 Vite 构建复制。

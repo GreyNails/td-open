@@ -52,22 +52,68 @@ for (const kind of [...templates.map((t) => t.id), "empty"]) {
 }
 for (const [kind, project] of documents) {
   project.id = "example_" + kind;
-  const names = new Map(
-    project.nodes.map((node, index) => [node.id, `${node.type}_${index + 1}`]),
-  );
-  for (const node of project.nodes) node.id = names.get(node.id);
-  for (const [index, edge] of project.edges.entries()) {
-    edge.id = `edge_${index + 1}`;
-    edge.source = names.get(edge.source);
-    edge.target = names.get(edge.target);
-  }
+  const names = new Map(),
+    scopes = [];
+  const rename = (graph, oldPrefix = "", newPrefix = "") => {
+    const local = new Map(
+      graph.nodes.map((node, index) => [node.id, `${node.type}_${index + 1}`]),
+    );
+    for (const node of graph.nodes) {
+      const original = node.id,
+        next = local.get(original);
+      names.set(oldPrefix + original, newPrefix + next);
+      scopes.push({ node, oldPrefix });
+      node.id = next;
+      if (node.data.graph) {
+        node.data.graph.id = ("net_" + newPrefix + next)
+          .replaceAll("/", "_")
+          .slice(0, 96);
+        rename(
+          node.data.graph,
+          oldPrefix + original + "/",
+          newPrefix + next + "/",
+        );
+      }
+    }
+    for (const [index, edge] of graph.edges.entries()) {
+      edge.id = `edge_${index + 1}`;
+      edge.source = local.get(edge.source);
+      edge.target = local.get(edge.target);
+    }
+  };
+  rename(project);
+  const resolve = (prefix, value) => {
+    const stack = [];
+    for (const part of (value.startsWith("/") ? value : prefix + value).split(
+      "/",
+    )) {
+      if (part === "..") stack.pop();
+      else if (part && part !== ".") stack.push(part);
+    }
+    return stack.join("/");
+  };
+  for (const { node, oldPrefix } of scopes)
+    for (const key of [
+      "source",
+      "path",
+      "parent",
+      "target",
+      "movie_node",
+      "source_node",
+      "target_node",
+    ]) {
+      const value = node.data.params[key];
+      if (typeof value !== "string") continue;
+      const mapped = names.get(resolve(oldPrefix, value));
+      if (mapped) node.data.params[key] = "/" + mapped;
+    }
   await fs.writeFile(
     path.join(root, "examples", kind + ".tdopen.json"),
     JSON.stringify(project, null, 2) + "\n",
   );
 }
 console.log(`Wrote ${documents.size} versioned example projects to examples/`);
-const header = `# 案例索引\n\n62 个可编辑案例，加 1 份空白作品。点击编辑器的“示例作品”可以搜索、分类、筛选并打开；也可以下载下列 JSON 后导入。缩略图来自内置引擎的实际输出；AI / MCP 案例使用明确标注的连接说明卡片。\n\n![部分实际输出](images/example-showcase.png)\n\n`;
+const header = `# 案例索引\n\n${templates.length} 个可编辑案例，加 1 份空白作品。点击编辑器的“示例作品”可以搜索、分类、筛选并打开；也可以下载下列 JSON 后导入。缩略图来自内置引擎的实际输出；AI / MCP 案例使用明确标注的连接说明卡片。\n\n![部分实际输出](images/example-showcase.png)\n\n`;
 let guide = header;
 for (const category of new Set(templates.map((t) => t.category))) {
   guide += `## ${category}\n\n| 案例 | 节点数 | 练习方向 | 运行条件 |\n| --- | ---: | --- | --- |\n`;

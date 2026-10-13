@@ -85,6 +85,10 @@ import {
   makeNode,
   preset,
 } from "./catalog";
+import { graphAt, updateGraph } from "./networks";
+import { isChannelBuffer, isTableData } from "./runtimeValues";
+import { mediaCatalog } from "./nodes/mediaCatalog";
+import { RuntimeInspector } from "./RuntimeInspector";
 import { StudioEngine } from "./engine";
 import Settings from "./Settings";
 import Workbench from "./Workbench";
@@ -104,15 +108,39 @@ function NodeThumbnail({ id, type }: { id: string; type: string }) {
         ctx = el?.getContext("2d"),
         e = engine?.current;
       if (ctx && el && e) {
-        const frame = e.frames.get(id);
+        const value = e.values.get(e.resolveId(id));
+        const frame =
+          value instanceof HTMLCanvasElement
+            ? value
+            : e.frames.get(e.resolveId(id));
         if (frame) {
           ctx.clearRect(0, 0, 192, 78);
           ctx.drawImage(frame, 0, 0, 192, 78);
         } else {
           ctx.fillStyle = "#181a22";
           ctx.fillRect(0, 0, 192, 78);
-          const value = e.values.get(id);
-          if (typeof value === "number") {
+          if (isChannelBuffer(value)) {
+            value.channels.slice(0, 3).forEach((channel, index) => {
+              ctx.strokeStyle = ["#73cda8", "#b29af7", "#e5bb6f"][index];
+              ctx.beginPath();
+              const samples = channel.samples,
+                step = Math.max(1, Math.ceil(samples.length / 192));
+              for (let i = 0; i < samples.length; i += step) {
+                const x = (i * 192) / Math.max(1, samples.length - 1),
+                  y = 39 - Math.max(-1, Math.min(1, samples[i])) * 32;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+              }
+              ctx.stroke();
+            });
+            ctx.fillStyle = "#a8b3b8";
+            ctx.font = "10px monospace";
+            ctx.fillText(
+              `${value.channels.length} CH · ${value.channels[0]?.samples.length || 0} samples`,
+              8,
+              73,
+            );
+          } else if (typeof value === "number") {
             ctx.strokeStyle = familyColors.CHOP;
             ctx.lineWidth = 1.5;
             ctx.beginPath();
@@ -126,9 +154,17 @@ function NodeThumbnail({ id, type }: { id: string; type: string }) {
             ctx.fillText(
               typeof value === "string"
                 ? value.slice(0, 22) || "等待运行"
-                : byType[type]?.outputs.some((port) => port.kind === "SOP")
-                  ? "◇  3D GEOMETRY"
-                  : "✦  AI GENERATION",
+                : isTableData(value)
+                  ? `${value.rows.length} ROWS × ${value.rows[0]?.length || 0} COLS`
+                  : byType[type]?.family === "COMP"
+                    ? "▣  COMPONENT"
+                    : byType[type]?.family === "MAT"
+                      ? "◉  MATERIAL"
+                      : byType[type]?.outputs.some(
+                            (port) => port.kind === "SOP",
+                          )
+                        ? "◇  3D GEOMETRY"
+                        : "✦  AI GENERATION",
               96,
               44,
             );
@@ -163,7 +199,11 @@ function StudioNode({ data, selected }: NodeProps<FlowNode>) {
       <div className="node-footer">
         <span>{s.english}</span>
         <span className="node-state">
-          {s.family === "AI" ? "手动运行" : "●"}
+          {s.reference?.level === "bridge"
+            ? "需适配器"
+            : s.family === "AI" || n.type.startsWith("python_script_")
+              ? "手动运行"
+              : "●"}
         </span>
       </div>
       {s.inputs.map((p, i) => (
@@ -234,7 +274,7 @@ function Studio() {
   } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [panMode, setPanMode] = useState(true);
-  const [project, setProject] = useState<Project>(() => preset()),
+  const [rootProject, setRootProject] = useState<Project>(() => preset()),
     [ready, setReady] = useState(false),
     [selected, setSelected] = useState(""),
     [category, setCategory] = useState("推荐"),
@@ -260,7 +300,52 @@ function Studio() {
     [guide, setGuide] = useState(true),
     [errors, setErrors] = useState<string[]>([]),
     [recording, setRecording] = useState(false),
-    [historyVersion, setHistoryVersion] = useState(0);
+    [historyVersion, setHistoryVersion] = useState(0),
+    [mediaSDP, setMediaSDP] = useState("");
+  const [networkPath, setNetworkPath] = useState<string[]>([]);
+  let project: Project;
+  try {
+    project = graphAt(rootProject, networkPath);
+  } catch {
+    project = rootProject;
+  }
+  const rootProjectRef = useRef(rootProject);
+  rootProjectRef.current = rootProject;
+  const networkPathRef = useRef(networkPath);
+  networkPathRef.current = networkPath;
+  const setProject = (action: React.SetStateAction<Project>) => {
+    let current: Project;
+    try {
+      current = graphAt(rootProjectRef.current, networkPathRef.current);
+    } catch {
+      current = rootProjectRef.current;
+      networkPathRef.current = [];
+      setNetworkPath([]);
+    }
+    if (typeof action !== "function" && action.id !== current.id) {
+      setNetworkPath([]);
+      setRootProject(action);
+    } else
+      setRootProject((root) =>
+        updateGraph(root, networkPathRef.current, (p) =>
+          typeof action === "function" ? action(p) : action,
+        ),
+      );
+  };
+  useEffect(() => {
+    try {
+      graphAt(rootProject, networkPath);
+    } catch {
+      setNetworkPath([]);
+    }
+  }, [rootProject, networkPath]);
+  const openNetwork = (path: string[]) => {
+    setNetworkPath(path);
+    setSelected("");
+    setSelectedIds(new Set());
+    setPreviewId("");
+    requestAnimationFrame(() => flow.fitView({ padding: 0.2, duration: 200 }));
+  };
   const renderDirty = useRef(true);
   const projectRef = useRef(project),
     engine = useRef<StudioEngine | null>(null),
@@ -286,7 +371,7 @@ function Studio() {
     toastTimer.current = window.setTimeout(() => setToast(""), 6500);
   }, []);
   const checkpoint = () => {
-    history.current.push(structuredClone(projectRef.current));
+    history.current.push(structuredClone(rootProjectRef.current));
     if (history.current.length > 60) history.current.shift();
     future.current = [];
     setHistoryVersion((v) => v + 1);
@@ -298,7 +383,7 @@ function Studio() {
       .catch(() => {})
       .then(() => api<Project>("/projects", p))
       .then((result) => {
-        if (projectRef.current.id === p.id)
+        if (rootProjectRef.current.id === p.id)
           lastPersisted.current = JSON.stringify(p);
         return result;
       });
@@ -307,7 +392,7 @@ function Studio() {
   };
   const replace = (p: Project, keepHistory = true) => {
     if (p.id !== projectRef.current.id && ready && backend)
-      void persist(projectRef.current).catch((e) =>
+      void persist(rootProjectRef.current).catch((e) =>
         notify("上一份作品保存失败：" + friendly(e)),
       );
     if (keepHistory) checkpoint();
@@ -316,16 +401,16 @@ function Studio() {
   const undo = () => {
     const prev = history.current.pop();
     if (prev) {
-      future.current.push(projectRef.current);
-      setProject(prev);
+      future.current.push(rootProjectRef.current);
+      setRootProject(prev);
       setHistoryVersion((v) => v + 1);
     }
   };
   const redo = () => {
     const next = future.current.pop();
     if (next) {
-      history.current.push(projectRef.current);
-      setProject(next);
+      history.current.push(rootProjectRef.current);
+      setRootProject(next);
       setHistoryVersion((v) => v + 1);
     }
   };
@@ -399,10 +484,10 @@ function Studio() {
     if (!ready || !backend) return;
     setSaveState("待保存");
     const timer = window.setTimeout(() => {
-      const p = projectRef.current;
+      const p = rootProjectRef.current;
       persist(p)
         .then(() => {
-          if (projectRef.current === p) setSaveState("已自动保存");
+          if (rootProjectRef.current === p) setSaveState("已自动保存");
         })
         .catch((e) => {
           setSaveState("保存失败");
@@ -410,9 +495,9 @@ function Studio() {
         });
     }, 1200);
     return () => clearTimeout(timer);
-  }, [project, ready, backend]);
+  }, [rootProject, ready, backend]);
   useEffect(() => {
-    const e = new StudioEngine(projectRef.current);
+    const e = new StudioEngine(rootProjectRef.current);
     engine.current = e;
     let raf = 0,
       last = performance.now(),
@@ -457,10 +542,11 @@ function Studio() {
     };
   }, []);
   useEffect(() => {
-    engine.current?.setProject(project);
+    engine.current?.setProject(rootProject);
+    if (engine.current) engine.current.viewPath = networkPath;
     renderDirty.current = true;
     setMic(engine.current?.hasAudio || false);
-  }, [project]);
+  }, [rootProject, networkPath]);
   useEffect(() => {
     engine.current?.setPlaying(playing);
     renderDirty.current = true;
@@ -471,14 +557,14 @@ function Studio() {
   useEffect(() => {
     if (!ready || !backend) return;
     const timer = window.setInterval(async () => {
-      const snapshot = projectRef.current;
+      const snapshot = rootProjectRef.current;
       if (JSON.stringify(snapshot) !== lastPersisted.current) return;
       try {
         const remote = await api<Project>("/projects/" + snapshot.id);
-        if (projectRef.current !== snapshot) return;
+        if (rootProjectRef.current !== snapshot) return;
         if (JSON.stringify(remote) !== lastPersisted.current) {
           lastPersisted.current = JSON.stringify(remote);
-          setProject(remote);
+          setRootProject(remote);
           notify("已同步外部 AI / MCP 对作品的修改");
         }
       } catch {}
@@ -487,7 +573,7 @@ function Studio() {
   }, [ready, backend]);
   useEffect(() => {
     const flush = () => {
-      const current = projectRef.current;
+      const current = rootProjectRef.current;
       const serialized = JSON.stringify(current);
       if (serialized !== lastPersisted.current && serialized.length < 60000)
         navigator.sendBeacon(
@@ -506,7 +592,7 @@ function Studio() {
   }, [chats, busy]);
   const save = async () => {
     try {
-      await persist(projectRef.current);
+      await persist(rootProjectRef.current);
       setBackend(true);
       setSaveState("已保存");
       notify("作品已保存到 data/projects");
@@ -917,6 +1003,12 @@ function Studio() {
   };
   const upload = async (file: File) => {
     const uploadProjectId = projectRef.current.id;
+    const uploadRootId = rootProjectRef.current.id;
+    const uploadPath = [...networkPathRef.current];
+    const sameUploadScope = () =>
+      rootProjectRef.current.id === uploadRootId &&
+      projectRef.current.id === uploadProjectId &&
+      JSON.stringify(networkPathRef.current) === JSON.stringify(uploadPath);
     const form = new FormData();
     form.append("file", file);
     setBusy("upload");
@@ -924,21 +1016,55 @@ function Studio() {
       const res = await fetch("/api/upload", { method: "POST", body: form });
       if (!res.ok) throw new Error("素材上传失败：" + (await res.text()));
       const r = await res.json();
-      if (projectRef.current.id !== uploadProjectId) {
-        notify("素材已保存在 data/assets，作品已切换，本次没有添加节点");
+      if (!sameUploadScope()) {
+        notify(
+          "素材已保存在 data/assets，作品或子网络已切换，本次没有添加节点",
+        );
         return;
       }
       if (r.kind === "audio" || file.type.startsWith("audio/")) {
-        await engine.current?.playAudio(r.url);
-        setMic(true);
         const n = makeNode("audio", 120, 220);
         n.data.label = file.name;
         n.data.params.url = r.url;
-        replace({
+        const next = {
           ...projectRef.current,
           nodes: [...projectRef.current.nodes, n],
-        });
-        notify("音频已导入并播放，可将音频节点连接到粒子调制端口");
+        };
+        replace(next);
+        setSelected(n.id);
+        setSelectedIds(new Set([n.id]));
+        notify("音频已导入；如未自动播放，可在节点参数中点击播放");
+        // Saving an uploaded asset must not depend on autoplay permission or
+        // the operating system opening an audio output device successfully.
+        const player = engine.current;
+        // Register the asset before playback so subsequent graph updates see
+        // its URL as owned by this project rather than a removed audio source.
+        player?.setProject(
+          updateGraph(rootProjectRef.current, uploadPath, () => next),
+        );
+        void player
+          ?.playAudio(r.url)
+          .then(() => {
+            if (
+              sameUploadScope() &&
+              engine.current === player &&
+              projectRef.current.nodes.some((node) => node.id === n.id)
+            ) {
+              setMic(true);
+              notify("音频已导入并播放，可将音频节点连接到粒子调制端口");
+            }
+          })
+          .catch((error) => {
+            if (
+              sameUploadScope() &&
+              engine.current === player &&
+              projectRef.current.nodes.some((node) => node.id === n.id)
+            )
+              notify(
+                "音频已保存，播放暂未开始；可在节点参数中重试。" +
+                  friendly(error),
+              );
+          });
       } else {
         const n = makeNode("media", 80, 200);
         n.data.label = file.name;
@@ -1087,6 +1213,8 @@ function Studio() {
         (category === "信号" && s.family === "CHOP") ||
         (category === "3D" && (s.family === "SOP" || s.type === "render")) ||
         (category === "数据" && s.family === "DAT") ||
+        (category === "COMP" && s.family === "COMP") ||
+        (category === "MAT" && s.family === "MAT") ||
         (category === "收藏" && favorites.includes(s.type)) ||
         (category === "AI" && s.family === "AI")) &&
       `${s.label} ${s.english} ${s.type}`
@@ -1115,17 +1243,26 @@ function Studio() {
           <kbd>Tab</kbd>
         </div>
         <div className="categories">
-          {["推荐", "图像", "信号", "3D", "数据", "AI", "收藏", "全部"].map(
-            (c) => (
-              <button
-                key={c}
-                className={category === c ? "active" : ""}
-                onClick={() => setCategory(c)}
-              >
-                {c}
-              </button>
-            ),
-          )}
+          {[
+            "推荐",
+            "图像",
+            "信号",
+            "3D",
+            "COMP",
+            "MAT",
+            "数据",
+            "AI",
+            "收藏",
+            "全部",
+          ].map((c) => (
+            <button
+              key={c}
+              className={category === c ? "active" : ""}
+              onClick={() => setCategory(c)}
+            >
+              {c}
+            </button>
+          ))}
         </div>
         <div className="library-section-label">
           {category === "推荐" ? "从这些节点开始" : category + "节点"}
@@ -1323,7 +1460,26 @@ function Studio() {
             <Network size={15} />
             <strong>节点工作区</strong>
             <span className="graph-breadcrumb">
-              project <ChevronRight size={12} /> main
+              <button onClick={() => openNetwork([])}>project</button>
+              {networkPath.map((id, index) => (
+                <span key={id}>
+                  <ChevronRight size={12} />
+                  <button
+                    onClick={() => openNetwork(networkPath.slice(0, index + 1))}
+                  >
+                    {graphAt(
+                      rootProject,
+                      networkPath.slice(0, index),
+                    ).nodes.find((n) => n.id === id)?.data.label || id}
+                  </button>
+                </span>
+              ))}
+              {!networkPath.length && (
+                <>
+                  {" "}
+                  <ChevronRight size={12} /> main
+                </>
+              )}
             </span>
           </div>
           <div className="graph-actions">
@@ -1428,7 +1584,11 @@ function Studio() {
               if (!event.ctrlKey && !event.metaKey)
                 setSelectedIds(new Set([n.id]));
             }}
-            onNodeDoubleClick={(_, n) => setPreviewId(n.id)}
+            onNodeDoubleClick={(_, n) =>
+              n.data.node.data.graph
+                ? openNetwork([...networkPath, n.id])
+                : setPreviewId(n.id)
+            }
             onPaneClick={(e) => {
               setSelected("");
               setSelectedIds(new Set());
@@ -1532,6 +1692,161 @@ function Studio() {
                   <Expand size={15} />
                 </button>
               </div>
+              {mediaCatalog.some((n) => n.type === active.type) && (
+                <>
+                  <button
+                    className="button primary"
+                    disabled={!!busy}
+                    onClick={() => {
+                      if (!engine.current) return;
+                      setBusy("媒体");
+                      void engine.current
+                        .activateMedia(active.id)
+                        .then(async (result) => {
+                          if (result.download) {
+                            const blob = await fetch(result.download.url).then(
+                              (r) => r.blob(),
+                            );
+                            await saveArtifact(blob, result.download.name);
+                          }
+                          if (result.localDescription)
+                            setMediaSDP(result.localDescription);
+                          notify(result.status);
+                        })
+                        .catch((e) => notify(friendly(e)))
+                        .finally(() => setBusy(""));
+                    }}
+                  >
+                    启用媒体节点 / 导出文件
+                  </button>
+                  {mediaSDP && (
+                    <label className="stacked">
+                      WebRTC 本机 SDP（复制到另一端）
+                      <textarea rows={4} readOnly value={mediaSDP} />
+                    </label>
+                  )}
+                </>
+              )}
+              {active.type === "web_render_top" && (
+                <button
+                  className="button primary"
+                  disabled={!!busy}
+                  onClick={() => {
+                    if (!engine.current) return;
+                    setBusy("网页渲染");
+                    void engine.current
+                      .captureWeb(active.id)
+                      .then(() => notify("网页已捕获"))
+                      .catch((e) => notify(friendly(e)))
+                      .finally(() => setBusy(""));
+                  }}
+                >
+                  捕获网页
+                </button>
+              )}
+              {active.type === "movie_file_out_top" && (
+                <button
+                  className="button primary"
+                  onClick={() => {
+                    try {
+                      const running = engine.current?.toggleMovie(active.id);
+                      notify(
+                        running
+                          ? "正在录制该节点，点击按钮停止"
+                          : "录制已停止，视频正在保存到本项目",
+                      );
+                    } catch (e) {
+                      notify(friendly(e));
+                    }
+                  }}
+                >
+                  开始 / 停止视频录制
+                </button>
+              )}
+              {active.type.startsWith("python_script_") && (
+                <button
+                  className="button primary"
+                  disabled={!!busy}
+                  onClick={() => {
+                    if (!engine.current) return;
+                    setBusy("Python");
+                    void engine.current
+                      .runPython(active.id, timeRef.current)
+                      .then((log) =>
+                        notify(
+                          "Python 已运行" +
+                            (log ? " · " + log.slice(0, 300) : ""),
+                        ),
+                      )
+                      .catch((error) => notify(friendly(error)))
+                      .finally(() => setBusy(""));
+                  }}
+                >
+                  运行 Python（本机权限）
+                </button>
+              )}
+              {active.data.graph && (
+                <button
+                  className="button primary"
+                  onClick={() => openNetwork([...networkPath, active.id])}
+                >
+                  进入内部网络 →
+                </button>
+              )}
+              {spec.reference && (
+                <p className="capability-note">
+                  {spec.reference.level === "bridge"
+                    ? "需要外部适配器"
+                    : spec.reference.level === "subset"
+                      ? "已实现核心子集"
+                      : "本地实现"}
+                  {spec.reference.note ? " · " + spec.reference.note : ""}
+                </p>
+              )}
+              <RuntimeInspector
+                node={active}
+                value={engine.current?.values.get(
+                  engine.current.resolveId(active.id),
+                )}
+                onChange={(params) => {
+                  checkpoint();
+                  setProject((p) => ({
+                    ...p,
+                    nodes: p.nodes.map((n) =>
+                      n.id === active.id
+                        ? {
+                            ...n,
+                            data: {
+                              ...n.data,
+                              params: { ...n.data.params, ...params },
+                            },
+                          }
+                        : n,
+                    ),
+                  }));
+                }}
+                onCapture={() => {
+                  const e = engine.current;
+                  if (!e) return;
+                  const task = active.type.includes("devices")
+                    ? e.browserInputs.refreshDevices()
+                    : active.type.includes("midi")
+                      ? e.browserInputs.enableMIDI()
+                      : active.type.includes("audio")
+                        ? e.microphone()
+                        : e.browserInputs.capture(
+                            e.resolveId(active.id),
+                            active.type === "browser_screen_grab",
+                            Number(active.data.params.device) || 0,
+                          );
+                  void task
+                    .then(() => {
+                      renderDirty.current = true;
+                      notify("采集已启用");
+                    })
+                    .catch((error) => notify(friendly(error)));
+                }}
+              />
               {tab === "info" ? (
                 <div className="node-info">
                   <p>{spec.description}</p>
@@ -2027,16 +2342,16 @@ function Studio() {
             <strong>
               TD<span>Open</span>
             </strong>
-            <span className="alpha">ALPHA 0.3</span>
+            <span className="alpha">ALPHA 0.4</span>
           </div>
           <span className="header-divider" />
           <div className="project-title">
             <input
               aria-label="作品名称"
-              value={project.name}
+              value={rootProject.name}
               onFocus={checkpoint}
               onChange={(e) =>
-                setProject((p) => ({ ...p, name: e.target.value }))
+                setRootProject((p) => ({ ...p, name: e.target.value }))
               }
             />
             <ChevronDown size={13} />
@@ -2115,12 +2430,12 @@ function Studio() {
             <div className="avatar">YOU</div>
           </nav>
           <Workbench
-            key={project.id}
-            saved={project.settings?.workspace}
+            key={rootProject.id}
+            saved={rootProject.settings?.workspace}
             nodeCount={catalog.length}
             onAdd={() => setQuickAdd({})}
             onChange={(layout: WorkspaceLayout) =>
-              setProject((p) => ({
+              setRootProject((p) => ({
                 ...p,
                 settings: { ...p.settings, workspace: layout },
               }))
@@ -2284,10 +2599,10 @@ function Studio() {
                       className="button"
                       onClick={() =>
                         void saveArtifact(
-                          new Blob([JSON.stringify(project, null, 2)], {
+                          new Blob([JSON.stringify(rootProject, null, 2)], {
                             type: "application/json",
                           }),
-                          project.id + ".tdopen.json",
+                          rootProject.id + ".tdopen.json",
                         ).catch((e) => notify(friendly(e)))
                       }
                     >

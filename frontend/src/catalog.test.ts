@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { templates } from "./templates";
 import { catalog, byType, preset, makeNode, connectionError } from "./catalog";
 import { cookDataNode } from "./nodes/dataRuntime";
+import { compileNetworks } from "./networks";
 describe("typed graph contracts", () => {
   it("all shipped examples connect every node to a single output with compatible acyclic edges", () => {
     for (const name of [...templates.map((t) => t.id), "empty"]) {
@@ -23,13 +24,24 @@ describe("typed graph contracts", () => {
       }
       const outputs = p.nodes.filter((node) => node.type === "output");
       expect(outputs).toHaveLength(1);
+      // Use the same dependency graph as cooking: path references are real
+      // dependencies, and component output ports can route to nested nodes.
+      const compiled = compileNetworks(p);
       const contributing = new Set([outputs[0].id]);
-      for (let pass = 0; pass < p.nodes.length; pass++) {
-        for (const edge of p.edges) {
+      for (let pass = 0; pass < compiled.nodes.length; pass++) {
+        for (const edge of compiled.edges) {
           if (contributing.has(edge.target)) contributing.add(edge.source);
         }
       }
-      expect(contributing.size).toBe(p.nodes.length);
+      const contributingTopLevel = new Set(
+        [...contributing].map((id) => id.split("/")[0]),
+      );
+      expect(
+        p.nodes
+          .filter((node) => !contributingTopLevel.has(node.id))
+          .map((node) => node.type),
+        `${name}: nodes do not contribute to output through wires or references`,
+      ).toEqual([]);
       expect(
         new Set(p.edges.map((edge) => `${edge.target}:${edge.targetHandle}`))
           .size,

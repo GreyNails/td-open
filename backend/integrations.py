@@ -511,6 +511,7 @@ def local_chat(request: ChatRequest) -> dict[str, Any]:
         # Prefer the most specific registered name: "Noise CHOP" must not be
         # swallowed by "Noise", and IDs must not match inside another ID.
         candidates = []
+        target_text = re.sub(r"^.*?(?:添加|创建|新建|(?<![a-z0-9_])add(?![a-z0-9_])|(?<![a-z0-9_])create(?![a-z0-9_]))\s*", "", message, count=1)
         for node_type, spec in NODE_TYPES.items():
             for name in (node_type, spec["label"], spec.get("english", "")):
                 name = name.lower().strip()
@@ -519,12 +520,12 @@ def local_chat(request: ChatRequest) -> dict[str, Any]:
                 pattern = re.escape(name)
                 if name.isascii():
                     pattern = r"(?<![a-z0-9_])" + pattern + r"(?![a-z0-9_])"
-                if re.search(pattern, message):
+                if re.search(pattern, target_text):
                     candidates.append((len(name), node_type, spec["label"]))
         if candidates:
             _, node_type, label = max(candidates, key=lambda item: item[0])
         else:
-            match = next(((node_type, label) for pattern, node_type, label in additions if re.search(pattern, message)), None)
+            match = next(((node_type, label) for pattern, node_type, label in additions if re.search(pattern, target_text)), None)
             node_type, label = match if match else (None, None)
         if node_type:
             commands = [{"op": "add_node", "id": f"{node_type}_{uuid.uuid4().hex[:8]}", "type": node_type, "label": label, "position": {"x": 120 + (len(nodes) % 4) * 240, "y": 120 + (len(nodes) // 4) * 150}}]
@@ -599,11 +600,20 @@ async def chat(request: ChatRequest, store: ConfigStore = Depends(get_store)) ->
     provider = store.get("providers", request.provider_id)
     if provider["capability"] != "text":
         raise HTTPException(422, "对话操作需要选择语言模型连接")
+    current_types = {node.get("type") for node in request.project.get("nodes", [])}
+    terms = set(re.findall(r"[a-z0-9_]+|[\u4e00-\u9fff]{2,}", request.message.lower()))
+    def score(item):
+        key, spec = item
+        words = f"{key} {spec.get('label','')} {spec.get('english','')}".lower()
+        return (100 if key in current_types else 0) + sum(len(term) for term in terms if term in words)
+    relevant = sorted(NODE_TYPES.items(), key=score, reverse=True)[:32]
+    schemas = [{"type": key, "parameters": [{k:v for k,v in param.items() if k in ("key","type","min","max","options")} for param in spec["params"]], "inputs":spec["inputs"],"outputs":spec["outputs"]} for key,spec in relevant]
     instructions = {
         "role": "TD Open beginner-friendly node graph assistant. Answer in the user's language.",
         "output": {"reply": "brief explanation, do not claim changes were applied", "commands": []},
         "rules": ["Return only a JSON object. No markdown.", "Commands are proposals for user review, never executable code.", "Use only documented node types and operations. Do not invoke MCP, external tools, network or code.", "Use current node IDs. New IDs must be unique. Connect nodes only if useful. If unsure, explain and return no commands."],
-        "node_types": [{"type": key, "parameters": spec["params"], "inputs": spec["inputs"], "outputs": spec["outputs"]} for key, spec in NODE_TYPES.items()],
+        "node_types": schemas,
+        "node_index": [[key,spec.get("family"),spec.get("label")] for key,spec in NODE_TYPES.items()],
         "command_examples": [
             {"op": "add_node", "type": "noise", "id": "noise_new", "label": "Noise", "params": {}, "position": {"x": 200, "y": 200}},
             {"op": "set_param", "id": "node_id", "key": "speed", "value": 0.5},

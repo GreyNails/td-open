@@ -1,0 +1,125 @@
+{
+  "id": "example_named-topology-groups",
+  "name": "点组驱动建模",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "sphere_1",
+      "type": "sphere",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "球体",
+        "params": {
+          "radius": 1.2,
+          "detail": 20
+        }
+      }
+    },
+    {
+      "id": "group_sop_2",
+      "type": "group_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "点与面分组",
+        "params": {
+          "name": "upper",
+          "domain": "point",
+          "mode": "sphere",
+          "start": 0,
+          "end": 10,
+          "x": 0,
+          "y": 1,
+          "z": 0,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "point_sop_3",
+      "type": "point_sop",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "点编辑",
+        "params": {
+          "group": "upper",
+          "x": 0,
+          "y": 0.5,
+          "z": 0,
+          "scale": 1.1,
+          "color": "#ecaa76",
+          "set_color": true
+        }
+      }
+    },
+    {
+      "id": "render_4",
+      "type": "render",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#8acadb",
+          "wireframe": false,
+          "speed": 0.1
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "sphere_1",
+      "target": "group_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "group_sop_2",
+      "target": "point_sop_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "point_sop_3",
+      "target": "render_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "render_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "named-topology-groups"
+  }
+}

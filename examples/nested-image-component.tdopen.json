@@ -1,0 +1,155 @@
+{
+  "id": "example_nested-image-component",
+  "name": "把效果封装为组件",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_1",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 3,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "base_comp_2",
+      "type": "base_comp",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "graph": {
+          "id": "net_base_comp_2",
+          "name": "可复用纹理效果",
+          "version": 1,
+          "nodes": [
+            {
+              "id": "network_in_top_1",
+              "type": "network_in_top",
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "data": {
+                "label": "TOP 组件输入",
+                "params": {
+                  "index": 1
+                }
+              }
+            },
+            {
+              "id": "ref_top_glsl_2",
+              "type": "ref_top_glsl",
+              "position": {
+                "x": 245,
+                "y": 0
+              },
+              "data": {
+                "label": "GLSL",
+                "params": {
+                  "code": "#version 300 es\nprecision highp float;\nuniform sampler2D uInput0;\nuniform sampler2D uInput1;\nuniform vec2 uResolution;\nuniform float uTime;\nuniform float uMod;\nin vec2 vUV;\nout vec4 fragColor;\nvoid main(){\n  vec4 source=texture(uInput0,vUV);\n  vec3 waves=0.5+0.5*cos(uTime+vUV.xyx*6.283+vec3(0,2,4));\n  fragColor=vec4(mix(waves,source.rgb,source.a*0.65),1.0);\n}"
+                }
+              }
+            },
+            {
+              "id": "ref_top_bloom_3",
+              "type": "ref_top_bloom",
+              "position": {
+                "x": 490,
+                "y": 0
+              },
+              "data": {
+                "label": "Bloom",
+                "params": {
+                  "threshold": 0.5,
+                  "radius": 10,
+                  "strength": 1
+                }
+              }
+            },
+            {
+              "id": "network_out_top_4",
+              "type": "network_out_top",
+              "position": {
+                "x": 735,
+                "y": 0
+              },
+              "data": {
+                "label": "TOP 组件输出",
+                "params": {
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge_1",
+              "source": "network_in_top_1",
+              "target": "ref_top_glsl_2",
+              "sourceHandle": "out",
+              "targetHandle": "in"
+            },
+            {
+              "id": "edge_2",
+              "source": "ref_top_glsl_2",
+              "target": "ref_top_bloom_3",
+              "sourceHandle": "out",
+              "targetHandle": "in"
+            },
+            {
+              "id": "edge_3",
+              "source": "ref_top_bloom_3",
+              "target": "network_out_top_4",
+              "sourceHandle": "out",
+              "targetHandle": "in"
+            }
+          ]
+        },
+        "label": "基础组件",
+        "params": {}
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "base_comp_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "base_comp_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "nested-image-component"
+  }
+}

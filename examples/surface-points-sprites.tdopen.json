@@ -1,0 +1,112 @@
+{
+  "id": "example_surface-points-sprites",
+  "name": "表面撒点与精灵",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "sphere_1",
+      "type": "sphere",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "球体",
+        "params": {
+          "radius": 1.2,
+          "detail": 20
+        }
+      }
+    },
+    {
+      "id": "sprinkle_sop_2",
+      "type": "sprinkle_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "表面随机撒点",
+        "params": {
+          "count": 700,
+          "seed": 7
+        }
+      }
+    },
+    {
+      "id": "sprite_sop_3",
+      "type": "sprite_sop",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "点精灵",
+        "params": {
+          "size": 0.05
+        }
+      }
+    },
+    {
+      "id": "render_4",
+      "type": "render",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#f7c594",
+          "wireframe": false,
+          "speed": 0.25
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "sphere_1",
+      "target": "sprinkle_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "sprinkle_sop_2",
+      "target": "sprite_sop_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "sprite_sop_3",
+      "target": "render_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "render_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "surface-points-sprites"
+  }
+}

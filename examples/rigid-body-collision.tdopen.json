@@ -1,0 +1,325 @@
+{
+  "id": "example_rigid-body-collision",
+  "name": "刚体落地碰撞",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "sphere_1",
+      "type": "sphere",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "球体",
+        "params": {
+          "radius": 0.5,
+          "detail": 16
+        }
+      }
+    },
+    {
+      "id": "geometry_comp_2",
+      "type": "geometry_comp",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "场景几何对象",
+        "params": {
+          "x": 0,
+          "y": 2,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1,
+          "visible": true
+        }
+      }
+    },
+    {
+      "id": "actor_comp_3",
+      "type": "actor_comp",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "刚体对象",
+        "params": {
+          "index": -1,
+          "mass": 1,
+          "shape": "box",
+          "restitution": 0.4,
+          "friction": 0.3,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "wx": 0,
+          "wy": 0,
+          "wz": 0
+        }
+      }
+    },
+    {
+      "id": "box_4",
+      "type": "box",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "立方体",
+        "params": {
+          "width": 5,
+          "height": 0.2,
+          "depth": 4,
+          "detail": 1
+        }
+      }
+    },
+    {
+      "id": "geometry_comp_5",
+      "type": "geometry_comp",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "场景几何对象",
+        "params": {
+          "x": 0,
+          "y": -2,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "sx": 1,
+          "sy": 1,
+          "sz": 1,
+          "visible": true
+        }
+      }
+    },
+    {
+      "id": "actor_comp_6",
+      "type": "actor_comp",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "刚体对象",
+        "params": {
+          "index": 1,
+          "mass": 0,
+          "shape": "box",
+          "restitution": 0.4,
+          "friction": 0.3,
+          "vx": 0,
+          "vy": 0,
+          "vz": 0,
+          "wx": 0,
+          "wy": 0,
+          "wz": 0
+        }
+      }
+    },
+    {
+      "id": "bullet_solver_comp_7",
+      "type": "bullet_solver_comp",
+      "position": {
+        "x": 1225,
+        "y": 0
+      },
+      "data": {
+        "label": "刚体求解器",
+        "params": {
+          "gravity": -9.81,
+          "ground": true,
+          "ground_y": -2,
+          "substeps": 8,
+          "paused": false
+        }
+      }
+    },
+    {
+      "id": "light_comp_8",
+      "type": "light_comp",
+      "position": {
+        "x": 1470,
+        "y": 0
+      },
+      "data": {
+        "label": "灯光",
+        "params": {
+          "x": 4,
+          "y": 3,
+          "z": 6,
+          "targetx": 0,
+          "targety": 0,
+          "targetz": 0,
+          "type": "directional",
+          "color": "#fff0de",
+          "intensity": 3,
+          "distance": 0,
+          "decay": 2,
+          "angle": 45
+        }
+      }
+    },
+    {
+      "id": "ambient_light_comp_9",
+      "type": "ambient_light_comp",
+      "position": {
+        "x": 1715,
+        "y": 0
+      },
+      "data": {
+        "label": "环境基础光",
+        "params": {
+          "color": "#bcc9ff",
+          "intensity": 1
+        }
+      }
+    },
+    {
+      "id": "camera_comp_10",
+      "type": "camera_comp",
+      "position": {
+        "x": 1960,
+        "y": 0
+      },
+      "data": {
+        "label": "相机",
+        "params": {
+          "x": 4,
+          "y": 2.5,
+          "z": 6,
+          "targetx": 0,
+          "targety": 0,
+          "targetz": 0,
+          "projection": "perspective",
+          "fov": 45,
+          "near": 0.01,
+          "far": 1000,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "id": "render_11",
+      "type": "render",
+      "position": {
+        "x": 2205,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a888ff",
+          "wireframe": true,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_12",
+      "type": "output",
+      "position": {
+        "x": 2450,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "sphere_1",
+      "target": "geometry_comp_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "geometry_comp_2",
+      "target": "actor_comp_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "box_4",
+      "target": "geometry_comp_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "actor_comp_3",
+      "target": "geometry_comp_5",
+      "sourceHandle": "out",
+      "targetHandle": "scene"
+    },
+    {
+      "id": "edge_5",
+      "source": "geometry_comp_5",
+      "target": "actor_comp_6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_6",
+      "source": "actor_comp_6",
+      "target": "bullet_solver_comp_7",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_7",
+      "source": "bullet_solver_comp_7",
+      "target": "light_comp_8",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_8",
+      "source": "light_comp_8",
+      "target": "ambient_light_comp_9",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_9",
+      "source": "ambient_light_comp_9",
+      "target": "camera_comp_10",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_10",
+      "source": "camera_comp_10",
+      "target": "render_11",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_11",
+      "source": "render_11",
+      "target": "output_12",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "rigid-body-collision"
+  }
+}

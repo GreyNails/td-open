@@ -108,6 +108,9 @@ const browser = await chromium.launch({
     "--enable-unsafe-swiftshader",
     "--use-angle=swiftshader",
     "--autoplay-policy=no-user-gesture-required",
+    // This host has no sound card. Keep Chromium's real media clock running
+    // without opening an unavailable hardware audio sink.
+    "--disable-audio-output",
     "--use-fake-device-for-media-stream",
     "--use-fake-ui-for-media-stream",
   ],
@@ -466,6 +469,66 @@ try {
   );
   expect(errors).toEqual([]);
   mark("no real microphone request or browser JavaScript error");
+
+  // Exercise browser autoplay denial at the actual media boundary. An uploaded
+  // asset must remain a saved, usable node even when playback rejects.
+  await page.getByTitle("播放（空格）").click();
+  await page.evaluate(() => {
+    window.__mediaQA.deniedAudioRequests = 0;
+    window.__mediaQA.originalPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      if (this instanceof HTMLAudioElement) {
+        window.__mediaQA.deniedAudioRequests++;
+        return Promise.reject(
+          new DOMException(
+            "Autoplay blocked for regression test",
+            "NotAllowedError",
+          ),
+        );
+      }
+      return window.__mediaQA.originalPlay.call(this);
+    };
+  });
+  await page
+    .locator('input[type=file][accept="image/*,video/*,audio/*"]')
+    .setInputFiles({
+      name: "media-qa-autoplay-denied.wav",
+      mimeType: "audio/wav",
+      buffer: wav,
+    });
+  await expect(
+    page
+      .locator(".studio-node")
+      .filter({ hasText: "media-qa-autoplay-denied.wav" }),
+  ).toHaveCount(1);
+  await expect
+    .poll(() => page.evaluate(() => window.__mediaQA.deniedAudioRequests))
+    .toBe(1);
+  await expect(page.locator(".save-state")).toHaveText("已自动保存");
+  const deniedNode = (await latestProject()).nodes.find(
+    (n) => n.data.label === "media-qa-autoplay-denied.wav",
+  );
+  expect(deniedNode?.type).toBe("audio");
+  expect(deniedNode.data.params.url).toMatch(/^\/api\/assets\/[a-f0-9]+\.wav$/);
+  expect(
+    Buffer.compare(
+      await (await page.request.get(base + deniedNode.data.params.url)).body(),
+      wav,
+    ),
+  ).toBe(0);
+  await page.evaluate(() => {
+    HTMLMediaElement.prototype.play = window.__mediaQA.originalPlay;
+  });
+  await page.getByRole("button", { name: "播放已导入音频" }).click();
+  await expect
+    .poll(async () =>
+      (await snapshotAudio()).some((a) => !a.paused && a.time > 0.05),
+    )
+    .toBe(true);
+  expect(errors).toEqual([]);
+  mark(
+    "autoplay denial still persists WAV node and manual retry plays the saved asset",
+  );
 } catch (error) {
   checks.push({ name: "failure", passed: false, message: error.message });
   console.error(error);
@@ -473,6 +536,18 @@ try {
     path.join(artifacts, "media-qa-debug.json"),
     JSON.stringify(
       await page.evaluate(() => ({
+        audio: window.__mediaQA.audio.map((a) => ({
+          src: a.src,
+          paused: a.paused,
+          time: a.currentTime,
+          ready: a.readyState,
+          error: a.error?.message,
+        })),
+        contexts: window.__mediaQA.contexts.map((context) => ({
+          state: context.state,
+          currentTime: context.currentTime,
+          sampleRate: context.sampleRate,
+        })),
         recordings: window.__mediaQA.recordings,
         videos: window.__mediaQA.video.map((v) => ({
           src: v.src,

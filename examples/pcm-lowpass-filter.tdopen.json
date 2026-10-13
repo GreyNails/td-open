@@ -1,0 +1,114 @@
+{
+  "id": "example_pcm-lowpass-filter",
+  "name": "采样波形低通滤波",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "audio_oscillator_1",
+      "type": "audio_oscillator",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "音频振荡器",
+        "params": {
+          "wave": "square",
+          "samples": 256,
+          "sample_rate": 48000,
+          "frequency": 800,
+          "amplitude": 0.5,
+          "phase": 0
+        }
+      }
+    },
+    {
+      "id": "audio_filter_chop_2",
+      "type": "audio_filter_chop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "音频滤波器",
+        "params": {
+          "mode": "lowpass",
+          "frequency": 1000,
+          "q": 0.707
+        }
+      }
+    },
+    {
+      "id": "channel_merge_3",
+      "type": "channel_merge",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "合并通道",
+        "params": {}
+      }
+    },
+    {
+      "id": "ref_top_op_viewer_4",
+      "type": "ref_top_op_viewer",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "OP Viewer",
+        "params": {
+          "source": "/channel_merge_3",
+          "font_size": 14
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 245,
+        "y": 205
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "audio_oscillator_1",
+      "target": "audio_filter_chop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "audio_oscillator_1",
+      "target": "channel_merge_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "audio_filter_chop_2",
+      "target": "channel_merge_3",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_4",
+      "source": "ref_top_op_viewer_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "pcm-lowpass-filter"
+  }
+}

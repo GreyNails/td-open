@@ -23,3 +23,6 @@ playwright-report/
 !.env.example
 *.log
 .DS_Store
+
+# User-provided commercial software reference screenshots.
+ref/

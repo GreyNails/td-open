@@ -122,25 +122,34 @@ export default function NodeSearch({
           </button>
         </div>
         <div className="node-search-families">
-          {["全部", "收藏", "TOP", "CHOP", "SOP", "DAT", "AI", "OUT"].map(
-            (f) => (
-              <button
-                key={f}
-                className={family === f ? "active" : ""}
-                onClick={() => setFamily(f)}
-              >
-                {f === "收藏" ? <Star size={11} /> : null}
-                {f}
-                <small>
-                  {f === "全部"
-                    ? catalog.length
-                    : f === "收藏"
-                      ? favorites.length
-                      : catalog.filter((n) => n.family === f).length}
-                </small>
-              </button>
-            ),
-          )}
+          {[
+            "全部",
+            "收藏",
+            "TOP",
+            "CHOP",
+            "SOP",
+            "COMP",
+            "MAT",
+            "DAT",
+            "AI",
+            "OUT",
+          ].map((f) => (
+            <button
+              key={f}
+              className={family === f ? "active" : ""}
+              onClick={() => setFamily(f)}
+            >
+              {f === "收藏" ? <Star size={11} /> : null}
+              {f}
+              <small>
+                {f === "全部"
+                  ? catalog.length
+                  : f === "收藏"
+                    ? favorites.length
+                    : catalog.filter((n) => n.family === f).length}
+              </small>
+            </button>
+          ))}
         </div>
         <div className="node-search-results" ref={list}>
           {items.map((n, i) => (
