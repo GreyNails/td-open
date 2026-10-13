@@ -1,0 +1,71 @@
+{
+  "id": "example_ai",
+  "name": "想象力画布 · AI canvas",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "ai_image_e7b0d030",
+      "type": "ai_image",
+      "position": {
+        "x": 0,
+        "y": 25
+      },
+      "data": {
+        "label": "AI 图片",
+        "params": {
+          "prompt": "A surreal lavender landscape, flowing liquid metal, soft cinematic light",
+          "provider_id": "",
+          "result_url": "",
+          "result_text": ""
+        }
+      }
+    },
+    {
+      "id": "color_7e571678",
+      "type": "color",
+      "position": {
+        "x": 245,
+        "y": 25
+      },
+      "data": {
+        "label": "色彩调整",
+        "params": {
+          "hue": 0,
+          "saturation": 1.2,
+          "brightness": 1.1
+        }
+      }
+    },
+    {
+      "id": "output_c8c8d8e6",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 25
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_9460ab2e",
+      "source": "ai_image_e7b0d030",
+      "target": "color_7e571678",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_d3bdd9ef",
+      "source": "color_7e571678",
+      "target": "output_c8c8d8e6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "ai"
+  }
+}

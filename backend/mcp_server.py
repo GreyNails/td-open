@@ -1,0 +1,84 @@
+"""Expose a running TD Open application to MCP clients over stdio.
+
+Run with ``python -m backend.mcp_server`` from the project directory. The HTTP
+backend must already be running. No tools run shell commands or generated code.
+"""
+from __future__ import annotations
+
+import os
+import re
+from typing import Any
+
+import httpx
+from mcp.server.fastmcp import FastMCP
+
+from backend.graph import apply_commands as edit_graph
+from backend.models import Project
+
+APP_URL = os.environ.get("TD_OPEN_APP_URL", "http://127.0.0.1:8765").rstrip("/")
+mcp = FastMCP("TD Open", instructions="Edit saved TD Open node graphs. Inspect operators and the project before changing it. apply_graph_commands defaults to a preview; set apply=true only when the user requests the edit. The local TD Open HTTP backend must be running.")
+
+
+async def app_request(method: str, path: str, payload: Any = None) -> Any:
+    try:
+        async with httpx.AsyncClient(timeout=30, follow_redirects=False) as client:
+            response = await client.request(method, APP_URL + path, json=payload)
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPStatusError as exc:
+        raise ValueError(f"TD Open returned HTTP {exc.response.status_code}. Verify the project ID and graph commands.") from None
+    except httpx.RequestError:
+        raise ValueError("Cannot reach TD Open. Start the HTTP backend and verify TD_OPEN_APP_URL.") from None
+
+
+def project_path(project_id: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", project_id):
+        raise ValueError("Invalid project ID")
+    return "/api/projects/" + project_id
+
+
+@mcp.tool()
+async def list_projects() -> Any:
+    """List saved local projects. Read only."""
+    return await app_request("GET", "/api/projects")
+
+
+@mcp.tool()
+async def get_project(project_id: str) -> dict[str, Any]:
+    """Read the nodes, edges and parameters of a saved project."""
+    return await app_request("GET", project_path(project_id))
+
+
+@mcp.tool()
+async def list_operators() -> Any:
+    """List supported operators, their parameter names and typed ports."""
+    return await app_request("GET", "/api/catalog")
+
+
+@mcp.tool()
+async def apply_graph_commands(project_id: str, commands: list[dict[str, Any]], apply: bool = False) -> dict[str, Any]:
+    """Preview or apply graph edits atomically. Each command uses 'op':
+    add_node(type,id?,params?,position?), set_param(id,key,value),
+    remove_node(id), connect(source,target,sourceHandle?,targetHandle?),
+    disconnect(id), rename_project(name). Defaults to preview, with no writes.
+    Pass apply=true to save changes to the project. Reload it in the editor
+    to see changes. This never executes generated code or remote MCP tools.
+    """
+    if len(commands) > 100:
+        raise ValueError("At most 100 commands may be applied together")
+    allowed = {"add_node", "set_param", "remove_node", "connect", "disconnect", "rename_project"}
+    if any(command.get("op") not in allowed for command in commands):
+        raise ValueError("Unsupported graph operation")
+    current = Project.model_validate(await get_project(project_id))
+    changed = edit_graph(current, commands).model_dump(mode="json")
+    if apply:
+        await app_request("POST", "/api/projects", changed)
+    return {"applied": apply, "project": changed, "message": "Project saved. Reload it in the editor." if apply else "Preview only. No changes saved."}
+
+
+def main() -> None:
+    mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,93 @@
+{
+  "id": "example_particles",
+  "name": "声音的形状 · Sound orbit",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "particles_5e53e99b",
+      "type": "particles",
+      "position": {
+        "x": 245,
+        "y": 25
+      },
+      "data": {
+        "label": "粒子星环",
+        "params": {
+          "count": 1600,
+          "speed": 0.3,
+          "size": 2,
+          "color": "#c1a2ff",
+          "spread": 1
+        }
+      }
+    },
+    {
+      "id": "audio_bfadd50d",
+      "type": "audio",
+      "position": {
+        "x": 0,
+        "y": 130
+      },
+      "data": {
+        "label": "音频输入",
+        "params": {
+          "gain": 1,
+          "url": ""
+        }
+      }
+    },
+    {
+      "id": "blur_b718a740",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 25
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 5,
+          "glow": 0.7
+        }
+      }
+    },
+    {
+      "id": "output_6d831c71",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 25
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_37912267",
+      "source": "audio_bfadd50d",
+      "target": "particles_5e53e99b",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    },
+    {
+      "id": "edge_bde27d52",
+      "source": "particles_5e53e99b",
+      "target": "blur_b718a740",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_e79c3310",
+      "source": "blur_b718a740",
+      "target": "output_6d831c71",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "particles"
+  }
+}

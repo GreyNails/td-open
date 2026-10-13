@@ -1,0 +1,25 @@
+# Local runtimes, package caches, and user projects / credentials / generated media.
+.tools/
+.cache/
+.venv/
+data/
+
+# Build outputs and dependencies.
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Browser verification outputs and local configuration.
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

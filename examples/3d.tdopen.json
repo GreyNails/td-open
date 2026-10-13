@@ -1,0 +1,91 @@
+{
+  "id": "example_3d",
+  "name": "空间练习 · Wire sculpture",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "geometry_f8ffdf26",
+      "type": "geometry",
+      "position": {
+        "x": 0,
+        "y": 25
+      },
+      "data": {
+        "label": "几何体",
+        "params": {
+          "shape": "knot",
+          "detail": 32
+        }
+      }
+    },
+    {
+      "id": "render_2f2f96e7",
+      "type": "render",
+      "position": {
+        "x": 245,
+        "y": 25
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a888ff",
+          "wireframe": true,
+          "speed": 0.3
+        }
+      }
+    },
+    {
+      "id": "blur_5f96174f",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 25
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 4,
+          "glow": 0.35
+        }
+      }
+    },
+    {
+      "id": "output_d0815e21",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 25
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_4dee6b1d",
+      "source": "geometry_f8ffdf26",
+      "target": "render_2f2f96e7",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_40b0006f",
+      "source": "render_2f2f96e7",
+      "target": "blur_5f96174f",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_8400e39e",
+      "source": "blur_5f96174f",
+      "target": "output_d0815e21",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "3d"
+  }
+}

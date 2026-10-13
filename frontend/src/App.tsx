@@ -1,0 +1,2247 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  ReactFlow,
+  Background,
+  BackgroundVariant,
+  Controls,
+  MiniMap,
+  Handle,
+  Position,
+  applyNodeChanges,
+  applyEdgeChanges,
+  ReactFlowProvider,
+  useReactFlow,
+} from "@xyflow/react";
+import type {
+  Node,
+  Edge,
+  NodeProps,
+  NodeChange,
+  EdgeChange,
+  Connection,
+} from "@xyflow/react";
+import {
+  Activity,
+  ArrowDownToLine,
+  ArrowRight,
+  AudioLines,
+  BookOpen,
+  Box,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Clapperboard,
+  Copy,
+  Download,
+  Expand,
+  FilePlus2,
+  FolderOpen,
+  Grid2X2,
+  HelpCircle,
+  Image,
+  Layers,
+  LoaderCircle,
+  Maximize2,
+  Mic,
+  MousePointer2,
+  Network,
+  PanelLeftClose,
+  Pause,
+  Play,
+  Plus,
+  Redo2,
+  RotateCcw,
+  Save,
+  Search,
+  Send,
+  Settings2,
+  SlidersHorizontal,
+  Sparkles,
+  Trash2,
+  Undo2,
+  Upload,
+  X,
+  Zap,
+  Plug,
+  Film,
+} from "lucide-react";
+import type { GraphNode, Project, Params, Command, Provider } from "./types";
+import { api, uid } from "./types";
+import {
+  byType,
+  catalog,
+  connectionError,
+  familyColors,
+  makeNode,
+  preset,
+} from "./catalog";
+import { StudioEngine } from "./engine";
+import Settings from "./Settings";
+
+const EngineContext =
+  createContext<React.MutableRefObject<StudioEngine | null> | null>(null);
+type FlowNode = Node<{ node: GraphNode }, "studio">;
+function NodeThumbnail({ id, type }: { id: string; type: string }) {
+  const canvas = useRef<HTMLCanvasElement>(null),
+    engine = useContext(EngineContext);
+  useEffect(() => {
+    let timer = 0;
+    const draw = () => {
+      const el = canvas.current,
+        ctx = el?.getContext("2d"),
+        e = engine?.current;
+      if (ctx && el && e) {
+        const frame = e.frames.get(id);
+        if (frame) {
+          ctx.clearRect(0, 0, 192, 78);
+          ctx.drawImage(frame, 0, 0, 192, 78);
+        } else {
+          ctx.fillStyle = "#181a22";
+          ctx.fillRect(0, 0, 192, 78);
+          const value = e.values.get(id);
+          if (typeof value === "number") {
+            ctx.strokeStyle = familyColors.CHOP;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let x = 0; x < 192; x++)
+              ctx.lineTo(x, 39 + Math.sin(x * 0.055 + value) * 20);
+            ctx.stroke();
+          } else {
+            ctx.fillStyle = familyColors[byType[type]?.family] || "#aaa";
+            ctx.font = "12px monospace";
+            ctx.textAlign = "center";
+            ctx.fillText(
+              typeof value === "string"
+                ? value.slice(0, 22) || "等待运行"
+                : type === "geometry"
+                  ? "◇  3D GEOMETRY"
+                  : "✦  AI GENERATION",
+              96,
+              44,
+            );
+          }
+        }
+      }
+      timer = window.setTimeout(draw, 160);
+    };
+    draw();
+    return () => clearTimeout(timer);
+  }, [id, type, engine]);
+  return (
+    <canvas className="node-thumbnail" ref={canvas} width={192} height={78} />
+  );
+}
+function StudioNode({ data, selected }: NodeProps<FlowNode>) {
+  const n = data.node,
+    s = byType[n.type];
+  if (!s) return <div>未知节点 {n.type}</div>;
+  const c = familyColors[s.family];
+  return (
+    <div
+      className={`studio-node ${selected ? "selected" : ""}`}
+      style={{ "--node-color": c } as React.CSSProperties}
+    >
+      <div className="node-heading">
+        <span className="family-dot" />
+        <strong>{n.data.label}</strong>
+        <span className="node-family">{s.family}</span>
+      </div>
+      <NodeThumbnail id={n.id} type={n.type} />
+      <div className="node-footer">
+        <span>{s.english}</span>
+        <span className="node-state">
+          {s.family === "AI" ? "手动运行" : "●"}
+        </span>
+      </div>
+      {s.inputs.map((p, i) => (
+        <Handle
+          key={p.id}
+          type="target"
+          position={Position.Left}
+          id={p.id}
+          title={`${p.label} · ${p.kind}`}
+          style={{ top: 48 + i * 29, background: familyColors[p.kind] || c }}
+        >
+          <span className="port-label">
+            {p.id === "mod" ? "↝" : i === 1 ? "B" : ""}
+          </span>
+        </Handle>
+      ))}
+      {s.outputs.map((p, i) => (
+        <Handle
+          key={p.id}
+          type="source"
+          position={Position.Right}
+          id={p.id}
+          title={`${p.label} · ${p.kind}`}
+          style={{ top: 75 + i * 25, background: familyColors[p.kind] || c }}
+        />
+      ))}
+    </div>
+  );
+}
+const nodeTypes = { studio: StudioNode };
+const iconFor = (type: string) =>
+  type === "output"
+    ? Expand
+    : type === "audio" || type === "spectrum"
+      ? AudioLines
+      : type === "particles"
+        ? Sparkles
+        : type === "geometry" || type === "render"
+          ? Box
+          : type.startsWith("ai_")
+            ? Sparkles
+            : type === "mcp_tool"
+              ? Plug
+              : type === "noise"
+                ? Activity
+                : type === "lfo" || type === "math" || type === "constant"
+                  ? Activity
+                  : Image;
+type Chat = {
+  role: "user" | "assistant";
+  text: string;
+  commands?: Command[];
+  applied?: boolean;
+};
+const friendly = (e: unknown) => (e instanceof Error ? e.message : String(e));
+function download(blob: Blob, name: string) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+
+function Studio() {
+  const [project, setProject] = useState<Project>(() => preset()),
+    [ready, setReady] = useState(false),
+    [selected, setSelected] = useState(""),
+    [category, setCategory] = useState("推荐"),
+    [search, setSearch] = useState(""),
+    [playing, setPlaying] = useState(true),
+    [saveState, setSaveState] = useState("正在连接"),
+    [backend, setBackend] = useState(false),
+    [modal, setModal] = useState(""),
+    [tab, setTab] = useState("params"),
+    [toast, setToast] = useState(""),
+    [fps, setFps] = useState(0),
+    [time, setTime] = useState(0),
+    [previewId, setPreviewId] = useState(""),
+    [mic, setMic] = useState(false),
+    [providers, setProviders] = useState<Provider[]>([]),
+    [chatProvider, setChatProvider] = useState(""),
+    [chats, setChats] = useState<Chat[]>([]),
+    [prompt, setPrompt] = useState(""),
+    [busy, setBusy] = useState(""),
+    [projects, setProjects] = useState<
+      { id: string; name: string; updated_at?: string }[]
+    >([]),
+    [guide, setGuide] = useState(true),
+    [errors, setErrors] = useState<string[]>([]),
+    [recording, setRecording] = useState(false),
+    [historyVersion, setHistoryVersion] = useState(0);
+  const renderDirty = useRef(true);
+  const projectRef = useRef(project),
+    engine = useRef<StudioEngine | null>(null),
+    preview = useRef<HTMLCanvasElement>(null),
+    previewWrap = useRef<HTMLDivElement>(null),
+    playingRef = useRef(playing),
+    previewRef = useRef(previewId),
+    timeRef = useRef(0),
+    history = useRef<Project[]>([]),
+    future = useRef<Project[]>([]),
+    fileInput = useRef<HTMLInputElement>(null),
+    importInput = useRef<HTMLInputElement>(null),
+    toastTimer = useRef(0),
+    chatBottom = useRef<HTMLDivElement>(null),
+    recorder = useRef<MediaRecorder | null>(null);
+  const flow = useReactFlow<FlowNode>();
+  projectRef.current = project;
+  playingRef.current = playing;
+  previewRef.current = previewId;
+  const notify = useCallback((text: string) => {
+    setToast(text);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(""), 6500);
+  }, []);
+  const checkpoint = () => {
+    history.current.push(structuredClone(projectRef.current));
+    if (history.current.length > 60) history.current.shift();
+    future.current = [];
+    setHistoryVersion((v) => v + 1);
+  };
+  const lastPersisted = useRef("");
+  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const persist = (p: Project) => {
+    const task = saveQueue.current
+      .catch(() => {})
+      .then(() => api<Project>("/projects", p))
+      .then((result) => {
+        if (projectRef.current.id === p.id)
+          lastPersisted.current = JSON.stringify(p);
+        return result;
+      });
+    saveQueue.current = task;
+    return task;
+  };
+  const replace = (p: Project, keepHistory = true) => {
+    if (p.id !== projectRef.current.id && ready && backend)
+      void persist(projectRef.current).catch((e) =>
+        notify("上一份作品保存失败：" + friendly(e)),
+      );
+    if (keepHistory) checkpoint();
+    setProject(p);
+  };
+  const undo = () => {
+    const prev = history.current.pop();
+    if (prev) {
+      future.current.push(projectRef.current);
+      setProject(prev);
+      setHistoryVersion((v) => v + 1);
+    }
+  };
+  const redo = () => {
+    const next = future.current.pop();
+    if (next) {
+      history.current.push(projectRef.current);
+      setProject(next);
+      setHistoryVersion((v) => v + 1);
+    }
+  };
+  const active = project.nodes.find((n) => n.id === selected),
+    spec = active ? byType[active.type] : undefined;
+  const fetchProviders = () =>
+    api<Provider[] | { providers: Provider[] }>("/providers")
+      .then((r) => setProviders(Array.isArray(r) ? r : r.providers))
+      .catch(() => {});
+  useEffect(() => {
+    let cancelled = false;
+    api<{ status: string }>("/health")
+      .then(() => {
+        if (cancelled) return;
+        setBackend(true);
+        return api<
+          | { id: string; name: string }[]
+          | { projects: { id: string; name: string }[] }
+        >("/projects");
+      })
+      .then(async (r) => {
+        if (cancelled) return;
+        const list = r ? (Array.isArray(r) ? r : r.projects) : [];
+        if (list.length) {
+          const p = await api<Project>("/projects/" + list[0].id);
+          if (!cancelled) {
+            lastPersisted.current = JSON.stringify(p);
+            setProject(p);
+            setSelected(p.nodes[0]?.id || "");
+          }
+        }
+        if (!list.length) setSelected(projectRef.current.nodes[0]?.id || "");
+        setSaveState("已连接");
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSaveState("后端未连接");
+          notify("无法连接 Python 后端；当前编辑尚未保存。请先运行启动脚本。");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
+    fetchProviders();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  useEffect(() => {
+    if (!ready || !backend) return;
+    setSaveState("待保存");
+    const timer = window.setTimeout(() => {
+      const p = projectRef.current;
+      persist(p)
+        .then(() => {
+          if (projectRef.current === p) setSaveState("已自动保存");
+        })
+        .catch((e) => {
+          setSaveState("保存失败");
+          notify(friendly(e));
+        });
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [project, ready, backend]);
+  useEffect(() => {
+    const e = new StudioEngine(projectRef.current);
+    engine.current = e;
+    let raf = 0,
+      last = performance.now(),
+      since = last,
+      count = 0,
+      lastRenderRevision = -1;
+    const tick = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.1);
+      last = now;
+      if (playingRef.current) timeRef.current += dt;
+      if (
+        playingRef.current ||
+        renderDirty.current ||
+        lastRenderRevision !== e.revision
+      ) {
+        lastRenderRevision = e.revision;
+        const frame = e.render(
+          timeRef.current,
+          previewRef.current || undefined,
+        );
+        const ctx = preview.current?.getContext("2d");
+        if (ctx) ctx.drawImage(frame, 0, 0, 640, 360);
+        renderDirty.current = false;
+        count++;
+      }
+      if (now - since > 600) {
+        setFps(Math.round((count * 1000) / (now - since)));
+        setTime(timeRef.current);
+        setErrors([...e.errors.values()]);
+        since = now;
+        count = 0;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      e.dispose();
+      engine.current = null;
+      recorder.current?.state === "recording" && recorder.current.stop();
+      clearTimeout(toastTimer.current);
+    };
+  }, []);
+  useEffect(() => {
+    engine.current?.setProject(project);
+    renderDirty.current = true;
+    setMic(engine.current?.hasAudio || false);
+  }, [project]);
+  useEffect(() => {
+    engine.current?.setPlaying(playing);
+    renderDirty.current = true;
+  }, [playing]);
+  useEffect(() => {
+    renderDirty.current = true;
+  }, [previewId]);
+  useEffect(() => {
+    if (!ready || !backend) return;
+    const timer = window.setInterval(async () => {
+      const snapshot = projectRef.current;
+      if (JSON.stringify(snapshot) !== lastPersisted.current) return;
+      try {
+        const remote = await api<Project>("/projects/" + snapshot.id);
+        if (projectRef.current !== snapshot) return;
+        if (JSON.stringify(remote) !== lastPersisted.current) {
+          lastPersisted.current = JSON.stringify(remote);
+          setProject(remote);
+          notify("已同步外部 AI / MCP 对作品的修改");
+        }
+      } catch {}
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [ready, backend]);
+  useEffect(() => {
+    const flush = () => {
+      const current = projectRef.current;
+      const serialized = JSON.stringify(current);
+      if (serialized !== lastPersisted.current && serialized.length < 60000)
+        navigator.sendBeacon(
+          "/api/projects",
+          new Blob([serialized], { type: "application/json" }),
+        );
+    };
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
+  }, []);
+  useEffect(() => {
+    chatBottom.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [chats, busy]);
+  const save = async () => {
+    try {
+      await persist(projectRef.current);
+      setBackend(true);
+      setSaveState("已保存");
+      notify("作品已保存到 data/projects");
+    } catch (e) {
+      notify(friendly(e));
+      setSaveState("保存失败");
+    }
+  };
+  const addNode = (type: string) => {
+    const n = makeNode(
+      type,
+      120 + Math.random() * 160,
+      120 + Math.random() * 100,
+    );
+    replace({ ...projectRef.current, nodes: [...projectRef.current.nodes, n] });
+    setSelected(n.id);
+    notify(`已添加「${n.data.label}」，拖动圆点连接节点`);
+  };
+  const updateParam = (
+    key: string,
+    value: Params[string],
+    snapshot = false,
+  ) => {
+    if (!active) return;
+    if (snapshot) checkpoint();
+    setProject((p) => ({
+      ...p,
+      nodes: p.nodes.map((n) =>
+        n.id === active.id
+          ? {
+              ...n,
+              data: { ...n.data, params: { ...n.data.params, [key]: value } },
+            }
+          : n,
+      ),
+    }));
+  };
+  const removeNode = () => {
+    if (!selected) return;
+    replace({
+      ...projectRef.current,
+      nodes: projectRef.current.nodes.filter((n) => n.id !== selected),
+      edges: projectRef.current.edges.filter(
+        (e) => e.source !== selected && e.target !== selected,
+      ),
+    });
+    setSelected("");
+    setPreviewId("");
+  };
+  const duplicate = () => {
+    if (!active) return;
+    const n = {
+      ...structuredClone(active),
+      id: uid(active.type),
+      position: { x: active.position.x + 36, y: active.position.y + 180 },
+      data: {
+        ...structuredClone(active.data),
+        label: active.data.label + " 副本",
+      },
+    };
+    replace({ ...projectRef.current, nodes: [...projectRef.current.nodes, n] });
+    setSelected(n.id);
+  };
+  const usePreset = (kind: string) => {
+    const p = preset(kind);
+    replace(p);
+    setSelected(p.nodes[0]?.id || "");
+    setPreviewId("");
+    timeRef.current = 0;
+    setModal("");
+    setTimeout(() => flow.fitView({ padding: 0.25, duration: 500 }), 100);
+    notify("示例已载入，修改会保存为独立作品");
+  };
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (
+        ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) ||
+        el.isContentEditable
+      )
+        return;
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        void save();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+        e.preventDefault();
+        duplicate();
+      }
+      if (e.code === "Space") {
+        e.preventDefault();
+        setPlaying((p) => !p);
+      }
+      if (e.key === "Tab") {
+        e.preventDefault();
+        document.getElementById("node-search")?.focus();
+      }
+      if (e.key === "Escape") {
+        setModal("");
+        setPreviewId("");
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [active, selected]);
+  const nodes: FlowNode[] = project.nodes.map((n) => ({
+    id: n.id,
+    type: "studio",
+    position: n.position,
+    data: { node: n },
+    selected: n.id === selected,
+  }));
+  const edges: Edge[] = project.edges.map((e) => ({
+    ...e,
+    animated: playing,
+    style: {
+      stroke:
+        familyColors[
+          byType[
+            project.nodes.find((n) => n.id === e.source)?.type || ""
+          ]?.outputs.find((p) => p.id === (e.sourceHandle || "out"))?.kind ||
+            "TOP"
+        ],
+      strokeWidth: 1.6,
+    },
+  }));
+  const onNodesChange = (changes: NodeChange<FlowNode>[]) => {
+    for (const c of changes)
+      if (c.type === "select" && c.selected) setSelected(c.id);
+    const changed = changes.filter(
+      (c) => c.type === "position" || c.type === "remove",
+    );
+    if (!changed.length) return;
+    if (changed.some((c) => c.type === "remove")) checkpoint();
+    const next = applyNodeChanges(changed, nodes);
+    const ids = new Set(next.map((n) => n.id));
+    setProject((p) => ({
+      ...p,
+      nodes: next.map((n) => ({ ...n.data.node, position: n.position })),
+      edges: p.edges.filter((e) => ids.has(e.source) && ids.has(e.target)),
+    }));
+    if (!ids.has(selected)) setSelected("");
+  };
+  const onEdgesChange = (changes: EdgeChange[]) => {
+    if (!changes.some((c) => c.type === "remove")) return;
+    checkpoint();
+    setProject((p) => ({
+      ...p,
+      edges: applyEdgeChanges(changes, edges).map(
+        ({ id, source, target, sourceHandle, targetHandle }) => ({
+          id,
+          source,
+          target,
+          sourceHandle,
+          targetHandle,
+        }),
+      ),
+    }));
+  };
+  const onConnect = (c: Connection) => {
+    const err = connectionError(
+      project,
+      c.source,
+      c.target,
+      c.sourceHandle || "out",
+      c.targetHandle || "in",
+    );
+    if (err) {
+      notify(err);
+      return;
+    }
+    replace({
+      ...project,
+      edges: [
+        ...project.edges.filter(
+          (e) =>
+            !(
+              e.target === c.target &&
+              (e.targetHandle || "in") === (c.targetHandle || "in")
+            ),
+        ),
+        { ...c, id: uid("edge") },
+      ],
+    });
+  };
+  const send = async (message = prompt) => {
+    if (!message.trim() || busy) return;
+    setPrompt("");
+    setChats((c) => [...c, { role: "user", text: message }]);
+    setBusy("chat");
+    try {
+      const r = await api<{ reply: string; commands: Command[]; mode: string }>(
+        "/chat",
+        {
+          message,
+          project: projectRef.current,
+          selected_node: selected || undefined,
+          provider_id: chatProvider || undefined,
+        },
+      );
+      setChats((c) => [
+        ...c,
+        { role: "assistant", text: r.reply, commands: r.commands },
+      ]);
+    } catch (e) {
+      setChats((c) => [
+        ...c,
+        { role: "assistant", text: "请求失败：" + friendly(e) },
+      ]);
+    } finally {
+      setBusy("");
+    }
+  };
+  const applyChat = async (index: number) => {
+    try {
+      const snapshot = projectRef.current;
+      const r = await api<{ project: Project }>("/commands", {
+        project: snapshot,
+        commands: chats[index].commands,
+      });
+      if (projectRef.current !== snapshot)
+        throw new Error("作品在请求期间发生了变化，请重新应用修改");
+      replace(r.project);
+      setChats((c) =>
+        c.map((m, i) => (i === index ? { ...m, applied: true } : m)),
+      );
+      notify("修改已应用，可按 Ctrl+Z 撤销");
+    } catch (e) {
+      notify(friendly(e));
+    }
+  };
+  const runNode = async () => {
+    if (!active) return;
+    const n = active;
+    setBusy(n.id);
+    try {
+      let r: Record<string, unknown>;
+      if (n.type === "mcp_tool")
+        r = await api("/mcp/call", {
+          server_id: n.data.params.server_id,
+          name: n.data.params.tool,
+          arguments: JSON.parse(String(n.data.params.arguments || "{}")),
+        });
+      else
+        r = await api("/ai/generate", {
+          provider_id: n.data.params.provider_id,
+          capability: n.type.replace("ai_", ""),
+          prompt: n.data.params.prompt,
+        });
+      if (r.isError)
+        throw new Error(
+          "MCP 工具执行失败：" + JSON.stringify(r.content || []).slice(0, 1000),
+        );
+      const data = (r.data || {}) as Record<string, unknown>;
+      const url = String(r.url || data.url || "");
+      const text = String(
+        r.text || r.result_text || (r.content ? JSON.stringify(r.content) : ""),
+      );
+      checkpoint();
+      setProject((p) => ({
+        ...p,
+        nodes: p.nodes.map((node) =>
+          node.id === n.id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  params: {
+                    ...node.data.params,
+                    result_url: url,
+                    result_text: (text || (url ? "" : JSON.stringify(r))).slice(
+                      0,
+                      20000,
+                    ),
+                  },
+                },
+              }
+            : node,
+        ),
+      }));
+      notify(
+        url || text
+          ? "运行完成，结果已写入节点"
+          : "服务已返回，响应保存在节点结果中；如为异步任务，请查询任务状态",
+      );
+    } catch (e) {
+      notify(friendly(e));
+    } finally {
+      setBusy("");
+    }
+  };
+  const upload = async (file: File) => {
+    const uploadProjectId = projectRef.current.id;
+    const form = new FormData();
+    form.append("file", file);
+    setBusy("upload");
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      if (!res.ok) throw new Error("素材上传失败：" + (await res.text()));
+      const r = await res.json();
+      if (projectRef.current.id !== uploadProjectId) {
+        notify("素材已保存在 data/assets，作品已切换，本次没有添加节点");
+        return;
+      }
+      if (r.kind === "audio" || file.type.startsWith("audio/")) {
+        await engine.current?.playAudio(r.url);
+        setMic(true);
+        const n = makeNode("audio", 120, 220);
+        n.data.label = file.name;
+        n.data.params.url = r.url;
+        replace({
+          ...projectRef.current,
+          nodes: [...projectRef.current.nodes, n],
+        });
+        notify("音频已导入并播放，可将音频节点连接到粒子调制端口");
+      } else {
+        const n = makeNode("media", 80, 200);
+        n.data.label = file.name;
+        n.data.params.url = r.url;
+        replace({
+          ...projectRef.current,
+          nodes: [...projectRef.current.nodes, n],
+        });
+        setSelected(n.id);
+        setPreviewId(n.id);
+        notify("素材已导入，连接输出节点即可加入作品");
+      }
+    } catch (e) {
+      notify(friendly(e));
+    } finally {
+      setBusy("");
+    }
+  };
+  const openProjects = async () => {
+    setModal("projects");
+    try {
+      const r = await api<typeof projects | { projects: typeof projects }>(
+        "/projects",
+      );
+      setProjects(Array.isArray(r) ? r : r.projects);
+    } catch (e) {
+      notify(friendly(e));
+    }
+  };
+  const importProject = async (file: File) => {
+    try {
+      let p = JSON.parse(await file.text()) as Project;
+      const result = await api<{
+        valid: boolean;
+        errors: unknown[];
+        project?: Project;
+      }>("/validate", p);
+      if (!result.valid) throw new Error(JSON.stringify(result.errors));
+      p = result.project || p;
+      p.id = uid("project");
+      replace(p);
+      setSelected("");
+      setPreviewId("");
+      setTimeout(() => flow.fitView({ padding: 0.25 }), 100);
+      notify("作品已导入并创建独立副本");
+    } catch (e) {
+      notify("导入失败：" + friendly(e));
+    }
+  };
+  const saveArtifact = async (blob: Blob, name: string) => {
+    const form = new FormData();
+    form.append("file", blob, name);
+    const response = await fetch("/api/artifacts", {
+      method: "POST",
+      body: form,
+    });
+    if (!response.ok)
+      throw new Error("保存导出文件失败：" + (await response.text()));
+    const result = await response.json();
+    notify("已保存到 data/exports/" + result.url.split("/").pop());
+    return result;
+  };
+  const screenshot = () => {
+    try {
+      preview.current?.toBlob((blob) => {
+        if (blob)
+          void saveArtifact(blob, "td-open-frame.png").catch((e) =>
+            notify(friendly(e)),
+          );
+      }, "image/png");
+    } catch (e) {
+      notify("无法导出：素材服务需要允许跨域访问");
+    }
+  };
+  const record = () => {
+    if (recording) {
+      recorder.current?.stop();
+      return;
+    }
+    try {
+      const stream = preview.current!.captureStream(30);
+      const mime = [
+        "video/webm;codecs=vp9",
+        "video/webm;codecs=vp8",
+        "video/webm",
+      ].find((t) => MediaRecorder.isTypeSupported(t));
+      if (!mime) throw new Error("浏览器不支持 WebM 录制");
+      const r = new MediaRecorder(stream, { mimeType: mime });
+      const chunks: Blob[] = [];
+      r.ondataavailable = (e) => {
+        if (e.data.size) chunks.push(e.data);
+      };
+      r.onstop = () => {
+        void saveArtifact(
+          new Blob(chunks, { type: "video/webm" }),
+          "td-open-recording.webm",
+        ).catch((e) => notify(friendly(e)));
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+      };
+      r.start();
+      recorder.current = r;
+      setRecording(true);
+      notify("正在录制画面，再次点击停止并下载");
+    } catch (e) {
+      notify(friendly(e));
+    }
+  };
+  const filtered = catalog.filter(
+    (s) =>
+      (category === "全部" ||
+        (category === "推荐" &&
+          [
+            "noise",
+            "color",
+            "blur",
+            "particles",
+            "lfo",
+            "geometry",
+            "output",
+            "ai_image",
+          ].includes(s.type)) ||
+        (category === "图像" && s.family === "TOP") ||
+        (category === "信号" && s.family === "CHOP") ||
+        (category === "3D" && ["geometry", "render"].includes(s.type)) ||
+        (category === "AI" && s.family === "AI")) &&
+      `${s.label} ${s.english} ${s.type}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  const ptime = new Date(time * 1000).toISOString().slice(14, 22);
+  return (
+    <EngineContext.Provider value={engine}>
+      <div className="app-shell">
+        <header className="topbar">
+          <div className="brand">
+            <div className="brand-symbol">
+              <Network size={22} />
+            </div>
+            <strong>
+              TD<span>Open</span>
+            </strong>
+            <span className="alpha">ALPHA 0.1</span>
+          </div>
+          <span className="header-divider" />
+          <div className="project-title">
+            <input
+              aria-label="作品名称"
+              value={project.name}
+              onFocus={checkpoint}
+              onChange={(e) =>
+                setProject((p) => ({ ...p, name: e.target.value }))
+              }
+            />
+            <ChevronDown size={13} />
+          </div>
+          <div className="save-state">
+            <span
+              className={
+                saveState.includes("失败") || !backend ? "dot warning" : "dot"
+              }
+            />
+            {saveState}
+          </div>
+          <div className="topbar-actions">
+            <button
+              className="button subtle"
+              onClick={() => setModal("templates")}
+            >
+              <Grid2X2 size={15} />
+              示例作品
+            </button>
+            <button
+              className="icon-button"
+              title="连接 AI 与 MCP"
+              onClick={() => setModal("settings")}
+            >
+              <Plug size={18} />
+            </button>
+            <button className="button primary" onClick={save}>
+              <Save size={15} />
+              保存作品
+            </button>
+          </div>
+        </header>
+        <div className="body-layout">
+          <nav className="rail" aria-label="主导航">
+            <button
+              className="rail-button active"
+              title="节点编辑器"
+              onClick={() => setModal("")}
+            >
+              <Network size={21} />
+              <span>创作</span>
+            </button>
+            <button
+              className="rail-button"
+              title="我的作品"
+              onClick={openProjects}
+            >
+              <FolderOpen size={21} />
+              <span>作品</span>
+            </button>
+            <button
+              className="rail-button"
+              title="AI 连接"
+              onClick={() => setModal("settings")}
+            >
+              <Plug size={21} />
+              <span>连接</span>
+            </button>
+            <div className="rail-spacer" />
+            <button
+              className="rail-button"
+              title="入门指南"
+              onClick={() => setModal("help")}
+            >
+              <BookOpen size={20} />
+              <span>学习</span>
+            </button>
+            <button
+              className="rail-button"
+              title="使用帮助"
+              onClick={() => setModal("help")}
+            >
+              <HelpCircle size={21} />
+            </button>
+            <div className="avatar">YOU</div>
+          </nav>
+          <aside className="library">
+            <div className="panel-heading">
+              <h2>节点资源</h2>
+              <span>{catalog.length}</span>
+            </div>
+            <div className="search-box">
+              <Search size={15} />
+              <input
+                id="node-search"
+                placeholder="搜索节点…"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (e.target.value) setCategory("全部");
+                }}
+              />
+              <kbd>Tab</kbd>
+            </div>
+            <div className="categories">
+              {["推荐", "图像", "信号", "3D", "AI", "全部"].map((c) => (
+                <button
+                  key={c}
+                  className={category === c ? "active" : ""}
+                  onClick={() => setCategory(c)}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+            <div className="library-section-label">
+              {category === "推荐" ? "从这些节点开始" : category + "节点"}
+              <span>点击添加</span>
+            </div>
+            <div className="node-list">
+              {filtered.map((s) => {
+                const Icon = iconFor(s.type);
+                return (
+                  <button
+                    key={s.type}
+                    className="library-node"
+                    title={s.description}
+                    onClick={() => addNode(s.type)}
+                    draggable
+                    onDragStart={(e) =>
+                      e.dataTransfer.setData("application/td-node", s.type)
+                    }
+                  >
+                    <span
+                      className="library-icon"
+                      style={{
+                        color: familyColors[s.family],
+                        background: familyColors[s.family] + "14",
+                      }}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <span className="library-node-text">
+                      <strong>{s.label}</strong>
+                      <small>{s.english}</small>
+                    </span>
+                    <Plus size={14} className="add-icon" />
+                  </button>
+                );
+              })}
+              {filtered.length === 0 && (
+                <div className="empty-note">没有找到节点，试试英文名称。</div>
+              )}
+            </div>
+            <button
+              className="import-asset"
+              onClick={() => fileInput.current?.click()}
+            >
+              <Upload size={17} />
+              <span>
+                导入素材<small>图片、视频或音频</small>
+              </span>
+              <Plus size={14} />
+            </button>
+            <div className="library-tip">
+              <div>
+                <Zap size={14} />
+                小连接，大创意
+              </div>
+              <p>把一个节点的输出拖到另一个节点的输入，看看会发生什么。</p>
+              <button onClick={() => setModal("help")}>
+                认识节点与连线 <ArrowRight size={13} />
+              </button>
+            </div>
+            <div className="library-bottom">
+              <span className="dot" />
+              本地优先 · 开源创作
+            </div>
+          </aside>
+          <main className="workspace">
+            <div className="workspace-heading">
+              <div>
+                <span className="eyebrow">YOUR CREATIVE PLAYGROUND</span>
+                <h1>
+                  让想法，流动起来<span>✳</span>
+                </h1>
+              </div>
+              <button
+                className="button subtle small"
+                onClick={() => setModal("help")}
+              >
+                <BookOpen size={14} />
+                新手指南
+                <ArrowRight size={13} />
+              </button>
+            </div>
+            <section className="preview-panel" ref={previewWrap}>
+              <div className="preview-toolbar">
+                <div className="preview-title">
+                  <span className="live-dot" />
+                  实时预览
+                  <span className="mini-divider" />{" "}
+                  <span className="muted">
+                    {previewId
+                      ? project.nodes.find((n) => n.id === previewId)?.data
+                          .label || "选中节点"
+                      : "最终输出"}
+                  </span>
+                </div>
+                <div className="preview-actions">
+                  <span className="resolution">640 × 360</span>
+                  <button
+                    className={`icon-button ${mic ? "on" : ""}`}
+                    aria-label={mic ? "关闭音频" : "启用麦克风"}
+                    title={mic ? "关闭音频" : "启用麦克风"}
+                    onClick={async () => {
+                      if (mic) {
+                        engine.current?.stopAudio();
+                        setMic(false);
+                      } else
+                        try {
+                          await engine.current?.microphone();
+                          setMic(true);
+                          notify("麦克风已启用，可添加音频节点驱动画面");
+                        } catch (e) {
+                          notify("无法启用麦克风：" + friendly(e));
+                        }
+                    }}
+                  >
+                    <Mic size={15} />
+                  </button>
+                  <button
+                    className="icon-button"
+                    title="导出 PNG"
+                    onClick={screenshot}
+                  >
+                    <ArrowDownToLine size={15} />
+                  </button>
+                  <button
+                    className={`icon-button ${recording ? "recording" : ""}`}
+                    title={recording ? "停止录制" : "录制画面 WebM"}
+                    onClick={record}
+                  >
+                    <Film size={15} />
+                  </button>
+                  <button
+                    className="icon-button"
+                    title="全屏预览"
+                    onClick={() =>
+                      previewWrap.current
+                        ?.requestFullscreen()
+                        .catch((e) => notify(friendly(e)))
+                    }
+                  >
+                    <Maximize2 size={15} />
+                  </button>
+                </div>
+              </div>
+              <div className="preview-stage">
+                <canvas
+                  ref={preview}
+                  width={640}
+                  height={360}
+                  aria-label="节点实时渲染画面"
+                />
+                <div className="preview-badge">
+                  <span className="dot" />
+                  {playing ? "LIVE" : "PAUSED"}
+                  <span>/{previewId || "output"}</span>
+                </div>
+                {previewId && (
+                  <button
+                    className="back-output"
+                    onClick={() => setPreviewId("")}
+                  >
+                    返回最终输出 <ArrowRight size={13} />
+                  </button>
+                )}
+              </div>
+              <div className="transport">
+                <button
+                  className="play-button"
+                  onClick={() => setPlaying((p) => !p)}
+                  title={playing ? "暂停（空格）" : "播放（空格）"}
+                >
+                  {playing ? (
+                    <Pause size={15} fill="currentColor" />
+                  ) : (
+                    <Play size={15} fill="currentColor" />
+                  )}
+                </button>
+                <button
+                  className="icon-button"
+                  title="回到起点"
+                  onClick={() => {
+                    timeRef.current = 0;
+                    setTime(0);
+                    renderDirty.current = true;
+                  }}
+                >
+                  <RotateCcw size={14} />
+                </button>
+                <span className="timecode">{ptime}</span>
+                <div className="timeline-ruler">
+                  <div
+                    className="timeline-playhead"
+                    style={{ left: `${((time % 60) / 60) * 100}%` }}
+                  />
+                  {[0, 10, 20, 30, 40, 50, 60].map((n) => (
+                    <span key={n}>{String(n).padStart(2, "0")}</span>
+                  ))}
+                </div>
+                <span className="fps">
+                  <i /> {fps} FPS
+                </span>
+              </div>
+            </section>
+            {guide && (
+              <div className="guide-strip">
+                <span className="guide-number">01</span>
+                <p>
+                  <strong>试着改变一点点</strong>
+                  点击下方节点，拖动右侧参数，画面会立刻响应。
+                </p>
+                <button
+                  onClick={() => {
+                    setSelected(project.nodes[0]?.id || "");
+                    setGuide(false);
+                  }}
+                >
+                  试试看 <ArrowRight size={13} />
+                </button>
+                <button
+                  className="icon-button"
+                  onClick={() => setGuide(false)}
+                  aria-label="关闭提示"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+            <section className="graph-panel">
+              <div className="graph-toolbar">
+                <div className="graph-title">
+                  <Network size={15} />
+                  <strong>节点工作区</strong>
+                  <span className="graph-breadcrumb">
+                    project <ChevronRight size={12} /> main
+                  </span>
+                </div>
+                <div className="graph-actions">
+                  <button
+                    className="icon-button"
+                    disabled={!history.current.length}
+                    onClick={undo}
+                    title="撤销 Ctrl+Z"
+                  >
+                    <Undo2 size={15} />
+                  </button>
+                  <button
+                    className="icon-button"
+                    disabled={!future.current.length}
+                    onClick={redo}
+                    title="重做 Ctrl+Shift+Z"
+                  >
+                    <Redo2 size={15} />
+                  </button>
+                  <span className="mini-divider" />
+                  <button
+                    className="button small subtle"
+                    onClick={() => {
+                      checkpoint();
+                      setProject((p) => ({
+                        ...p,
+                        nodes: p.nodes.map((n, i) => ({
+                          ...n,
+                          position: {
+                            x: (i % 4) * 245,
+                            y: Math.floor(i / 4) * 215,
+                          },
+                        })),
+                      }));
+                      setTimeout(
+                        () => flow.fitView({ padding: 0.2, duration: 350 }),
+                        80,
+                      );
+                    }}
+                  >
+                    <Grid2X2 size={13} />
+                    整理
+                  </button>
+                  <button
+                    className="icon-button"
+                    title="适应全部节点"
+                    onClick={() =>
+                      flow.fitView({ padding: 0.2, duration: 400 })
+                    }
+                  >
+                    <Expand size={15} />
+                  </button>
+                </div>
+              </div>
+              <div
+                className="flow-container"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const type = e.dataTransfer.getData("application/td-node");
+                  if (!byType[type]) return;
+                  const n = makeNode(type);
+                  n.position = flow.screenToFlowPosition({
+                    x: e.clientX,
+                    y: e.clientY,
+                  });
+                  replace({
+                    ...projectRef.current,
+                    nodes: [...projectRef.current.nodes, n],
+                  });
+                  setSelected(n.id);
+                }}
+              >
+                <ReactFlow<FlowNode>
+                  nodes={nodes}
+                  edges={edges}
+                  nodeTypes={nodeTypes}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  onNodeDragStart={checkpoint}
+                  onNodeClick={(_, n) => setSelected(n.id)}
+                  onNodeDoubleClick={(_, n) => setPreviewId(n.id)}
+                  onPaneClick={() => setSelected("")}
+                  fitView
+                  fitViewOptions={{ padding: 0.3 }}
+                  minZoom={0.25}
+                  maxZoom={1.75}
+                  deleteKeyCode={["Backspace", "Delete"]}
+                  colorMode="dark"
+                  defaultEdgeOptions={{ type: "default" }}
+                >
+                  <Background
+                    variant={BackgroundVariant.Dots}
+                    gap={18}
+                    size={1}
+                    color="#32343c"
+                  />
+                  <Controls showInteractive={false} />
+                  <MiniMap
+                    nodeColor={(n) =>
+                      familyColors[
+                        byType[(n.data as FlowNode["data"]).node.type]?.family
+                      ]
+                    }
+                    maskColor="#15161bbe"
+                    pannable
+                    zoomable
+                  />
+                </ReactFlow>
+                <div className="graph-hint">
+                  <MousePointer2 size={12} />
+                  拖动连接 · 滚轮缩放 · 双击预览
+                </div>
+              </div>
+            </section>
+          </main>
+          <aside className="inspector">
+            <div className="inspector-tabs">
+              <button
+                className={tab === "params" ? "active" : ""}
+                onClick={() => setTab("params")}
+              >
+                <SlidersHorizontal size={15} />
+                参数
+              </button>
+              <button
+                className={tab === "info" ? "active" : ""}
+                onClick={() => setTab("info")}
+              >
+                <BookOpen size={15} />
+                节点说明
+              </button>
+            </div>
+            <div className="inspector-content">
+              {active && spec ? (
+                <>
+                  <div className="inspector-node">
+                    <span
+                      className="family-tag"
+                      style={{
+                        color: familyColors[spec.family],
+                        background: familyColors[spec.family] + "15",
+                      }}
+                    >
+                      {spec.family}
+                    </span>
+                    <div>
+                      <h3>{active.data.label}</h3>
+                      <small>
+                        {spec.english} / {active.id.split("_").pop()}
+                      </small>
+                    </div>
+                    <button
+                      className="icon-button"
+                      title="预览选中节点"
+                      onClick={() => setPreviewId(active.id)}
+                    >
+                      <Expand size={15} />
+                    </button>
+                  </div>
+                  {tab === "info" ? (
+                    <div className="node-info">
+                      <p>{spec.description}</p>
+                      <h4>输入接口</h4>
+                      {spec.inputs.length ? (
+                        spec.inputs.map((p) => (
+                          <p key={p.id}>
+                            {p.label}{" "}
+                            <code>
+                              {p.kind} / {p.id}
+                            </code>
+                          </p>
+                        ))
+                      ) : (
+                        <p>这是源节点，不需要输入。</p>
+                      )}
+                      <h4>输出接口</h4>
+                      {spec.outputs.map((p) => (
+                        <p key={p.id}>
+                          {p.label} <code>{p.kind}</code>
+                        </p>
+                      ))}
+                      <p className="muted">
+                        双击节点可以单独预览。更改参数后无需重新运行视觉节点。
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="param-description">{spec.description}</p>
+                      <div className="param-section-label">
+                        基础参数
+                        <button
+                          className="reset-params"
+                          title="重置参数"
+                          onClick={() => {
+                            checkpoint();
+                            setProject((p) => ({
+                              ...p,
+                              nodes: p.nodes.map((n) =>
+                                n.id === active.id
+                                  ? {
+                                      ...n,
+                                      data: {
+                                        ...n.data,
+                                        params: Object.fromEntries(
+                                          spec.params.map((x) => [
+                                            x.key,
+                                            x.default,
+                                          ]),
+                                        ),
+                                      },
+                                    }
+                                  : n,
+                              ),
+                            }));
+                          }}
+                        >
+                          <RotateCcw size={11} />
+                          重置
+                        </button>
+                      </div>
+                      {spec.params
+                        .filter(
+                          (p) => !["result_url", "result_text"].includes(p.key),
+                        )
+                        .map((p) => (
+                          <div className="param" key={active.id + p.key}>
+                            {p.type === "number" ? (
+                              <>
+                                <label htmlFor={"param-" + p.key}>
+                                  {p.label}
+                                  <input
+                                    aria-label={p.label + "数值"}
+                                    type="number"
+                                    min={p.min}
+                                    max={p.max}
+                                    step={p.step || 0.01}
+                                    value={Number(
+                                      active.data.params[p.key] ?? p.default,
+                                    )}
+                                    onFocus={checkpoint}
+                                    onChange={(e) => {
+                                      if (e.target.value !== "")
+                                        updateParam(
+                                          p.key,
+                                          Math.min(
+                                            p.max ?? Infinity,
+                                            Math.max(
+                                              p.min ?? -Infinity,
+                                              Number(e.target.value),
+                                            ),
+                                          ),
+                                        );
+                                    }}
+                                  />
+                                </label>
+                                <input
+                                  id={"param-" + p.key}
+                                  className="slider"
+                                  type="range"
+                                  min={p.min}
+                                  max={p.max}
+                                  step={p.step || 0.01}
+                                  value={Number(
+                                    active.data.params[p.key] ?? p.default,
+                                  )}
+                                  onPointerDown={checkpoint}
+                                  onChange={(e) =>
+                                    updateParam(p.key, Number(e.target.value))
+                                  }
+                                />
+                                <div className="range-labels">
+                                  <span>{p.min}</span>
+                                  <span>{p.max}</span>
+                                </div>
+                              </>
+                            ) : p.type === "color" ? (
+                              <label>
+                                {p.label}
+                                <div className="color-control">
+                                  <input
+                                    type="color"
+                                    value={String(
+                                      active.data.params[p.key] ?? p.default,
+                                    )}
+                                    onFocus={checkpoint}
+                                    onChange={(e) =>
+                                      updateParam(p.key, e.target.value)
+                                    }
+                                  />
+                                  <span>
+                                    {String(
+                                      active.data.params[p.key] ?? p.default,
+                                    ).toUpperCase()}
+                                  </span>
+                                </div>
+                              </label>
+                            ) : p.type === "boolean" ? (
+                              <label>
+                                {p.label}
+                                <input
+                                  className="toggle"
+                                  type="checkbox"
+                                  checked={Boolean(
+                                    active.data.params[p.key] ?? p.default,
+                                  )}
+                                  onChange={(e) =>
+                                    updateParam(p.key, e.target.checked, true)
+                                  }
+                                />
+                              </label>
+                            ) : p.type === "select" ? (
+                              <label className="stacked">
+                                {p.label}
+                                <select
+                                  value={String(
+                                    active.data.params[p.key] ?? p.default,
+                                  )}
+                                  onChange={(e) =>
+                                    updateParam(p.key, e.target.value, true)
+                                  }
+                                >
+                                  {p.options?.map((v) => (
+                                    <option key={v}>{v}</option>
+                                  ))}
+                                </select>
+                              </label>
+                            ) : p.key === "provider_id" ? (
+                              <label className="stacked">
+                                AI 服务
+                                <select
+                                  aria-label="节点 AI 服务"
+                                  value={String(
+                                    active.data.params[p.key] || "",
+                                  )}
+                                  onChange={(e) =>
+                                    updateParam(p.key, e.target.value, true)
+                                  }
+                                >
+                                  <option value="">选择已连接的服务</option>
+                                  {providers
+                                    .filter(
+                                      (v) =>
+                                        v.capability ===
+                                        active.type.replace("ai_", ""),
+                                    )
+                                    .map((v) => (
+                                      <option key={v.id} value={v.id}>
+                                        {v.name}
+                                      </option>
+                                    ))}
+                                </select>
+                                <button
+                                  className="text-button"
+                                  onClick={() => setModal("settings")}
+                                >
+                                  <Plus size={12} />
+                                  添加 AI 服务
+                                </button>
+                              </label>
+                            ) : (
+                              <label className="stacked">
+                                {p.label}
+                                {["prompt", "text", "arguments"].includes(
+                                  p.key,
+                                ) ? (
+                                  <textarea
+                                    rows={3}
+                                    value={String(
+                                      active.data.params[p.key] ?? p.default,
+                                    )}
+                                    onFocus={checkpoint}
+                                    onChange={(e) =>
+                                      updateParam(p.key, e.target.value)
+                                    }
+                                  />
+                                ) : (
+                                  <input
+                                    value={String(
+                                      active.data.params[p.key] ?? p.default,
+                                    )}
+                                    onFocus={checkpoint}
+                                    onChange={(e) =>
+                                      updateParam(p.key, e.target.value)
+                                    }
+                                  />
+                                )}
+                              </label>
+                            )}
+                          </div>
+                        ))}
+                      {spec.family === "AI" && (
+                        <>
+                          <button
+                            className="button primary full"
+                            disabled={!!busy}
+                            onClick={runNode}
+                          >
+                            {busy === active.id ? (
+                              <LoaderCircle className="spin" size={14} />
+                            ) : (
+                              <Play size={14} />
+                            )}
+                            运行{active.type === "mcp_tool" ? "工具" : "生成"}
+                            {active.type !== "mcp_tool" && (
+                              <small>按服务商计费</small>
+                            )}
+                          </button>
+                          {(active.data.params.result_url ||
+                            active.data.params.result_text) && (
+                            <div className="generation-result">
+                              <strong>运行结果</strong>
+                              {active.data.params.result_url && (
+                                <>
+                                  <a
+                                    href={String(active.data.params.result_url)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    打开资源 ↗
+                                  </a>
+                                  {active.type === "ai_music" && (
+                                    <button
+                                      className="button small"
+                                      onClick={() =>
+                                        engine.current
+                                          ?.playAudio(
+                                            String(
+                                              active.data.params.result_url,
+                                            ),
+                                          )
+                                          .then(() => {
+                                            setMic(true);
+                                            notify("生成音频正在播放");
+                                          })
+                                          .catch((e) => notify(friendly(e)))
+                                      }
+                                    >
+                                      <Play size={12} />
+                                      播放并驱动画面
+                                    </button>
+                                  )}
+                                </>
+                              )}
+                              {active.data.params.result_text && (
+                                <pre>
+                                  {String(active.data.params.result_text)}
+                                </pre>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {active.type === "audio" && active.data.params.url && (
+                        <button
+                          className="button full"
+                          onClick={() =>
+                            engine.current
+                              ?.playAudio(String(active.data.params.url))
+                              .then(() => {
+                                setMic(true);
+                                notify("音频开始播放");
+                              })
+                              .catch((e) => notify(friendly(e)))
+                          }
+                        >
+                          <Play size={14} />
+                          播放已导入音频
+                        </button>
+                      )}
+                      {active.type === "media" && (
+                        <button
+                          className="button full"
+                          onClick={() => fileInput.current?.click()}
+                        >
+                          <Upload size={14} />
+                          导入素材
+                        </button>
+                      )}
+                      {spec.params.length === 0 && (
+                        <div className="output-info">
+                          <Check size={20} />
+                          <strong>你的作品出口</strong>
+                          <p>
+                            连接一个画面节点到左侧输入。通过预览工具栏导出 PNG
+                            或录制视频。
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div className="node-actions">
+                    <button onClick={duplicate}>
+                      <Copy size={13} />
+                      复制节点
+                    </button>
+                    <button onClick={removeNode}>
+                      <Trash2 size={13} />
+                      删除
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="inspector-empty">
+                  <MousePointer2 size={28} />
+                  <h3>选中一个节点</h3>
+                  <p>
+                    点击工作区中的节点，
+                    <br />
+                    在这里探索它的参数。
+                  </p>
+                  <button
+                    className="button small"
+                    onClick={() => setSelected(project.nodes[0]?.id || "")}
+                  >
+                    选择第一个节点
+                    <ArrowRight size={12} />
+                  </button>
+                </div>
+              )}
+            </div>
+            <section className="assistant-panel">
+              <div className="assistant-heading">
+                <div>
+                  <Sparkles size={16} />
+                  <strong>创作助手</strong>
+                </div>
+                <span className="assistant-mode">
+                  {chatProvider ? "AI 已连接" : "本地指令"}
+                </span>
+              </div>
+              <div className="chat-messages">
+                {chats.length === 0 ? (
+                  <div className="chat-welcome">
+                    <div className="assistant-orb">
+                      <Sparkles size={22} />
+                    </div>
+                    <h3>从一个想法开始。</h3>
+                    <p>
+                      用一句话添加节点、调整参数。
+                      <br />
+                      连接语言模型，探索更多可能。
+                    </p>
+                    <button
+                      className="prompt-chip"
+                      onClick={() => send("添加粒子节点")}
+                    >
+                      ✧ 添加一组流动粒子 <ArrowRight size={12} />
+                    </button>
+                    <button
+                      className="prompt-chip"
+                      onClick={() => send("速度调为 0.5")}
+                    >
+                      ↝ 把画面的速度调慢 <ArrowRight size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  chats.map((m, i) => (
+                    <div key={i} className={"chat-message " + m.role}>
+                      <span>
+                        {m.role === "assistant" ? <Sparkles size={13} /> : null}
+                      </span>
+                      <p>{m.text}</p>
+                      {!!m.commands?.length && (
+                        <div className="command-preview">
+                          <details>
+                            <summary>{m.commands.length} 项修改</summary>
+                            <pre>{JSON.stringify(m.commands, null, 2)}</pre>
+                          </details>
+                          <button
+                            className="button primary small"
+                            disabled={m.applied}
+                            onClick={() => applyChat(i)}
+                          >
+                            {m.applied ? (
+                              <Check size={12} />
+                            ) : (
+                              <Play size={12} />
+                            )}{" "}
+                            {m.applied ? "已应用" : "应用修改"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+                {busy === "chat" && (
+                  <div className="thinking">
+                    <LoaderCircle size={13} className="spin" />
+                    正在理解你的想法…
+                  </div>
+                )}
+                <div ref={chatBottom} />
+              </div>
+              <div className="chat-compose">
+                <textarea
+                  aria-label="对话指令"
+                  placeholder="描述你想创作的画面…"
+                  rows={2}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void send();
+                    }
+                  }}
+                />
+                <div>
+                  <select
+                    aria-label="对话模型"
+                    value={chatProvider}
+                    onChange={(e) => setChatProvider(e.target.value)}
+                  >
+                    <option value="">⌘ 本地指令模式</option>
+                    {providers
+                      .filter((p) => p.capability === "text")
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    className="send-button"
+                    disabled={!prompt.trim() || !!busy}
+                    onClick={() => send()}
+                    aria-label="发送对话"
+                  >
+                    <ArrowRight size={17} />
+                  </button>
+                </div>
+              </div>
+              <div className="assistant-footnote">修改前可预览 · 支持撤销</div>
+            </section>
+          </aside>
+        </div>
+        <footer className="statusbar">
+          <div>
+            <span className={backend ? "dot" : "dot warning"} />
+            {backend ? "Python 引擎已连接" : "后端未连接"}
+            <span className="status-divider" />
+            {engine.current?.gpu || "初始化渲染器"}
+            <span className="status-divider" />
+            {project.nodes.length} 个节点 · {project.edges.length} 条连接
+          </div>
+          <div>
+            {errors.length > 0 ? (
+              <button
+                className="error-status"
+                onClick={() => notify(errors.join("；"))}
+              >
+                {errors.length} 条运行提示
+              </button>
+            ) : (
+              <span>所有系统就绪</span>
+            )}
+            <span className="status-divider" />
+            <span>TD OPEN / MAKE SOMETHING NEW</span>
+          </div>
+        </footer>
+        <input
+          hidden
+          ref={fileInput}
+          type="file"
+          accept="image/*,video/*,audio/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void upload(file);
+            e.target.value = "";
+          }}
+        />
+        <input
+          hidden
+          ref={importInput}
+          type="file"
+          accept=".json,.tdopen"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void importProject(file);
+            e.target.value = "";
+          }}
+        />
+        {toast && (
+          <div className="toast" role="status">
+            <span>
+              <Activity size={16} />
+              {toast}
+            </span>
+            <button className="icon-button" onClick={() => setToast("")}>
+              <X size={14} />
+            </button>
+          </div>
+        )}
+        {modal === "settings" && (
+          <Settings
+            close={() => {
+              setModal("");
+              void fetchProviders();
+            }}
+            notify={notify}
+          />
+        )}
+        {["templates", "projects", "help"].includes(modal) && (
+          <div
+            className="modal-backdrop"
+            onMouseDown={(e) => e.target === e.currentTarget && setModal("")}
+          >
+            <section
+              className="modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label={
+                modal === "templates"
+                  ? "示例作品"
+                  : modal === "projects"
+                    ? "我的作品"
+                    : "入门指南"
+              }
+            >
+              <div className="modal-head">
+                <div>
+                  <span className="eyebrow">
+                    {modal === "templates"
+                      ? "A LITTLE SPARK"
+                      : modal === "projects"
+                        ? "YOUR CREATIVE SPACE"
+                        : "START EXPLORING"}
+                  </span>
+                  <h2>
+                    {modal === "templates"
+                      ? "不用从空白开始。"
+                      : modal === "projects"
+                        ? "你的创作空间"
+                        : "第一个作品，从连接开始。"}
+                  </h2>
+                  <p>
+                    {modal === "templates"
+                      ? "挑一个起点，改成自己的样子。"
+                      : modal === "projects"
+                        ? "作品以可读的 JSON 文件保存在本机。"
+                        : "用四个简单步骤，认识你的新工作台。"}
+                  </p>
+                </div>
+                <button
+                  className="icon-button"
+                  onClick={() => setModal("")}
+                  aria-label="关闭窗口"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              {modal === "templates" ? (
+                <>
+                  <div className="template-grid">
+                    {[
+                      {
+                        id: "flow",
+                        name: "流光实验",
+                        sub: "纹理 · 色彩 · 柔光",
+                        tag: "适合第一次探索",
+                      },
+                      {
+                        id: "particles",
+                        name: "声音的形状",
+                        sub: "音频 · 粒子 · 实时互动",
+                        tag: "启用麦克风后互动",
+                      },
+                      {
+                        id: "3d",
+                        name: "空间练习",
+                        sub: "三维几何 · 线框 · 渲染",
+                        tag: "真正的 WebGL 3D",
+                      },
+                      {
+                        id: "ai",
+                        name: "想象力画布",
+                        sub: "AI 图片 · 色彩 · 输出",
+                        tag: "需要连接 AI 服务",
+                      },
+                    ].map((t) => (
+                      <button
+                        className="template-card"
+                        key={t.id}
+                        onClick={() => usePreset(t.id)}
+                      >
+                        <div className={"template-art " + t.id}>
+                          <span>
+                            {t.id === "3d"
+                              ? "◎"
+                              : t.id === "particles"
+                                ? "✧"
+                                : t.id === "ai"
+                                  ? "✦"
+                                  : "≈"}
+                          </span>
+                          <small>{t.tag}</small>
+                        </div>
+                        <div>
+                          <h3>
+                            {t.name}
+                            <ArrowRight size={16} />
+                          </h3>
+                          <p>{t.sub}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    className="button subtle"
+                    onClick={() => usePreset("empty")}
+                  >
+                    <FilePlus2 size={16} />
+                    创建空白作品
+                  </button>
+                </>
+              ) : modal === "projects" ? (
+                <>
+                  <div className="project-tools">
+                    <button
+                      className="button primary"
+                      onClick={() => usePreset("empty")}
+                    >
+                      <Plus size={15} />
+                      新建作品
+                    </button>
+                    <button
+                      className="button"
+                      onClick={() => importInput.current?.click()}
+                    >
+                      <Upload size={15} />
+                      导入 JSON
+                    </button>
+                    <button
+                      className="button"
+                      onClick={() =>
+                        void saveArtifact(
+                          new Blob([JSON.stringify(project, null, 2)], {
+                            type: "application/json",
+                          }),
+                          project.id + ".tdopen.json",
+                        ).catch((e) => notify(friendly(e)))
+                      }
+                    >
+                      <Download size={15} />
+                      导出当前作品
+                    </button>
+                  </div>
+                  <div className="project-list">
+                    {projects.length === 0 && (
+                      <div className="empty-note">
+                        还没有保存的作品。回到工作区点击“保存作品”。
+                      </div>
+                    )}
+                    {projects.map((p) => (
+                      <button
+                        className="project-row"
+                        key={p.id}
+                        onClick={async () => {
+                          try {
+                            const result = await api<Project>(
+                              "/projects/" + p.id,
+                            );
+                            replace(result);
+                            setModal("");
+                            setSelected("");
+                            setPreviewId("");
+                            setTimeout(
+                              () => flow.fitView({ padding: 0.2 }),
+                              150,
+                            );
+                          } catch (e) {
+                            notify(friendly(e));
+                          }
+                        }}
+                      >
+                        <span className="project-icon">
+                          <Network size={22} />
+                        </span>
+                        <span>
+                          <strong>{p.name}</strong>
+                          <small>{p.id}</small>
+                        </span>
+                        <ArrowRight size={16} />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="help-steps">
+                    {[
+                      [
+                        "01",
+                        "先选一个示例",
+                        "流光实验无需 API 即可运行。点击“示例作品”选择起点。",
+                      ],
+                      [
+                        "02",
+                        "连接节点",
+                        "从节点右侧圆点拖到另一个节点左侧圆点。接口类型需匹配：图像连图像，信号连调制。",
+                      ],
+                      [
+                        "03",
+                        "调节参数，立即看到变化",
+                        "选中节点，在右侧调整参数。双击节点查看中间结果；空格暂停，Ctrl+Z 撤销。",
+                      ],
+                      [
+                        "04",
+                        "让 AI 加入创作",
+                        "在“连接”中添加服务。本地指令可添加节点和修改速度；选择语言模型后可生成更多工作流修改。",
+                      ],
+                    ].map(([n, title, desc]) => (
+                      <div key={n}>
+                        <span>{n}</span>
+                        <section>
+                          <h3>{title}</h3>
+                          <p>{desc}</p>
+                        </section>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="help-note">
+                    <strong>这是一个独立开源项目的早期版本。</strong>
+                    <p>
+                      当前支持基础视觉节点、3D 渲染、AI API 和 MCP 接入。完整
+                      TouchDesigner 功能、.toe/.tox
+                      文件、硬件协议、组件嵌套和专业 GPU
+                      管线尚未实现。完整范围请查看项目 docs/FEATURE_MATRIX.md。
+                    </p>
+                  </div>
+                  <button
+                    className="button primary"
+                    onClick={() => {
+                      setModal("templates");
+                    }}
+                  >
+                    打开示例作品
+                    <ArrowRight size={16} />
+                  </button>
+                </>
+              )}
+            </section>
+          </div>
+        )}
+      </div>
+    </EngineContext.Provider>
+  );
+}
+export default function App() {
+  return (
+    <ReactFlowProvider>
+      <Studio />
+    </ReactFlowProvider>
+  );
+}

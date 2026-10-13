@@ -1,0 +1,23 @@
+{
+  "id": "example_empty",
+  "name": "未命名作品",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "output_9bd3e821",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 25
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [],
+  "settings": {
+    "preset": "empty"
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "id": "example_flow",
+  "name": "流光实验 · Flow study",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_6af54ed8",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 25
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 3,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "color_34038082",
+      "type": "color",
+      "position": {
+        "x": 245,
+        "y": 25
+      },
+      "data": {
+        "label": "色彩调整",
+        "params": {
+          "hue": 0,
+          "saturation": 1.2,
+          "brightness": 1.1
+        }
+      }
+    },
+    {
+      "id": "blur_76c93667",
+      "type": "blur",
+      "position": {
+        "x": 490,
+        "y": 25
+      },
+      "data": {
+        "label": "柔光",
+        "params": {
+          "radius": 6,
+          "glow": 0.35
+        }
+      }
+    },
+    {
+      "id": "output_dad890a8",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 25
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    },
+    {
+      "id": "lfo_f4fed9a6",
+      "type": "lfo",
+      "position": {
+        "x": 0,
+        "y": 245
+      },
+      "data": {
+        "label": "波形信号",
+        "params": {
+          "frequency": 0.12,
+          "amplitude": 0.4,
+          "offset": 0
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_cf9690f3",
+      "source": "noise_6af54ed8",
+      "target": "color_34038082",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_016b9f1b",
+      "source": "color_34038082",
+      "target": "blur_76c93667",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_1507f336",
+      "source": "blur_76c93667",
+      "target": "output_dad890a8",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_af1cb12a",
+      "source": "lfo_f4fed9a6",
+      "target": "noise_6af54ed8",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    }
+  ],
+  "settings": {
+    "preset": "flow"
+  }
+}
