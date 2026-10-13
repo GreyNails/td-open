@@ -1,6 +1,6 @@
 # 本地 HTTP API 接入指南
 
-本文适用于 TD Open 0.4，面向希望用 Python、curl、其它应用或自己的插件控制 TD Open 的开发者。示例对应仓库中的实际路由；交互式接口文档以你当前运行的版本为准。
+本文适用于 TD Open 0.5，面向希望用 Python、curl、其它应用或自己的插件控制 TD Open 的开发者。示例对应仓库中的实际路由；交互式接口文档以你当前运行的版本为准。
 
 完整导航见 [API 接入总指南](API_GUIDE.md)。如果你只是想在界面里接入语言、图片、音乐或 3D 生成服务，先看 [AI API 接入说明](AI_API.md)。设备、OSC、MQTT、文件和外部 SDK 的接入见 [I/O 接入指南](IO_GUIDE.md)，通过对话操作工具见 [MCP 接入指南](MCP_GUIDE.md)。
 
@@ -68,6 +68,7 @@ TD_PORT=8767 TD_DATA_DIR=.cache/api-guide/server-data ./scripts/start.sh
 | `POST /api/scripts/run` | `code`、`inputs`、`time`，加令牌请求头 | `value`、`log` | 执行受信任 Python |
 | `POST /api/web-render/capture` | `url` 或 `html`、尺寸、动作 | `image_url` 和页面信息 | Chromium 截图 |
 | `/api/io/*` | 见 [I/O 指南](IO_GUIDE.md) | 会话、数据、设备桥接 | 依接口而定 |
+| `/api/local-ai/*` | 见 [本地模型接口与安装](LOCAL_AI.md) | 环境、权重、GPU 队列、生成结果、Comfy API 工作流 | 手动启动本地下载或推理 |
 | `/api/providers`、`/api/ai/*`、`/api/chat` | 见 [AI 文档](AI_API.md) | 服务配置、生成结果、对话命令 | 调用外部服务可能计费 |
 
 `POST /api/commands` 返回的是计算得到的修改结果，不会直接改磁盘工程。自动化程序需要再调用 `POST /api/projects` 保存。HTTP 保存同一 ID 会覆盖该工程；没有版本号冲突合并机制，避免两个编辑器同时写同一个工程。

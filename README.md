@@ -2,11 +2,11 @@
 
 一个以中文新手体验为起点的开源节点创作工作台：连接节点、实时调整画面，把 AI 服务和 MCP 工具接入同一张创作图。
 
-**699 个节点入口 · 82 个可编辑案例 · 联动停靠工作区 · Python + TypeScript · MIT**
+**744 个节点入口 · 94 个可编辑案例 · 联动停靠工作区 · Python + TypeScript · MIT**
 
-Open-source visual programming studio with a dockable workspace, real-time graphics, AI APIs and MCP.
+Open-source visual programming studio with a dockable workspace, real-time graphics, local AI models, AI APIs and MCP.
 
-**当前为可运行的 0.4 Alpha，尚未实现 TouchDesigner 全功能等价。** 这是独立实现的项目，与 Derivative 无隶属关系，不包含其程序、图标或源码，也不兼容 `.toe` / `.tox`。对参考截图的 531 项逐项核对：432 项已有可运行子集、7 项由已有相关节点覆盖、92 项需要外部适配器。详细支持范围和未完成项见 [功能矩阵](docs/FEATURE_MATRIX.md)，可检索的 [逐项清单](docs/REFERENCE_COVERAGE.md) 保留每项限制。
+**当前为可运行的 0.5 Alpha，尚未实现 TouchDesigner 全功能等价。** 这是独立实现的项目，与 Derivative 无隶属关系，不包含其程序、图标或源码，也不兼容 `.toe` / `.tox`。对参考截图的 531 项逐项核对：432 项已有可运行子集、7 项由已有相关节点覆盖、92 项需要外部适配器。详细支持范围和未完成项见 [功能矩阵](docs/FEATURE_MATRIX.md)，可检索的 [逐项清单](docs/REFERENCE_COVERAGE.md) 保留每项限制。
 
 ![TD Open 0.4：实时输出、联动分栏与节点编辑](docs/images/studio-docked.png)
 
@@ -16,15 +16,20 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 
 上图均由项目内置引擎实际渲染。图库另有 AI / MCP 工作流，明确标注需连接服务，未填入虚构的生成结果。
 
+![本地模型中心：七组真实模型、一键环境与权重管理](docs/images/local-model-center.png)
+
+![工作台实跑：图片、音乐、三维与视频生成](docs/images/local-ai-live.png)
+
 ## 现在可以做什么
 
 - **类似 Blender 的联动停靠布局**：节点资源、实时预览、节点画布、参数、创作助手共用边界；拖动分隔线时相邻区域同步增减，支持上下/左右拆分、拖动合并标签、隐藏、最大化和按作品保存。
 - 在无限节点画布上添加、移动、框选、多选复制、删除、连接节点；复制多选节点时保留内部连线，支持撤销、重做和整理布局。
-- **699 个节点入口**：TOP 204、CHOP 211、SOP 129、DAT 96、COMP 40、MAT 13、AI 5、OUT 1。包含 **92 个需要外部 SDK/硬件适配器的入口**，其余也按实际实现子集说明；数量不代表商业软件完整兼容。详见 [逐项对照](docs/REFERENCE_COVERAGE.md) 与 [节点手册](docs/NODES.md)。
+- **744 个节点入口**：TOP 204、CHOP 211、SOP 129、DAT 128、COMP 40、MAT 13、AI 18、OUT 1。包含 **92 个需要外部 SDK/硬件适配器的入口**，其余也按实际实现子集说明；数量不代表商业软件完整兼容。详见 [逐项对照](docs/REFERENCE_COVERAGE.md) 与 [节点手册](docs/NODES.md)。
+- **本地 AI 与原生 ComfyUI**：45 个新增节点入口，支持 FLUX.2 Klein、Z-Image、ACE-Step 1.5、Hunyuan3D 2.1、MelBand、Demucs、Wan 2.2。提供独立环境、可续传权重下载、哈希校验、单卡显存预算、任务队列、取消、结果下载，以及原生 API 工作流导入和实际 Comfy 节点库。七组模型已通过工作界面实跑；[安装文档](docs/LOCAL_AI.md) / [真实运行与显存记录](docs/LOCAL_AI_VALIDATION.md)。
 - **真正可编辑的组件内部网络**：双击进入 Base / Container / Time 等组件，通过 In/Out 与父级连接，使用绝对/相对节点引用；支持独立时钟和 Replicator 模板复制。
 - **真实采样、网格和着色器**：命名多通道 CHOP、表格 DAT、音频 PCM/FFT/WAV、布尔/曲线/蒙皮 SOP、13 个 MAT、相机灯光与刚体场景、WebGL 2 GLSL。
 - **Python、网页与协议**：手动运行 Python TOP/CHOP/SOP/DAT；Chromium 捕获网页；OSC、UDP/TCP、WebSocket、MQTT、Art-Net、串口、文件与共享内存；授权后使用 MIDI、摄像头、屏幕捕获和浏览器音频。
-- **82 个代表性案例**：纹理与分形、图像处理、合成与遮罩、三维雕塑、音频与信号、文字数据、AI 与 MCP。支持搜索、分类、入门筛选；附真实缩略图和动手提示。另提供 1 份空白作品，全部可从 [案例索引](docs/EXAMPLES.md) 下载。
+- **94 个代表性案例**：纹理与分形、图像处理、合成与遮罩、三维雕塑、音频与信号、文字数据、AI 与 MCP。支持搜索、分类、入门筛选；附真实缩略图和动手提示。另提供 1 份空白作品，全部可从 [案例索引](docs/EXAMPLES.md) 下载。
 - 通过中文/英文快捷搜索添加节点、收藏常用节点，并自动连接选中节点的兼容输出。
 - 使用 LFO、常量和数学节点驱动参数；导入音频或授权麦克风后，让频谱和粒子跟随声音。音频导入后可保存 URL 并手动重新播放。
 - 通过 WebGL / Three.js 渲染几何体、材质与场景，以及可访问的 glTF / GLB / OBJ / FBX 资源。
@@ -85,6 +90,12 @@ npx playwright install chromium
 
 启动脚本会设置项目内浏览器缓存路径，也可用 `TD_CHROMIUM=/path/to/chromium ./scripts/start.sh` 指定已有浏览器。Python Script 是手动运行的受信任本机代码，可使用当前用户的文件和网络权限，不是沙箱。
 
+## 本地图片、音乐、三维、分轨和视频
+
+这台机器已安装并校验七组模型。点击左侧 **本地 AI** 查看环境和权重，添加节点后填写提示词、上传输入素材，再点击 **运行本地工作流**。也可从 **示例作品 → 本地 AI** 开始。所有任务手动启动，结果保存到项目目录。
+
+在其他机器上点击模型卡的 **一键安装**，或按 [详细手动安装与权重接入](docs/LOCAL_AI.md) 配置。公开仓库不包含权重；模型源码与权重各自保留原许可。本次使用单张 L40 强制 24 GiB 预算测试，七组预设显存峰值最高约 12.69 GiB；尚未在实体游戏显卡或 Windows 上复测，任意分辨率和时长需要另行验证。LTX-2.5 需要账户许可，未在本机授权和验收。
+
 ## 第一个作品
 
 1. 点击“示例作品”，选择“流光实验”；它不需要任何 AI API。
@@ -103,7 +114,7 @@ npx playwright install chromium
 
 ![拖动合并后的标签工作区](docs/images/studio-merged.png)
 
-“示例作品”收录 82 个完整节点网络。无须密钥即可运行大多数程序图像、信号和三维案例；声音案例可导入音频或使用麦克风。AI / MCP 案例需要配置服务并手动执行。
+“示例作品”收录 94 个完整节点网络。无须密钥即可运行大多数程序图像、信号和三维案例；声音案例可导入音频或使用麦克风。AI / MCP 案例需要配置服务并手动执行；新增 12 个本地 AI 案例需要安装相应权重。
 
 ![可搜索、分类与筛选的案例库](docs/images/example-browser.png)
 
@@ -142,7 +153,7 @@ MCP 客户端示例配置（请把路径替换为自己的安装目录）：
 }
 ```
 
-先启动 Python 应用。不同客户端的工作目录、SSH 配置、四个工具及完整对话步骤见 [MCP 接入指南](docs/MCP_GUIDE.md)。
+先启动 Python 应用。不同客户端的工作目录、SSH 配置、八个工具及完整对话步骤见 [MCP 接入指南](docs/MCP_GUIDE.md)。
 
 ## 所有文件放在哪里
 
@@ -156,7 +167,7 @@ MCP 客户端示例配置（请把路径替换为自己的安装目录）：
 | `data/config` | 服务配置与密钥，文件权限限制且 Git 忽略 |
 | `data/exports` | PNG、WebM、WAV、JSON 导出文件 |
 | `data/artifacts` | 验证报告与界面截图 |
-| `examples` | 82 个案例 + 1 个空白项目 JSON |
+| `examples` | 94 个案例 + 1 个空白项目 JSON |
 | `examples/api` | API 演练服务、四份连接配置与 MCP 客户端配置模板 |
 | `docs/*API*.md`、`docs/MCP_GUIDE.md`、`docs/IO_GUIDE.md` | 应用内文档中心共用的接入教程源码 |
 | `frontend/public/examples` | 实际渲染的案例缩略图；AI 卡片明确显示连接说明 |

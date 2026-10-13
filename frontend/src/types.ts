@@ -41,6 +41,7 @@ export type NodeSpec = {
   inputs: Port[];
   outputs: Port[];
   params: Param[];
+  comfy?: { class_type: string; terminal: boolean };
   reference?: {
     family: string;
     name: string;

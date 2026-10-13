@@ -1,0 +1,388 @@
+{
+  "schema": 1,
+  "checked_at": "2026-10-14",
+  "runtime": {
+    "repository": "https://github.com/Comfy-Org/ComfyUI.git",
+    "revision": "7bf5df9e38763dbdd94a0f9c939273019025c2bc",
+    "torch": "2.8.0",
+    "torchvision": "0.23.0",
+    "torchaudio": "2.8.0",
+    "cuda": "cu128"
+  },
+  "assets": {
+    "flux-klein": {
+      "id": "flux-klein",
+      "repo": "black-forest-labs/FLUX.2-klein-4b-fp8",
+      "revision": "5b4408e59397a4a37ccb46afe426d8ed86379441",
+      "path": "flux-2-klein-4b-fp8.safetensors",
+      "filename": "flux-2-klein-4b-fp8.safetensors",
+      "directory": "diffusion_models",
+      "size": 4070624520,
+      "sha256": "97ed34fe0567e436200f2faee3939b88f2b5d99f8af2a4dc16532c4245c0ccb6",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4b-fp8",
+      "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4b-fp8/resolve/5b4408e59397a4a37ccb46afe426d8ed86379441/flux-2-klein-4b-fp8.safetensors"
+    },
+    "qwen3": {
+      "id": "qwen3",
+      "repo": "Comfy-Org/z_image_turbo",
+      "revision": "6fc90a3b1b653e935a0d175e260736de25b84df5",
+      "path": "split_files/text_encoders/qwen_3_4b_fp8_mixed.safetensors",
+      "filename": "qwen_3_4b_fp8_mixed.safetensors",
+      "directory": "text_encoders",
+      "size": 5631994051,
+      "sha256": "72450b19758172c5a7273cf7de729d1c17e7f434a104a00167624cba94f68f15",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/z_image_turbo",
+      "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/6fc90a3b1b653e935a0d175e260736de25b84df5/split_files/text_encoders/qwen_3_4b_fp8_mixed.safetensors"
+    },
+    "flux-vae": {
+      "id": "flux-vae",
+      "repo": "Comfy-Org/flux2-klein",
+      "revision": "5f526678002e43af5551dadb73ce2e8c91b43afe",
+      "path": "split_files/vae/flux2-vae.safetensors",
+      "filename": "flux2-vae.safetensors",
+      "directory": "vae",
+      "size": 336211292,
+      "sha256": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/flux2-klein",
+      "url": "https://huggingface.co/Comfy-Org/flux2-klein/resolve/5f526678002e43af5551dadb73ce2e8c91b43afe/split_files/vae/flux2-vae.safetensors"
+    },
+    "z-turbo": {
+      "id": "z-turbo",
+      "repo": "Comfy-Org/z_image_turbo",
+      "revision": "6fc90a3b1b653e935a0d175e260736de25b84df5",
+      "path": "split_files/diffusion_models/z_image_turbo_int8_convrot.safetensors",
+      "filename": "z_image_turbo_int8_convrot.safetensors",
+      "directory": "diffusion_models",
+      "size": 6201001296,
+      "sha256": "be517ebd47c912a5626a588e1aeea43e6be4a43c0cdcd2b48a2a780d9f358635",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/z_image_turbo",
+      "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/6fc90a3b1b653e935a0d175e260736de25b84df5/split_files/diffusion_models/z_image_turbo_int8_convrot.safetensors"
+    },
+    "z-vae": {
+      "id": "z-vae",
+      "repo": "Comfy-Org/z_image_turbo",
+      "revision": "6fc90a3b1b653e935a0d175e260736de25b84df5",
+      "path": "split_files/vae/ae.safetensors",
+      "filename": "ae.safetensors",
+      "directory": "vae",
+      "size": 335304388,
+      "sha256": "afc8e28272cd15db3919bacdb6918ce9c1ed22e96cb12c4d5ed0fba823529e38",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/z_image_turbo",
+      "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/6fc90a3b1b653e935a0d175e260736de25b84df5/split_files/vae/ae.safetensors"
+    },
+    "ace-turbo": {
+      "id": "ace-turbo",
+      "repo": "Comfy-Org/ace_step_1.5_ComfyUI_files",
+      "revision": "6707deb277e9e0907fd9c14ce6b6f1d695c6a3fc",
+      "path": "split_files/diffusion_models/acestep_v1.5_turbo.safetensors",
+      "filename": "acestep_v1.5_turbo.safetensors",
+      "directory": "diffusion_models",
+      "size": 4787825604,
+      "sha256": "3f6e0797fad420a39bd33979eb6e840e30989e34a3794e843d23b60ec6e422d7",
+      "license": "MIT",
+      "source_url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files",
+      "url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/6707deb277e9e0907fd9c14ce6b6f1d695c6a3fc/split_files/diffusion_models/acestep_v1.5_turbo.safetensors"
+    },
+    "ace-text": {
+      "id": "ace-text",
+      "repo": "Comfy-Org/ace_step_1.5_ComfyUI_files",
+      "revision": "6707deb277e9e0907fd9c14ce6b6f1d695c6a3fc",
+      "path": "split_files/text_encoders/qwen_0.6b_ace15.safetensors",
+      "filename": "qwen_0.6b_ace15.safetensors",
+      "directory": "text_encoders",
+      "size": 1191588248,
+      "sha256": "fd4590c82153b8ddb67e15a2e7aaa8afa8b83a858c8a9b82a4831063156aa7a7",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files",
+      "url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/6707deb277e9e0907fd9c14ce6b6f1d695c6a3fc/split_files/text_encoders/qwen_0.6b_ace15.safetensors"
+    },
+    "ace-lm": {
+      "id": "ace-lm",
+      "repo": "Comfy-Org/ace_step_1.5_ComfyUI_files",
+      "revision": "6707deb277e9e0907fd9c14ce6b6f1d695c6a3fc",
+      "path": "split_files/text_encoders/qwen_1.7b_ace15.safetensors",
+      "filename": "qwen_1.7b_ace15.safetensors",
+      "directory": "text_encoders",
+      "size": 3708523360,
+      "sha256": "ed63e9247d1f55f3ace04fa11e95b085fc82d459c82c5626f0b2e37b91ebd710",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files",
+      "url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/6707deb277e9e0907fd9c14ce6b6f1d695c6a3fc/split_files/text_encoders/qwen_1.7b_ace15.safetensors"
+    },
+    "ace-vae": {
+      "id": "ace-vae",
+      "repo": "Comfy-Org/ace_step_1.5_ComfyUI_files",
+      "revision": "6707deb277e9e0907fd9c14ce6b6f1d695c6a3fc",
+      "path": "split_files/vae/ace_1.5_vae.safetensors",
+      "filename": "ace_1.5_vae.safetensors",
+      "directory": "vae",
+      "size": 337431732,
+      "sha256": "6de92e3a862acd287e08b024ac90f0783a8635451b728721a33ff03565bcb2bb",
+      "license": "MIT",
+      "source_url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files",
+      "url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/6707deb277e9e0907fd9c14ce6b6f1d695c6a3fc/split_files/vae/ace_1.5_vae.safetensors"
+    },
+    "hy21": {
+      "id": "hy21",
+      "repo": "Comfy-Org/hunyuan3D_2.1_repackaged",
+      "revision": "606def5076d38b387b005caf93b5336c56ca99f9",
+      "path": "hunyuan_3d_v2.1.safetensors",
+      "filename": "hunyuan_3d_v2.1.safetensors",
+      "directory": "checkpoints",
+      "size": 7365943290,
+      "sha256": "5f21e98a6cb99b13b5e224abaee33929570fff7af2b6a0060001559a04ba9d72",
+      "license": "Tencent Hunyuan Community",
+      "source_url": "https://huggingface.co/Comfy-Org/hunyuan3D_2.1_repackaged",
+      "url": "https://huggingface.co/Comfy-Org/hunyuan3D_2.1_repackaged/resolve/606def5076d38b387b005caf93b5336c56ca99f9/hunyuan_3d_v2.1.safetensors"
+    },
+    "wan5b": {
+      "id": "wan5b",
+      "repo": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+      "revision": "ee6f4a40737a995bf5818954cfce6d59443b0f04",
+      "path": "split_files/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors",
+      "filename": "wan2.2_ti2v_5B_fp16.safetensors",
+      "directory": "diffusion_models",
+      "size": 9999658848,
+      "sha256": "456f901338bd9eadbded3828b819109a9b68e8a525ca5cf8d0049a69fcfeca1e",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+      "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/ee6f4a40737a995bf5818954cfce6d59443b0f04/split_files/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors"
+    },
+    "wan-t5": {
+      "id": "wan-t5",
+      "repo": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+      "revision": "ee6f4a40737a995bf5818954cfce6d59443b0f04",
+      "path": "split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "filename": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "directory": "text_encoders",
+      "size": 6735906897,
+      "sha256": "c3355d30191f1f066b26d93fba017ae9809dce6c627dda5f6a66eaa651204f68",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+      "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/ee6f4a40737a995bf5818954cfce6d59443b0f04/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+    },
+    "wan-vae": {
+      "id": "wan-vae",
+      "repo": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+      "revision": "ee6f4a40737a995bf5818954cfce6d59443b0f04",
+      "path": "split_files/vae/wan2.2_vae.safetensors",
+      "filename": "wan2.2_vae.safetensors",
+      "directory": "vae",
+      "size": 1409400960,
+      "sha256": "e40321bd36b9709991dae2530eb4ac303dd168276980d3e9bc4b6e2b75fed156",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+      "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/ee6f4a40737a995bf5818954cfce6d59443b0f04/split_files/vae/wan2.2_vae.safetensors"
+    },
+    "mel": {
+      "id": "mel",
+      "repo": "Kijai/MelBandRoFormer_comfy",
+      "revision": "7dc5fa7824f1f3089a5c4b130d767004ccc1ed12",
+      "path": "MelBandRoformer_fp16.safetensors",
+      "filename": "MelBandRoformer_fp16.safetensors",
+      "directory": "diffusion_models",
+      "size": 456479072,
+      "sha256": "6119aef379a6c7264e0b37db65ae1e6488b8ca4a00baf56d6d244737b8488226",
+      "license": "MIT (code); see upstream model terms",
+      "source_url": "https://huggingface.co/Kijai/MelBandRoFormer_comfy",
+      "url": "https://huggingface.co/Kijai/MelBandRoFormer_comfy/resolve/7dc5fa7824f1f3089a5c4b130d767004ccc1ed12/MelBandRoformer_fp16.safetensors"
+    },
+    "demucs": {
+      "id": "demucs",
+      "filename": "955717e8-8726e21a.th",
+      "directory": "demucs",
+      "size": 84141911,
+      "sha256_prefix": "8726e21a",
+      "license": "MIT",
+      "source_url": "https://github.com/facebookresearch/demucs",
+      "url": "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th",
+      "sha256": "8726e21a993978c7ba086d3872e7608d7d5bfca646ca4aca459ffda844faa8b4"
+    }
+  },
+  "profiles": [
+    {
+      "id": "flux-klein-4b",
+      "name": "FLUX.2 Klein 4B",
+      "category": "image",
+      "assets": [
+        "flux-klein",
+        "qwen3",
+        "flux-vae"
+      ],
+      "vram_gb": 8,
+      "ram_gb": 24,
+      "tasks": [
+        "text-to-image",
+        "image-edit"
+      ],
+      "license": "Apache-2.0",
+      "description": "4 步快速生成与参考图编辑；FP8 权重，文本编码器与 Z-Image 共用。",
+      "source": "https://github.com/black-forest-labs/flux2",
+      "released": "2026-01",
+      "parameters": {
+        "width": 512,
+        "height": 512,
+        "steps": 4,
+        "cfg": 1,
+        "seed": 42
+      }
+    },
+    {
+      "id": "z-image-turbo",
+      "name": "Z-Image Turbo",
+      "category": "image",
+      "assets": [
+        "z-turbo",
+        "qwen3",
+        "z-vae"
+      ],
+      "vram_gb": 10,
+      "ram_gb": 24,
+      "tasks": [
+        "text-to-image",
+        "image-to-image",
+        "inpaint",
+        "lora"
+      ],
+      "license": "Apache-2.0",
+      "description": "中英文提示词、8 步图片生成；INT8 权重与 CPU 卸载。",
+      "source": "https://github.com/Tongyi-MAI/Z-Image",
+      "released": "2025-11",
+      "parameters": {
+        "width": 512,
+        "height": 512,
+        "steps": 9,
+        "cfg": 1,
+        "seed": 42
+      }
+    },
+    {
+      "id": "ace-step-15",
+      "name": "ACE-Step 1.5 Turbo",
+      "category": "music",
+      "assets": [
+        "ace-turbo",
+        "ace-text",
+        "ace-lm",
+        "ace-vae"
+      ],
+      "vram_gb": 8,
+      "ram_gb": 24,
+      "tasks": [
+        "text-to-music",
+        "lyrics-to-music",
+        "reference-timbre"
+      ],
+      "license": "MIT / Apache-2.0",
+      "description": "风格描述、歌词、BPM 与调性控制；可启用语言模型生成音频编码。",
+      "source": "https://github.com/ace-step/ACE-Step-1.5",
+      "released": "2026-02",
+      "parameters": {
+        "duration": 10,
+        "steps": 8,
+        "cfg": 1,
+        "bpm": 120,
+        "seed": 42
+      }
+    },
+    {
+      "id": "hunyuan3d-21",
+      "name": "Hunyuan3D 2.1 Shape",
+      "category": "3d",
+      "assets": [
+        "hy21"
+      ],
+      "vram_gb": 12,
+      "ram_gb": 24,
+      "tasks": [
+        "image-to-3d"
+      ],
+      "license": "Tencent Hunyuan Community (有地域/商用条款)",
+      "description": "参考图生成可下载 GLB 网格；此预设生成几何体，不包含 PBR 纹理绘制。",
+      "source": "https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1",
+      "released": "2025-06",
+      "parameters": {
+        "steps": 30,
+        "cfg": 5,
+        "seed": 42,
+        "resolution": 128
+      }
+    },
+    {
+      "id": "melband-roformer",
+      "name": "MelBand RoFormer",
+      "category": "stems",
+      "assets": [
+        "mel"
+      ],
+      "vram_gb": 4,
+      "ram_gb": 8,
+      "tasks": [
+        "vocals-instrumental"
+      ],
+      "license": "见原模型许可",
+      "description": "人声 / 伴奏双轨分离；Kijai ComfyUI 插件。",
+      "source": "https://github.com/kijai/ComfyUI-MelBandRoFormer",
+      "released": "2024",
+      "parameters": {
+        "seed": 42
+      }
+    },
+    {
+      "id": "demucs-4",
+      "name": "Demucs HT 4 Stems",
+      "category": "stems",
+      "assets": [
+        "demucs"
+      ],
+      "vram_gb": 4,
+      "ram_gb": 8,
+      "tasks": [
+        "vocals-drums-bass-other"
+      ],
+      "license": "MIT",
+      "description": "人声、鼓、贝斯、其他四轨；短分块推理控制显存。",
+      "source": "https://github.com/facebookresearch/demucs",
+      "released": "2023",
+      "parameters": {
+        "segment": 4,
+        "shifts": 0,
+        "seed": 42
+      }
+    },
+    {
+      "id": "wan22-5b",
+      "name": "Wan 2.2 TI2V 5B",
+      "category": "video",
+      "assets": [
+        "wan5b",
+        "wan-t5",
+        "wan-vae"
+      ],
+      "vram_gb": 16,
+      "ram_gb": 32,
+      "tasks": [
+        "text-to-video",
+        "image-to-video"
+      ],
+      "license": "Apache-2.0",
+      "description": "单个 5B 模型支持文生与图生视频；默认短片低分辨率，支持 CPU 卸载。",
+      "source": "https://github.com/Wan-Video/Wan2.2",
+      "released": "2025-07",
+      "parameters": {
+        "width": 512,
+        "height": 320,
+        "frames": 17,
+        "fps": 16,
+        "steps": 20,
+        "cfg": 5,
+        "seed": 42
+      }
+    }
+  ]
+}

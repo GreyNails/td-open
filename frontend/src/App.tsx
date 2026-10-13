@@ -1,3 +1,4 @@
+import { comfyDefaults } from "./comfySchema";
 import { TemplateGallery } from "./TemplateGallery";
 import { templateById } from "./templates";
 import {
@@ -93,6 +94,11 @@ import { mediaCatalog } from "./nodes/mediaCatalog";
 import { RuntimeInspector } from "./RuntimeInspector";
 import { StudioEngine } from "./engine";
 import Settings from "./Settings";
+import LocalAI, { LocalNodePanel, localResult, terminalJob } from "./LocalAI";
+import type { LocalJob } from "./LocalAI";
+import { localNodeProfile } from "./nodes/localAICatalog";
+import { encodeWAV } from "./nodes/mediaRuntime";
+import { pendingLocalJobs, patchLocalResult } from "./localAIResults";
 import { guideFromHash } from "./guideRoute";
 import type { GuidePage } from "./guideRoute";
 import Workbench from "./Workbench";
@@ -340,6 +346,44 @@ function Studio() {
   }
   const rootProjectRef = useRef(rootProject);
   rootProjectRef.current = rootProject;
+  const appliedLocalJobs = useRef(new Set<string>());
+  useEffect(() => {
+    let disposed = false,
+      timer = 0;
+    const poll = async () => {
+      const jobs = pendingLocalJobs(rootProjectRef.current).filter(
+        (job) =>
+          !appliedLocalJobs.current.has(
+            `${job.rootId}/${job.path.join("/")}/${job.nodeId}/${job.jobId}`,
+          ),
+      );
+      await Promise.all(
+        jobs.map(async (job) => {
+          try {
+            const result = await api<LocalJob>("/local-ai/jobs/" + job.jobId);
+            if (
+              disposed ||
+              !terminalJob(result) ||
+              rootProjectRef.current.id !== job.rootId
+            )
+              return;
+            appliedLocalJobs.current.add(
+              `${job.rootId}/${job.path.join("/")}/${job.nodeId}/${job.jobId}`,
+            );
+            setRootProject((current) =>
+              patchLocalResult(current, job, localResult(result)),
+            );
+          } catch {}
+        }),
+      );
+      if (!disposed) timer = window.setTimeout(poll, 2000);
+    };
+    void poll();
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
+    };
+  }, []);
   const networkPathRef = useRef(networkPath);
   networkPathRef.current = networkPath;
   const setProject = (action: React.SetStateAction<Project>) => {
@@ -782,7 +826,7 @@ function Studio() {
   };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (document.querySelector(".docs-center")) return;
+      if (document.querySelector(".docs-center, .local-ai-center")) return;
       const el = e.target as HTMLElement;
       if (
         ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) ||
@@ -1030,6 +1074,223 @@ function Studio() {
     } finally {
       setBusy("");
     }
+  };
+  const runLocalNode = async () => {
+    if (!active) return;
+    const node = active,
+      snapshot = projectRef.current,
+      rootId = rootProjectRef.current.id,
+      path = [...networkPathRef.current];
+    const inputs: Record<string, string> = {};
+    const profile = localNodeProfile(node.type, node.data.params);
+    const audioTask = ["local_music", "local_stems"].includes(node.type);
+    const explicit = String(node.data.params.input_url || "");
+    if (explicit) inputs[audioTask ? "audio" : "image"] = explicit;
+    if (node.data.params.reference_url)
+      inputs.image2 = String(node.data.params.reference_url);
+    if (node.data.params.mask_url)
+      inputs.mask = String(node.data.params.mask_url);
+    const saveInput = async (blob: Blob, name: string) => {
+      const form = new FormData();
+      form.append("file", blob, name);
+      const response = await fetch("/api/artifacts", {
+        method: "POST",
+        body: form,
+      });
+      if (!response.ok) throw new Error("输入快照保存失败");
+      return (await response.json()).url as string;
+    };
+    const capture = async (sourceId: string, kind: string) => {
+      const source = snapshot.nodes.find((n) => n.id === sourceId)!;
+      if (
+        (source.type.startsWith("local_") ||
+          source.type === "ai_image" ||
+          source.type === "media") &&
+        !String(
+          source.data.params.result_url || source.data.params.url || "",
+        ).trim()
+      )
+        throw new Error("请先运行或导入上游生成素材，再把结果传给当前模型");
+      const value = engine.current?.values.get(
+        engine.current.resolveId(sourceId),
+      );
+      if (kind === "CHOP") {
+        const url = String(
+          source.data.params.result_url || source.data.params.url || "",
+        );
+        if (url.startsWith("/api/assets/") || url.startsWith("/api/exports/"))
+          return url;
+        if (isChannelBuffer(value))
+          return saveInput(
+            new Blob([encodeWAV(value)], { type: "audio/wav" }),
+            "local-input.wav",
+          );
+        throw new Error("音频输入需要本地文件 URL 或已启用的 PCM 采样节点");
+      }
+      if (!(value instanceof HTMLCanvasElement))
+        throw new Error("输入画面尚未就绪，请上传素材或先运行上游画面");
+      const blob = await new Promise<Blob>((resolve, reject) =>
+        value.toBlob(
+          (result) =>
+            result ? resolve(result) : reject(new Error("画面快照失败")),
+          "image/png",
+        ),
+      );
+      return saveInput(blob, "local-input.png");
+    };
+    setBusy(node.id);
+    try {
+      let workflow: Record<string, unknown> | undefined;
+      let graph: Project | undefined;
+      if (node.type === "comfy_workflow")
+        workflow = JSON.parse(String(node.data.params.workflow_json || "{}"));
+      else if (node.type.startsWith("comfy_")) {
+        graph = snapshot;
+        const visit = async (id: string, seen = new Set<string>()) => {
+          if (seen.has(id)) return;
+          seen.add(id);
+          const n = snapshot.nodes.find((n) => n.id === id)!;
+          if (n.type === "comfy_image" || n.type === "comfy_audio") {
+            const url = String(n.data.params.input_url || "");
+            if (!url) throw new Error("请先填写 Comfy 读取节点的素材地址");
+            inputs[id] = url;
+          }
+          for (const edge of snapshot.edges.filter((e) => e.target === id)) {
+            const src = snapshot.nodes.find((n) => n.id === edge.source)!;
+            if (src.type.startsWith("comfy_")) await visit(src.id, seen);
+            else
+              inputs[src.id] = await capture(
+                src.id,
+                byType[src.type].outputs.find((p) => p.id === edge.sourceHandle)
+                  ?.kind || "TOP",
+              );
+          }
+        };
+        await visit(node.id);
+      } else {
+        for (const edge of snapshot.edges.filter((e) => e.target === node.id)) {
+          const handle = edge.targetHandle || byType[node.type].inputs[0]?.id;
+          if (!handle) throw new Error("连线没有对应输入端口");
+          const kind =
+            byType[node.type].inputs.find((p) => p.id === handle)?.kind ||
+            "TOP";
+          inputs[handle] = await capture(edge.source, kind);
+        }
+      }
+      if (
+        rootProjectRef.current.id !== rootId ||
+        JSON.stringify(networkPathRef.current) !== JSON.stringify(path)
+      )
+        throw new Error(
+          "输入已保存，但作品或子网络已切换，请返回目标画布重新运行",
+        );
+      const parameters: Record<string, unknown> = { ...node.data.params };
+      if (parameters.resolution)
+        parameters.resolution = Number(parameters.resolution);
+      const modes: Record<string, string> = {
+        local_image: "text-to-image",
+        local_image_edit: "image-edit",
+        local_image_to_image: "image-to-image",
+        local_inpaint: "inpaint",
+      };
+      if (modes[node.type]) parameters.mode = modes[node.type];
+      const result = await api<LocalJob>("/local-ai/generate", {
+        profile_id: profile || undefined,
+        parameters,
+        inputs,
+        workflow,
+        project: graph,
+        node_id: graph ? node.id : undefined,
+        metadata: { root_project_id: rootId, path, node_id: node.id },
+      });
+      checkpoint();
+      setRootProject((current) =>
+        current.id !== rootId
+          ? current
+          : updateGraph(current, path, (p) => ({
+              ...p,
+              nodes: p.nodes.map((n) =>
+                n.id === node.id
+                  ? {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        params: {
+                          ...n.data.params,
+                          job_id: result.id,
+                          job_status: "queued",
+                          result_text: "本地任务已提交",
+                        },
+                      },
+                    }
+                  : n,
+              ),
+            })),
+      );
+      notify("本地任务已加入队列；可在节点参数或模型中心查看进度");
+    } finally {
+      setBusy("");
+    }
+  };
+  const patchLocalNode = (params: Params) => {
+    if (!active) return;
+    checkpoint();
+    setProject((current) => ({
+      ...current,
+      nodes: current.nodes.map((n) =>
+        n.id === active.id
+          ? {
+              ...n,
+              data: { ...n.data, params: { ...n.data.params, ...params } },
+            }
+          : n,
+      ),
+    }));
+  };
+  const addLocalModel = (type: string, model: string) => {
+    const node = makeNode(type, 160, 140);
+    if (type === "local_image" || type === "local_stems")
+      node.data.params.model_id = model;
+    if (type === "local_image" && model === "z-image-turbo")
+      node.data.params.steps = 9;
+    replace({
+      ...projectRef.current,
+      nodes: [...projectRef.current.nodes, node],
+    });
+    setSelected(node.id);
+    setSelectedIds(new Set([node.id]));
+    setModal("");
+    notify("已添加本地生成节点，在右侧填写参数并手动运行");
+  };
+  const addComfyClass = (
+    classType: string,
+    info: {
+      display_name?: string;
+      input: {
+        required?: Record<
+          string,
+          [string | string[], Record<string, unknown>?]
+        >;
+      };
+      output_node: boolean;
+    },
+  ) => {
+    const node = makeNode("comfy_custom", 160, 140);
+    const { values, names } = comfyDefaults(info.input.required || {});
+    node.data.label = info.display_name || classType;
+    Object.assign(node.data.params, {
+      class_type: classType,
+      inputs_json: JSON.stringify(values, null, 2),
+      input_names: names.slice(0, 4).join(","),
+      is_output: info.output_node,
+    });
+    replace({
+      ...projectRef.current,
+      nodes: [...projectRef.current.nodes, node],
+    });
+    setSelected(node.id);
+    setSelectedIds(new Set([node.id]));
+    setModal("");
   };
   const upload = async (file: File) => {
     const uploadProjectId = projectRef.current.id;
@@ -1940,7 +2201,15 @@ function Studio() {
                   </div>
                   {spec.params
                     .filter(
-                      (p) => !["result_url", "result_text"].includes(p.key),
+                      (p) =>
+                        ![
+                          "result_url",
+                          "result_text",
+                          "outputs_json",
+                          "job_id",
+                          "job_status",
+                          "result_kind",
+                        ].includes(p.key),
                     )
                     .map((p) => (
                       <div className="param" key={active.id + p.key}>
@@ -2084,6 +2353,9 @@ function Studio() {
                               "text2",
                               "arguments",
                               "csv",
+                              "workflow_json",
+                              "inputs_json",
+                              "lyrics",
                             ].includes(p.key) ||
                             String(
                               active.data.params[p.key] ?? p.default,
@@ -2115,64 +2387,93 @@ function Studio() {
                         )}
                       </div>
                     ))}
-                  {spec.family === "AI" && (
-                    <>
-                      <button
-                        className="button primary full"
-                        disabled={!!busy}
-                        onClick={runNode}
-                      >
-                        {busy === active.id ? (
-                          <LoaderCircle className="spin" size={14} />
-                        ) : (
-                          <Play size={14} />
-                        )}
-                        运行{active.type === "mcp_tool" ? "工具" : "生成"}
-                        {active.type !== "mcp_tool" && (
-                          <small>按服务商计费</small>
-                        )}
-                      </button>
-                      {(active.data.params.result_url ||
-                        active.data.params.result_text) && (
-                        <div className="generation-result">
-                          <strong>运行结果</strong>
-                          {active.data.params.result_url && (
-                            <>
-                              <a
-                                href={String(active.data.params.result_url)}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                打开资源 ↗
-                              </a>
-                              {active.type === "ai_music" && (
-                                <button
-                                  className="button small"
-                                  onClick={() =>
-                                    engine.current
-                                      ?.playAudio(
-                                        String(active.data.params.result_url),
-                                      )
-                                      .then(() => {
-                                        setMic(true);
-                                        notify("生成音频正在播放");
-                                      })
-                                      .catch((e) => notify(friendly(e)))
-                                  }
-                                >
-                                  <Play size={12} />
-                                  播放并驱动画面
-                                </button>
-                              )}
-                            </>
-                          )}
-                          {active.data.params.result_text && (
-                            <pre>{String(active.data.params.result_text)}</pre>
-                          )}
-                        </div>
-                      )}
-                    </>
+                  {(active.type.startsWith("local_") ||
+                    active.type.startsWith("comfy_")) && (
+                    <LocalNodePanel
+                      node={active}
+                      onRun={runLocalNode}
+                      onPatch={patchLocalNode}
+                      openManager={() => setModal("local-ai")}
+                      openGuide={() => openDocs("local")}
+                      notify={notify}
+                      play={(url) => {
+                        void engine.current
+                          ?.playAudio(url)
+                          .then(() => setMic(true))
+                          .catch((error) => notify(friendly(error)));
+                      }}
+                      decode={() => {
+                        void engine.current
+                          ?.activateMedia(active.id)
+                          .then(() =>
+                            notify("完整音频已解码为 PCM，可连接信号处理节点"),
+                          )
+                          .catch((error) => notify(friendly(error)));
+                      }}
+                    />
                   )}
+                  {spec.family === "AI" &&
+                    !active.type.startsWith("local_") &&
+                    !active.type.startsWith("comfy_") && (
+                      <>
+                        <button
+                          className="button primary full"
+                          disabled={!!busy}
+                          onClick={runNode}
+                        >
+                          {busy === active.id ? (
+                            <LoaderCircle className="spin" size={14} />
+                          ) : (
+                            <Play size={14} />
+                          )}
+                          运行{active.type === "mcp_tool" ? "工具" : "生成"}
+                          {active.type !== "mcp_tool" && (
+                            <small>按服务商计费</small>
+                          )}
+                        </button>
+                        {(active.data.params.result_url ||
+                          active.data.params.result_text) && (
+                          <div className="generation-result">
+                            <strong>运行结果</strong>
+                            {active.data.params.result_url && (
+                              <>
+                                <a
+                                  href={String(active.data.params.result_url)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  打开资源 ↗
+                                </a>
+                                {active.type === "ai_music" && (
+                                  <button
+                                    className="button small"
+                                    onClick={() =>
+                                      engine.current
+                                        ?.playAudio(
+                                          String(active.data.params.result_url),
+                                        )
+                                        .then(() => {
+                                          setMic(true);
+                                          notify("生成音频正在播放");
+                                        })
+                                        .catch((e) => notify(friendly(e)))
+                                    }
+                                  >
+                                    <Play size={12} />
+                                    播放并驱动画面
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {active.data.params.result_text && (
+                              <pre>
+                                {String(active.data.params.result_text)}
+                              </pre>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
                   {active.type === "audio" && active.data.params.url && (
                     <button
                       className="button full"
@@ -2372,7 +2673,7 @@ function Studio() {
             <strong>
               TD<span>Open</span>
             </strong>
-            <span className="alpha">ALPHA 0.4</span>
+            <span className="alpha">ALPHA 0.5</span>
           </div>
           <span className="header-divider" />
           <div className="project-title">
@@ -2417,6 +2718,14 @@ function Studio() {
         </header>
         <div className="body-layout free-body">
           <nav className="rail" aria-label="主导航">
+            <button
+              className="rail-button"
+              title="本地生成与模型"
+              onClick={() => setModal("local-ai")}
+            >
+              <Download size={20} />
+              <span>本地 AI</span>
+            </button>
             <button
               className="rail-button active"
               title="节点编辑器"
@@ -2757,6 +3066,15 @@ function Studio() {
           >
             <DocsCenter page={docsPage} navigate={openDocs} close={closeDocs} />
           </Suspense>
+        )}
+        {modal === "local-ai" && (
+          <LocalAI
+            close={() => setModal("")}
+            guide={() => openDocs("local")}
+            addNode={addLocalModel}
+            addComfy={addComfyClass}
+            notify={notify}
+          />
         )}
       </div>
     </EngineContext.Provider>

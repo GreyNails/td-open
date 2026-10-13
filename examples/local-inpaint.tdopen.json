@@ -1,0 +1,102 @@
+{
+  "id": "example_local-inpaint",
+  "name": "本地 · 局部重绘",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "media_1",
+      "type": "media",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "图片 / 视频",
+        "params": {
+          "url": "",
+          "fit": "cover"
+        }
+      }
+    },
+    {
+      "id": "media_2",
+      "type": "media",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "图片 / 视频",
+        "params": {
+          "url": "",
+          "fit": "cover"
+        }
+      }
+    },
+    {
+      "id": "local_inpaint_3",
+      "type": "local_inpaint",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "本地遮罩修复",
+        "params": {
+          "prompt": "A small red flower in a ceramic vase",
+          "input_url": "",
+          "mask_url": "",
+          "width": 512,
+          "height": 512,
+          "denoise": 0.8,
+          "steps": 9,
+          "seed": 42,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "media_1",
+      "target": "local_inpaint_3",
+      "sourceHandle": "out",
+      "targetHandle": "image"
+    },
+    {
+      "id": "edge_2",
+      "source": "media_2",
+      "target": "local_inpaint_3",
+      "sourceHandle": "out",
+      "targetHandle": "mask"
+    },
+    {
+      "id": "edge_3",
+      "source": "local_inpaint_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "local-inpaint"
+  }
+}

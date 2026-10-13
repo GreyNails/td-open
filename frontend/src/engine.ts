@@ -5,6 +5,11 @@ import { api } from "./types";
 import type { GraphNode, Project } from "./types";
 import { byType } from "./catalog";
 import {
+  localImageTypes,
+  localAudioTypes,
+  localModelTypes,
+} from "./nodes/localAICatalog";
+import {
   cookReferenceTopNode,
   disposeReferenceTopState,
 } from "./nodes/referenceTopRuntime";
@@ -204,9 +209,14 @@ export class StudioEngine {
           return (
             !switched &&
             old?.type === n.type &&
-            ["url", "movie_node", "mode", "device_id", "device"].every(
-              (key) => old.data.params[key] === n.data.params[key],
-            )
+            [
+              "url",
+              "result_url",
+              "movie_node",
+              "mode",
+              "device_id",
+              "device",
+            ].every((key) => old.data.params[key] === n.data.params[key])
           );
         })
         .map((n) => n.id),
@@ -236,7 +246,14 @@ export class StudioEngine {
     }
     const imageUrls = new Set(
       project.nodes
-        .filter((n) => n.type === "media" || n.type === "ai_image")
+        .filter(
+          (n) =>
+            n.type === "media" ||
+            n.type === "ai_image" ||
+            localImageTypes.has(n.type) ||
+            (["comfy_workflow", "comfy_custom"].includes(n.type) &&
+              ["image", "video"].includes(String(n.data.params.result_kind))),
+        )
         .map((n) =>
           String(
             n.data.params[n.type === "media" ? "url" : "result_url"] || "",
@@ -245,15 +262,32 @@ export class StudioEngine {
     );
     const modelUrls = new Set(
       project.nodes
-        .filter((n) => ["ai_3d", "file_in_sop", "fbx_comp"].includes(n.type))
+        .filter(
+          (n) =>
+            ["ai_3d", "file_in_sop", "fbx_comp"].includes(n.type) ||
+            localModelTypes.has(n.type) ||
+            (["comfy_workflow", "comfy_custom"].includes(n.type) &&
+              n.data.params.result_kind === "3d"),
+        )
         .map((n) =>
           String(
-            n.data.params[n.type === "ai_3d" ? "result_url" : "url"] || "",
+            n.data.params[
+              n.type === "ai_3d" ||
+              localModelTypes.has(n.type) ||
+              ["comfy_workflow", "comfy_custom"].includes(n.type)
+                ? "result_url"
+                : "url"
+            ] || "",
           ),
         ),
     );
     const audioNodes = project.nodes.filter(
-      (n) => n.type === "audio" || n.type === "ai_music",
+      (n) =>
+        n.type === "audio" ||
+        n.type === "ai_music" ||
+        localAudioTypes.has(n.type) ||
+        (["comfy_workflow", "comfy_custom"].includes(n.type) &&
+          n.data.params.result_kind === "audio"),
     );
     const audioUrls = new Set(
       audioNodes.map((n) =>
@@ -261,8 +295,12 @@ export class StudioEngine {
       ),
     );
     const removedLastAudio =
-      previous.nodes.some((n) => n.type === "audio" || n.type === "ai_music") &&
-      !audioNodes.length;
+      previous.nodes.some(
+        (n) =>
+          n.type === "audio" ||
+          n.type === "ai_music" ||
+          localAudioTypes.has(n.type),
+      ) && !audioNodes.length;
     if (
       switched ||
       removedLastAudio ||
@@ -618,11 +656,37 @@ export class StudioEngine {
       (e) => e.target === fullId && (e.targetHandle || "in") === "in",
     );
     const result = await this.mediaRuntime.activate(
-      node,
+      this.localAudioNode(node),
       input ? this.values.get(input.source) : undefined,
     );
     this.revision++;
+    this.frames.delete(fullId);
     return result;
+  }
+  private localAudioNode(node: GraphNode): GraphNode {
+    if (
+      !localAudioTypes.has(node.type) &&
+      !(
+        ["comfy_workflow", "comfy_custom"].includes(node.type) &&
+        node.data.params.result_kind === "audio"
+      )
+    )
+      return node;
+    return {
+      ...node,
+      type: "media_audio_file_in",
+      data: {
+        ...node.data,
+        params: {
+          ...node.data.params,
+          url: String(node.data.params.result_url || ""),
+          samples: 1024,
+          loop: true,
+          speed: 1,
+          offset: 0,
+        },
+      },
+    };
   }
   async runPython(id: string, time: number) {
     const fullId = this.resolveId(id),
@@ -722,19 +786,47 @@ export class StudioEngine {
         throw new Error("点击运行 Python 以执行脚本");
       return state.get("python_result") as Value;
     }
-    const media = this.mediaRuntime.cook(n, time, rawInput, state, {
-      project: this.project,
-      videoForNode: (id) => {
-        const node = this.project.nodes.find((x) => x.id === id);
-        const el = node
-          ? this.image(
-              String(node.data.params.url || node.data.params.result_url || ""),
-            )
-          : undefined;
-        return el instanceof HTMLVideoElement ? el : undefined;
+    if (localAudioTypes.has(n.type) && !n.data.params.result_url) return 0;
+    const media = this.mediaRuntime.cook(
+      this.localAudioNode(n),
+      time,
+      rawInput,
+      state,
+      {
+        project: this.project,
+        videoForNode: (id) => {
+          const node = this.project.nodes.find((x) => x.id === id);
+          const el = node
+            ? this.image(
+                String(
+                  node.data.params.url || node.data.params.result_url || "",
+                ),
+              )
+            : undefined;
+          return el instanceof HTMLVideoElement ? el : undefined;
+        },
       },
-    });
+    );
     if (media.handled) return media.value;
+    if (
+      n.type.startsWith("comfy_") &&
+      !(
+        n.data.params.result_url &&
+        ["image", "video", "audio", "3d"].includes(
+          String(n.data.params.result_kind),
+        )
+      ) &&
+      ![
+        "comfy_save_image",
+        "comfy_save_audio",
+        "comfy_save_video",
+        "comfy_save_mesh",
+        "comfy_workflow",
+      ].includes(n.type)
+    )
+      return String(
+        n.data.params.result_text || "连接到 Comfy 保存节点后手动运行",
+      );
     const io = cookIONode(n, time, rawInput, state);
     if (io.handled) return io.value;
     const channels = cookChannelDataNode(n, time, rawInput, state, {
@@ -815,7 +907,12 @@ export class StudioEngine {
     }
     if (type === "geometry")
       return { shape: s("shape", "torus"), detail: v("detail", 32) };
-    if (type === "ai_3d")
+    if (
+      type === "ai_3d" ||
+      localModelTypes.has(type) ||
+      (["comfy_workflow", "comfy_custom"].includes(type) &&
+        s("result_kind") === "3d")
+    )
       return { shape: "model", detail: 32, url: s("result_url") };
     if (type === "ai_text" || type === "mcp_tool") return s("result_text");
     const c = this.canvas(n.id),
@@ -928,7 +1025,13 @@ export class StudioEngine {
           .forEach((line, i) =>
             ctx.fillText(line, W / 2, H / 2 + i * v("size", 64) * 1.2, W - 40),
           );
-      } else if (type === "media" || type === "ai_image") {
+      } else if (
+        type === "media" ||
+        type === "ai_image" ||
+        localImageTypes.has(type) ||
+        (["comfy_workflow", "comfy_custom"].includes(type) &&
+          ["image", "video"].includes(s("result_kind")))
+      ) {
         const media = this.image(s(type === "media" ? "url" : "result_url"));
         const mw =
             media instanceof HTMLVideoElement
@@ -940,7 +1043,7 @@ export class StudioEngine {
               : media?.naturalHeight;
         if (media && mw && mh) {
           const factor =
-            s("fit") === "contain"
+            s("fit") === "contain" || localImageTypes.has(type)
               ? Math.min(W / mw, H / mh)
               : Math.max(W / mw, H / mh);
           ctx.drawImage(
@@ -955,7 +1058,7 @@ export class StudioEngine {
           ctx.fillStyle = "#9b94ad";
           ctx.font = "16px sans-serif";
           ctx.fillText(
-            type === "ai_image"
+            type !== "media"
               ? "配置 AI 服务并运行，生成画面"
               : "导入一张图片或一段视频",
             W / 2,

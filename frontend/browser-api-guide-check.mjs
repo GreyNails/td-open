@@ -137,6 +137,7 @@ try {
     ["mcp", "MCP 与 AI 对话", "MCP_GUIDE.md"],
     ["http", "项目 HTTP API", "HTTP_API.md"],
     ["io", "设备与实时协议", "IO_GUIDE.md"],
+    ["local", "本地模型与 ComfyUI", "LOCAL_AI.md"],
   ];
   for (const [id, label, file] of sections) {
     await dialog
@@ -154,7 +155,7 @@ try {
     );
     expect(await dialog.locator("article h2").count()).toBeGreaterThan(2);
   }
-  mark("All five chapter tabs render the corresponding repository Markdown");
+  mark("All six chapter tabs render the corresponding repository Markdown");
   await dialog.getByRole("textbox", { name: "搜索 API 文档" }).fill("OSC");
   await expect(dialog.locator(".guide-results")).toContainText(
     "设备与实时协议",
@@ -305,8 +306,8 @@ try {
   }
   await page.reload({ waitUntil: "networkidle" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.locator("article h1")).toContainText("协议");
-  mark("Five hash deep links and page reload open their document directly");
+  await expect(dialog.locator("article h1")).toContainText("本地模型");
+  mark("Six hash deep links and page reload open their document directly");
   await page.screenshot({ path: path.join(root, "docs/images/api-guide.png") });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(dialog).toBeVisible();

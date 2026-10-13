@@ -89,6 +89,8 @@ def evaluate(project: Project, time: float = 0) -> dict[str, Any]:
                     skip_reasons[node_id] = "有状态信号节点需要浏览器连续帧上下文"
                 elif spec.get("runtime") == "provider":
                     skip_reasons[node_id] = "AI 与 MCP 节点需要通过专用接口手动执行"
+                elif spec.get('runtime')=='local_model':
+                    skip_reasons[node_id]='本地模型与 Comfy 工作流需要在节点中手动执行，不随时间线自动生成'
                 else:
                     skip_reasons[node_id] = "图像、音频设备与几何节点在浏览器运行"
                 continue

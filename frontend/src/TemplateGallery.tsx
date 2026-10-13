@@ -92,7 +92,13 @@ export function TemplateGallery({ open }: { open: (id: string) => void }) {
               <div className="example-art">
                 <img
                   src={`/examples/${t.id}.webp`}
-                  alt={t.requires === "ai" || t.requires === "mcp" ? `${t.name}工作流连接说明` : `${t.name}实际渲染效果`}
+                  alt={
+                    t.requires === "ai" ||
+                    t.requires === "mcp" ||
+                    t.requires === "local"
+                      ? `${t.name}工作流连接说明`
+                      : `${t.name}实际渲染效果`
+                  }
                   loading="lazy"
                 />
                 <span className="example-badge">{t.level}</span>
@@ -102,7 +108,9 @@ export function TemplateGallery({ open }: { open: (id: string) => void }) {
                       ? "可连接音频"
                       : t.requires === "mcp"
                         ? "需连接 MCP"
-                        : "需配置 AI"}
+                        : t.requires === "local"
+                          ? "需安装本地模型"
+                          : "需配置 AI"}
                   </span>
                 )}
                 <span className="example-open">

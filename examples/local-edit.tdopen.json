@@ -1,0 +1,79 @@
+{
+  "id": "example_local-edit",
+  "name": "本地 · 参考图编辑",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "media_1",
+      "type": "media",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "图片 / 视频",
+        "params": {
+          "url": "",
+          "fit": "cover"
+        }
+      }
+    },
+    {
+      "id": "local_image_edit_2",
+      "type": "local_image_edit",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "本地参考图编辑",
+        "params": {
+          "prompt": "Change the robot to polished blue ceramic, preserve the pose and background",
+          "input_url": "",
+          "reference_url": "",
+          "width": 512,
+          "height": 512,
+          "steps": 4,
+          "seed": 42,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "media_1",
+      "target": "local_image_edit_2",
+      "sourceHandle": "out",
+      "targetHandle": "image"
+    },
+    {
+      "id": "edge_2",
+      "source": "local_image_edit_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "local-edit"
+  }
+}

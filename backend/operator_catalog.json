@@ -1,5 +1,2731 @@
 [
   {
+    "type": "local_image",
+    "label": "本地图片生成",
+    "english": "Local Image",
+    "family": "AI",
+    "description": "使用本地 FLUX.2 Klein / Z-Image 权重生成图片，手动执行，不需要 API Key。",
+    "params": [
+      {
+        "key": "model_id",
+        "label": "本地模型",
+        "type": "select",
+        "default": "flux-klein-4b",
+        "options": [
+          "flux-klein-4b",
+          "z-image-turbo"
+        ]
+      },
+      {
+        "key": "prompt",
+        "label": "提示词",
+        "type": "text",
+        "default": "A small ceramic robot, white background, studio lighting"
+      },
+      {
+        "key": "width",
+        "label": "宽度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "steps",
+        "label": "采样步数",
+        "type": "number",
+        "default": 4,
+        "min": 1,
+        "max": 100,
+        "step": 1
+      },
+      {
+        "key": "cfg",
+        "label": "引导强度",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 20,
+        "step": 0.1
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 42,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "local_image_edit",
+    "label": "本地参考图编辑",
+    "english": "Local Image Edit",
+    "family": "AI",
+    "description": "FLUX.2 Klein 根据描述编辑一张或两张参考图，支持文生与参考图联合条件。",
+    "params": [
+      {
+        "key": "prompt",
+        "label": "提示词",
+        "type": "text",
+        "default": "A small ceramic robot, white background, studio lighting"
+      },
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "reference_url",
+        "label": "第二张参考图地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "width",
+        "label": "宽度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "steps",
+        "label": "采样步数",
+        "type": "number",
+        "default": 4,
+        "min": 1,
+        "max": 100,
+        "step": 1
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 42,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "参考图"
+      },
+      {
+        "id": "image2",
+        "kind": "TOP",
+        "label": "第二参考图"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "local_image_to_image",
+    "label": "本地图像重绘",
+    "english": "Local Image to Image",
+    "family": "AI",
+    "description": "Z-Image 对输入图像进行扩散重绘，降噪强度控制改动程度。",
+    "params": [
+      {
+        "key": "prompt",
+        "label": "提示词",
+        "type": "text",
+        "default": "A small ceramic robot, white background, studio lighting"
+      },
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "width",
+        "label": "宽度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "denoise",
+        "label": "降噪强度",
+        "type": "number",
+        "default": 0.65,
+        "min": 0.01,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "steps",
+        "label": "采样步数",
+        "type": "number",
+        "default": 9,
+        "min": 1,
+        "max": 100,
+        "step": 1
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 42,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "原图"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "local_inpaint",
+    "label": "本地遮罩修复",
+    "english": "Local Inpaint",
+    "family": "AI",
+    "description": "白色遮罩区域参与重绘，黑色区域保留原图。输入原图和独立灰度遮罩。",
+    "params": [
+      {
+        "key": "prompt",
+        "label": "提示词",
+        "type": "text",
+        "default": "A small ceramic robot, white background, studio lighting"
+      },
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "mask_url",
+        "label": "遮罩素材地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "width",
+        "label": "宽度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "denoise",
+        "label": "降噪强度",
+        "type": "number",
+        "default": 0.8,
+        "min": 0.01,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "steps",
+        "label": "采样步数",
+        "type": "number",
+        "default": 9,
+        "min": 1,
+        "max": 100,
+        "step": 1
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 42,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "原图"
+      },
+      {
+        "id": "mask",
+        "kind": "TOP",
+        "label": "白色重绘遮罩"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "local_music",
+    "label": "本地音乐生成",
+    "english": "Local Music",
+    "family": "AI",
+    "description": "ACE-Step 1.5 Turbo 通过风格描述与歌词生成真实音频；可提供参考音色。",
+    "params": [
+      {
+        "key": "prompt",
+        "label": "音乐风格",
+        "type": "text",
+        "default": "Warm instrumental electronic music, soft piano, mellow synth bass, steady drums, 120 BPM"
+      },
+      {
+        "key": "lyrics",
+        "label": "歌词",
+        "type": "text",
+        "default": "[Instrumental]"
+      },
+      {
+        "key": "duration",
+        "label": "时长（秒）",
+        "type": "number",
+        "default": 10,
+        "min": 1,
+        "max": 240,
+        "step": 0.1
+      },
+      {
+        "key": "bpm",
+        "label": "BPM",
+        "type": "number",
+        "default": 120,
+        "min": 10,
+        "max": 300,
+        "step": 1
+      },
+      {
+        "key": "language",
+        "label": "歌词语言",
+        "type": "select",
+        "default": "en",
+        "options": [
+          "en",
+          "zh",
+          "ja",
+          "ko",
+          "unknown"
+        ]
+      },
+      {
+        "key": "keyscale",
+        "label": "调性",
+        "type": "select",
+        "default": "C major",
+        "options": [
+          "C major",
+          "C minor",
+          "D major",
+          "D minor",
+          "E major",
+          "E minor",
+          "F major",
+          "G major",
+          "A minor"
+        ]
+      },
+      {
+        "key": "generate_audio_codes",
+        "label": "启用语言模型规划",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "key": "steps",
+        "label": "采样步数",
+        "type": "number",
+        "default": 8,
+        "min": 1,
+        "max": 100,
+        "step": 1
+      },
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 42,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "audio",
+        "kind": "CHOP",
+        "label": "参考音频"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "local_3d",
+    "label": "本地三维模型生成",
+    "english": "Local 3D",
+    "family": "AI",
+    "description": "Hunyuan3D 2.1 从参考图生成 GLB 几何网格；该预设不包含纹理绘制。",
+    "params": [
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "steps",
+        "label": "采样步数",
+        "type": "number",
+        "default": 30,
+        "min": 1,
+        "max": 100,
+        "step": 1
+      },
+      {
+        "key": "cfg",
+        "label": "引导强度",
+        "type": "number",
+        "default": 5,
+        "min": 0,
+        "max": 20,
+        "step": 0.1
+      },
+      {
+        "key": "resolution",
+        "label": "网格解析度",
+        "type": "select",
+        "default": "128",
+        "options": [
+          "64",
+          "128",
+          "256"
+        ]
+      },
+      {
+        "key": "clean_mesh",
+        "label": "移除孤立碎片，保留主体",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 42,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "参考图"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "local_stems",
+    "label": "本地音乐分轨",
+    "english": "Local Stems",
+    "family": "AI",
+    "description": "Demucs 四轨（人声/鼓/贝斯/其他）或 MelBand RoFormer 人声/伴奏双轨；所有分轨可下载或单独播放。",
+    "params": [
+      {
+        "key": "model_id",
+        "label": "分轨模型",
+        "type": "select",
+        "default": "demucs-4",
+        "options": [
+          "demucs-4",
+          "melband-roformer"
+        ]
+      },
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "segment",
+        "label": "分块秒数",
+        "type": "number",
+        "default": 4,
+        "min": 1,
+        "max": 7,
+        "step": 0.1
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "audio",
+        "kind": "CHOP",
+        "label": "音频"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "local_video",
+    "label": "本地视频生成",
+    "english": "Local Video",
+    "family": "AI",
+    "description": "Wan 2.2 TI2V 5B 支持文生视频和图生视频，使用低显存分块解码。",
+    "params": [
+      {
+        "key": "prompt",
+        "label": "提示词",
+        "type": "text",
+        "default": "A small ceramic robot, white background, studio lighting"
+      },
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "width",
+        "label": "宽度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 1280,
+        "step": 32
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 320,
+        "min": 256,
+        "max": 1280,
+        "step": 32
+      },
+      {
+        "key": "frames",
+        "label": "帧数（4n+1）",
+        "type": "number",
+        "default": 17,
+        "min": 5,
+        "max": 121,
+        "step": 4
+      },
+      {
+        "key": "fps",
+        "label": "帧率",
+        "type": "number",
+        "default": 16,
+        "min": 1,
+        "max": 60,
+        "step": 1
+      },
+      {
+        "key": "steps",
+        "label": "采样步数",
+        "type": "number",
+        "default": 20,
+        "min": 1,
+        "max": 80,
+        "step": 1
+      },
+      {
+        "key": "cfg",
+        "label": "引导强度",
+        "type": "number",
+        "default": 5,
+        "min": 0,
+        "max": 20,
+        "step": 0.1
+      },
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 42,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "可选起始图"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "comfy_workflow",
+    "label": "ComfyUI 工作流",
+    "english": "ComfyUI API Workflow",
+    "family": "AI",
+    "description": "导入 API 格式工作流，运行当前本地 ComfyUI 中安装的节点，返回全部图片、音频、视频与模型资源。",
+    "params": [
+      {
+        "key": "workflow_json",
+        "label": "ComfyUI API 工作流 JSON",
+        "type": "text",
+        "default": "{}"
+      },
+      {
+        "key": "output_kind",
+        "label": "预览类型",
+        "type": "select",
+        "default": "image",
+        "options": [
+          "image",
+          "video",
+          "audio",
+          "3d",
+          "data"
+        ]
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "any",
+        "label": "生成结果"
+      }
+    ]
+  },
+  {
+    "type": "comfy_checkpoint",
+    "label": "Comfy · 加载检查点",
+    "english": "CheckpointLoaderSimple",
+    "family": "DAT",
+    "description": "本地 ComfyUI CheckpointLoaderSimple；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "ckpt_name",
+        "label": "检查点文件名",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      },
+      {
+        "id": "clip",
+        "kind": "CLIP",
+        "label": "文本编码器"
+      },
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      }
+    ],
+    "comfy": {
+      "class_type": "CheckpointLoaderSimple",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_unet",
+    "label": "Comfy · 加载扩散模型",
+    "english": "UNETLoader",
+    "family": "DAT",
+    "description": "本地 ComfyUI UNETLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "unet_name",
+        "label": "扩散模型文件名",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "weight_dtype",
+        "label": "权重精度",
+        "type": "select",
+        "default": "default",
+        "options": [
+          "default",
+          "fp8_e4m3fn",
+          "fp8_e5m2"
+        ]
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      }
+    ],
+    "comfy": {
+      "class_type": "UNETLoader",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_clip",
+    "label": "Comfy · 加载文本编码器",
+    "english": "CLIPLoader",
+    "family": "DAT",
+    "description": "本地 ComfyUI CLIPLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "clip_name",
+        "label": "编码器文件名",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "type",
+        "label": "模型架构",
+        "type": "select",
+        "default": "lumina2",
+        "options": [
+          "lumina2",
+          "flux2",
+          "wan",
+          "stable_diffusion",
+          "sd3",
+          "ltxv"
+        ]
+      },
+      {
+        "key": "device",
+        "label": "设备",
+        "type": "select",
+        "default": "cpu",
+        "options": [
+          "cpu",
+          "default"
+        ]
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "clip",
+        "kind": "CLIP",
+        "label": "文本编码器"
+      }
+    ],
+    "comfy": {
+      "class_type": "CLIPLoader",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_dual_clip",
+    "label": "Comfy · 加载双文本编码器",
+    "english": "DualCLIPLoader",
+    "family": "DAT",
+    "description": "本地 ComfyUI DualCLIPLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "clip_name1",
+        "label": "编码器一",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "clip_name2",
+        "label": "编码器二",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "type",
+        "label": "模型架构",
+        "type": "select",
+        "default": "ace",
+        "options": [
+          "ace",
+          "sdxl",
+          "sd3",
+          "flux"
+        ]
+      },
+      {
+        "key": "device",
+        "label": "设备",
+        "type": "select",
+        "default": "cpu",
+        "options": [
+          "cpu",
+          "default"
+        ]
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "clip",
+        "kind": "CLIP",
+        "label": "文本编码器"
+      }
+    ],
+    "comfy": {
+      "class_type": "DualCLIPLoader",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_vae_loader",
+    "label": "Comfy · 加载 VAE",
+    "english": "VAELoader",
+    "family": "DAT",
+    "description": "本地 ComfyUI VAELoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "vae_name",
+        "label": "VAE 文件名",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      }
+    ],
+    "comfy": {
+      "class_type": "VAELoader",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_lora",
+    "label": "Comfy · LoRA 风格叠加",
+    "english": "LoraLoader",
+    "family": "DAT",
+    "description": "本地 ComfyUI LoraLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "lora_name",
+        "label": "LoRA 文件名",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "strength_model",
+        "label": "模型强度",
+        "type": "number",
+        "default": 1,
+        "min": -3,
+        "max": 3,
+        "step": 0.01
+      },
+      {
+        "key": "strength_clip",
+        "label": "文本强度",
+        "type": "number",
+        "default": 1,
+        "min": -3,
+        "max": 3,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      },
+      {
+        "id": "clip",
+        "kind": "CLIP",
+        "label": "文本编码器"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      },
+      {
+        "id": "clip",
+        "kind": "CLIP",
+        "label": "文本编码器"
+      }
+    ],
+    "comfy": {
+      "class_type": "LoraLoader",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_text",
+    "label": "Comfy · 提示词编码",
+    "english": "CLIPTextEncode",
+    "family": "DAT",
+    "description": "本地 ComfyUI CLIPTextEncode；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "text",
+        "label": "提示词",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "clip",
+        "kind": "CLIP",
+        "label": "文本编码器"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "conditioning",
+        "kind": "CONDITIONING",
+        "label": "条件"
+      }
+    ],
+    "comfy": {
+      "class_type": "CLIPTextEncode",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_zero_condition",
+    "label": "Comfy · 清空负向条件",
+    "english": "ConditioningZeroOut",
+    "family": "DAT",
+    "description": "本地 ComfyUI ConditioningZeroOut；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "conditioning",
+        "kind": "CONDITIONING",
+        "label": "条件"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "conditioning",
+        "kind": "CONDITIONING",
+        "label": "零条件"
+      }
+    ],
+    "comfy": {
+      "class_type": "ConditioningZeroOut",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_latent",
+    "label": "Comfy · 空白潜空间（16通道）",
+    "english": "EmptySD3LatentImage",
+    "family": "DAT",
+    "description": "本地 ComfyUI EmptySD3LatentImage；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "width",
+        "label": "宽度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "batch_size",
+        "label": "批量",
+        "type": "number",
+        "default": 1,
+        "min": 1,
+        "max": 4,
+        "step": 1
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      }
+    ],
+    "comfy": {
+      "class_type": "EmptySD3LatentImage",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_sd_latent",
+    "label": "Comfy · 空白潜空间（4通道）",
+    "english": "EmptyLatentImage",
+    "family": "DAT",
+    "description": "本地 ComfyUI EmptyLatentImage；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "width",
+        "label": "宽度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "batch_size",
+        "label": "批量",
+        "type": "number",
+        "default": 1,
+        "min": 1,
+        "max": 4,
+        "step": 1
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      }
+    ],
+    "comfy": {
+      "class_type": "EmptyLatentImage",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_sampler",
+    "label": "Comfy · 扩散采样",
+    "english": "KSampler",
+    "family": "DAT",
+    "description": "本地 ComfyUI KSampler；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "seed",
+        "label": "随机种子",
+        "type": "number",
+        "default": 42,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "steps",
+        "label": "步数",
+        "type": "number",
+        "default": 20,
+        "min": 1,
+        "max": 100,
+        "step": 1
+      },
+      {
+        "key": "cfg",
+        "label": "引导强度",
+        "type": "number",
+        "default": 7,
+        "min": 0,
+        "max": 30,
+        "step": 0.1
+      },
+      {
+        "key": "sampler_name",
+        "label": "采样器",
+        "type": "select",
+        "default": "euler",
+        "options": [
+          "euler",
+          "euler_ancestral",
+          "dpmpp_2m",
+          "dpmpp_2m_sde",
+          "heun",
+          "uni_pc"
+        ]
+      },
+      {
+        "key": "scheduler",
+        "label": "调度器",
+        "type": "select",
+        "default": "normal",
+        "options": [
+          "normal",
+          "simple",
+          "karras",
+          "sgm_uniform",
+          "exponential"
+        ]
+      },
+      {
+        "key": "denoise",
+        "label": "降噪强度",
+        "type": "number",
+        "default": 1,
+        "min": 0.01,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      },
+      {
+        "id": "positive",
+        "kind": "CONDITIONING",
+        "label": "正向条件"
+      },
+      {
+        "id": "negative",
+        "kind": "CONDITIONING",
+        "label": "负向条件"
+      },
+      {
+        "id": "latent_image",
+        "kind": "LATENT",
+        "label": "潜空间"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      }
+    ],
+    "comfy": {
+      "class_type": "KSampler",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_flow_sampling",
+    "label": "Comfy · Flow 模型采样配置",
+    "english": "ModelSamplingAuraFlow",
+    "family": "DAT",
+    "description": "本地 ComfyUI ModelSamplingAuraFlow；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "shift",
+        "label": "时间偏移",
+        "type": "number",
+        "default": 3,
+        "min": 0.1,
+        "max": 20,
+        "step": 0.1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      }
+    ],
+    "comfy": {
+      "class_type": "ModelSamplingAuraFlow",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_sd3_sampling",
+    "label": "Comfy · SD3 / Wan 采样配置",
+    "english": "ModelSamplingSD3",
+    "family": "DAT",
+    "description": "本地 ComfyUI ModelSamplingSD3；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "shift",
+        "label": "时间偏移",
+        "type": "number",
+        "default": 8,
+        "min": 0.1,
+        "max": 20,
+        "step": 0.1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "model",
+        "kind": "MODEL",
+        "label": "模型"
+      }
+    ],
+    "comfy": {
+      "class_type": "ModelSamplingSD3",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_vae_encode",
+    "label": "Comfy · 图像编码",
+    "english": "VAEEncode",
+    "family": "DAT",
+    "description": "本地 ComfyUI VAEEncode；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "pixels",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      }
+    ],
+    "comfy": {
+      "class_type": "VAEEncode",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_vae_decode",
+    "label": "Comfy · 图像解码",
+    "english": "VAEDecode",
+    "family": "DAT",
+    "description": "本地 ComfyUI VAEDecode；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      },
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "comfy": {
+      "class_type": "VAEDecode",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_vae_decode_tiled",
+    "label": "Comfy · 分块解码",
+    "english": "VAEDecodeTiled",
+    "family": "DAT",
+    "description": "本地 ComfyUI VAEDecodeTiled；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "tile_size",
+        "label": "块大小",
+        "type": "number",
+        "default": 512,
+        "min": 64,
+        "max": 2048,
+        "step": 64
+      },
+      {
+        "key": "overlap",
+        "label": "重叠",
+        "type": "number",
+        "default": 64,
+        "min": 0,
+        "max": 256,
+        "step": 8
+      },
+      {
+        "key": "temporal_size",
+        "label": "时间块",
+        "type": "number",
+        "default": 16,
+        "min": 4,
+        "max": 64,
+        "step": 4
+      },
+      {
+        "key": "temporal_overlap",
+        "label": "时间重叠",
+        "type": "number",
+        "default": 4,
+        "min": 0,
+        "max": 16,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      },
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "comfy": {
+      "class_type": "VAEDecodeTiled",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_image",
+    "label": "Comfy · 读取工作台图片",
+    "english": "LoadImage",
+    "family": "DAT",
+    "description": "本地 ComfyUI LoadImage；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "mask",
+        "kind": "MASK",
+        "label": "遮罩"
+      }
+    ],
+    "comfy": {
+      "class_type": "LoadImage",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_mask",
+    "label": "Comfy · 图像转遮罩",
+    "english": "ImageToMask",
+    "family": "DAT",
+    "description": "本地 ComfyUI ImageToMask；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "channel",
+        "label": "通道",
+        "type": "select",
+        "default": "red",
+        "options": [
+          "red",
+          "green",
+          "blue",
+          "alpha"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "mask",
+        "kind": "MASK",
+        "label": "遮罩"
+      }
+    ],
+    "comfy": {
+      "class_type": "ImageToMask",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_inpaint_encode",
+    "label": "Comfy · 遮罩重绘编码",
+    "english": "VAEEncodeForInpaint",
+    "family": "DAT",
+    "description": "本地 ComfyUI VAEEncodeForInpaint；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "grow_mask_by",
+        "label": "遮罩扩展",
+        "type": "number",
+        "default": 8,
+        "min": 0,
+        "max": 64,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "pixels",
+        "kind": "TOP",
+        "label": "画面"
+      },
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      },
+      {
+        "id": "mask",
+        "kind": "MASK",
+        "label": "遮罩"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      }
+    ],
+    "comfy": {
+      "class_type": "VAEEncodeForInpaint",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_latent_mask",
+    "label": "Comfy · 潜空间降噪遮罩",
+    "english": "SetLatentNoiseMask",
+    "family": "DAT",
+    "description": "本地 ComfyUI SetLatentNoiseMask；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      },
+      {
+        "id": "mask",
+        "kind": "MASK",
+        "label": "遮罩"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      }
+    ],
+    "comfy": {
+      "class_type": "SetLatentNoiseMask",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_controlnet_loader",
+    "label": "Comfy · 加载 ControlNet",
+    "english": "ControlNetLoader",
+    "family": "DAT",
+    "description": "本地 ComfyUI ControlNetLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "control_net_name",
+        "label": "ControlNet 文件名",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "control_net",
+        "kind": "CONTROL_NET",
+        "label": "ControlNet"
+      }
+    ],
+    "comfy": {
+      "class_type": "ControlNetLoader",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_controlnet",
+    "label": "Comfy · 应用 ControlNet",
+    "english": "ControlNetApplyAdvanced",
+    "family": "DAT",
+    "description": "本地 ComfyUI ControlNetApplyAdvanced；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "strength",
+        "label": "强度",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 3,
+        "step": 0.01
+      },
+      {
+        "key": "start_percent",
+        "label": "开始比例",
+        "type": "number",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "end_percent",
+        "label": "结束比例",
+        "type": "number",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "positive",
+        "kind": "CONDITIONING",
+        "label": "正向条件"
+      },
+      {
+        "id": "negative",
+        "kind": "CONDITIONING",
+        "label": "负向条件"
+      },
+      {
+        "id": "control_net",
+        "kind": "CONTROL_NET",
+        "label": "ControlNet"
+      },
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "控制图"
+      },
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "positive",
+        "kind": "CONDITIONING",
+        "label": "正向条件"
+      },
+      {
+        "id": "negative",
+        "kind": "CONDITIONING",
+        "label": "负向条件"
+      }
+    ],
+    "comfy": {
+      "class_type": "ControlNetApplyAdvanced",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_canny",
+    "label": "Comfy · 边缘控制图",
+    "english": "Canny",
+    "family": "DAT",
+    "description": "本地 ComfyUI Canny；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "low_threshold",
+        "label": "低阈值",
+        "type": "number",
+        "default": 0.1,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "high_threshold",
+        "label": "高阈值",
+        "type": "number",
+        "default": 0.4,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ],
+    "inputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "边缘图"
+      }
+    ],
+    "comfy": {
+      "class_type": "Canny",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_resize",
+    "label": "Comfy · 图像缩放",
+    "english": "ImageScale",
+    "family": "DAT",
+    "description": "本地 ComfyUI ImageScale；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "upscale_method",
+        "label": "插值",
+        "type": "select",
+        "default": "lanczos",
+        "options": [
+          "nearest-exact",
+          "bilinear",
+          "bicubic",
+          "lanczos",
+          "area"
+        ]
+      },
+      {
+        "key": "width",
+        "label": "宽度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "height",
+        "label": "高度",
+        "type": "number",
+        "default": 512,
+        "min": 256,
+        "max": 2048,
+        "step": 16
+      },
+      {
+        "key": "crop",
+        "label": "裁剪",
+        "type": "select",
+        "default": "disabled",
+        "options": [
+          "disabled",
+          "center"
+        ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "comfy": {
+      "class_type": "ImageScale",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_upscale_loader",
+    "label": "Comfy · 加载放大模型",
+    "english": "UpscaleModelLoader",
+    "family": "DAT",
+    "description": "本地 ComfyUI UpscaleModelLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "model_name",
+        "label": "放大模型文件名",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "upscale_model",
+        "kind": "UPSCALE_MODEL",
+        "label": "放大模型"
+      }
+    ],
+    "comfy": {
+      "class_type": "UpscaleModelLoader",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_upscale",
+    "label": "Comfy · 模型放大图像",
+    "english": "ImageUpscaleWithModel",
+    "family": "DAT",
+    "description": "本地 ComfyUI ImageUpscaleWithModel；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "upscale_model",
+        "kind": "UPSCALE_MODEL",
+        "label": "放大模型"
+      },
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "image",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "comfy": {
+      "class_type": "ImageUpscaleWithModel",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_reference",
+    "label": "Comfy · 参考图潜空间条件",
+    "english": "ReferenceLatent",
+    "family": "DAT",
+    "description": "本地 ComfyUI ReferenceLatent；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "conditioning",
+        "kind": "CONDITIONING",
+        "label": "条件"
+      },
+      {
+        "id": "latent",
+        "kind": "LATENT",
+        "label": "参考潜空间"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "conditioning",
+        "kind": "CONDITIONING",
+        "label": "参考条件"
+      }
+    ],
+    "comfy": {
+      "class_type": "ReferenceLatent",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_save_image",
+    "label": "Comfy · 保存图片并返回工作台",
+    "english": "SaveImage",
+    "family": "AI",
+    "description": "本地 ComfyUI SaveImage；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "filename_prefix",
+        "label": "文件前缀",
+        "type": "text",
+        "default": "td_open/image"
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "images",
+        "kind": "TOP",
+        "label": "画面"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "生成结果"
+      }
+    ],
+    "comfy": {
+      "class_type": "SaveImage",
+      "terminal": true
+    }
+  },
+  {
+    "type": "comfy_audio",
+    "label": "Comfy · 读取工作台音频",
+    "english": "LoadAudio",
+    "family": "DAT",
+    "description": "本地 ComfyUI LoadAudio；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "input_url",
+        "label": "输入素材地址",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [],
+    "outputs": [
+      {
+        "id": "audio",
+        "kind": "AUDIO",
+        "label": "音频"
+      }
+    ],
+    "comfy": {
+      "class_type": "LoadAudio",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_audio_encode",
+    "label": "Comfy · 音频编码",
+    "english": "VAEEncodeAudio",
+    "family": "DAT",
+    "description": "本地 ComfyUI VAEEncodeAudio；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "audio",
+        "kind": "AUDIO",
+        "label": "音频"
+      },
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      }
+    ],
+    "comfy": {
+      "class_type": "VAEEncodeAudio",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_audio_decode",
+    "label": "Comfy · 音频解码",
+    "english": "VAEDecodeAudio",
+    "family": "DAT",
+    "description": "本地 ComfyUI VAEDecodeAudio；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [],
+    "inputs": [
+      {
+        "id": "samples",
+        "kind": "LATENT",
+        "label": "潜空间"
+      },
+      {
+        "id": "vae",
+        "kind": "VAE",
+        "label": "VAE"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "audio",
+        "kind": "AUDIO",
+        "label": "音频"
+      }
+    ],
+    "comfy": {
+      "class_type": "VAEDecodeAudio",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_save_audio",
+    "label": "Comfy · 保存音频并返回工作台",
+    "english": "TDOpenSaveWAV",
+    "family": "AI",
+    "description": "本地 ComfyUI TDOpenSaveWAV；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "filename_prefix",
+        "label": "文件前缀",
+        "type": "text",
+        "default": "td_open/audio"
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "audio",
+        "kind": "AUDIO",
+        "label": "音频"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "生成结果"
+      }
+    ],
+    "comfy": {
+      "class_type": "TDOpenSaveWAV",
+      "terminal": true
+    }
+  },
+  {
+    "type": "comfy_create_video",
+    "label": "Comfy · 图像帧序列转视频",
+    "english": "CreateVideo",
+    "family": "DAT",
+    "description": "本地 ComfyUI CreateVideo；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "fps",
+        "label": "帧率",
+        "type": "number",
+        "default": 24,
+        "min": 1,
+        "max": 60,
+        "step": 1
+      }
+    ],
+    "inputs": [
+      {
+        "id": "images",
+        "kind": "TOP",
+        "label": "帧序列"
+      },
+      {
+        "id": "audio",
+        "kind": "AUDIO",
+        "label": "可选音轨"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "video",
+        "kind": "VIDEO",
+        "label": "视频"
+      }
+    ],
+    "comfy": {
+      "class_type": "CreateVideo",
+      "terminal": false
+    }
+  },
+  {
+    "type": "comfy_save_video",
+    "label": "Comfy · 保存视频并返回工作台",
+    "english": "SaveVideo",
+    "family": "AI",
+    "description": "本地 ComfyUI SaveVideo；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "filename_prefix",
+        "label": "文件前缀",
+        "type": "text",
+        "default": "td_open/video"
+      },
+      {
+        "key": "format",
+        "label": "容器",
+        "type": "select",
+        "default": "mp4",
+        "options": [
+          "mp4",
+          "auto"
+        ]
+      },
+      {
+        "key": "codec",
+        "label": "编码",
+        "type": "select",
+        "default": "h264",
+        "options": [
+          "h264",
+          "auto"
+        ]
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "video",
+        "kind": "VIDEO",
+        "label": "视频"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "生成结果"
+      }
+    ],
+    "comfy": {
+      "class_type": "SaveVideo",
+      "terminal": true
+    }
+  },
+  {
+    "type": "comfy_save_mesh",
+    "label": "Comfy · 保存网格并返回工作台",
+    "english": "SaveGLB",
+    "family": "AI",
+    "description": "本地 ComfyUI SaveGLB；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "filename_prefix",
+        "label": "文件前缀",
+        "type": "text",
+        "default": "td_open/mesh"
+      },
+      {
+        "key": "result_url",
+        "label": "生成资源地址",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_text",
+        "label": "任务信息",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_id",
+        "label": "本地任务 ID",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "outputs_json",
+        "label": "全部资源 JSON",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "result_kind",
+        "label": "资源类型",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "job_status",
+        "label": "任务状态",
+        "type": "text",
+        "default": ""
+      }
+    ],
+    "inputs": [
+      {
+        "id": "mesh",
+        "kind": "MESH",
+        "label": "网格"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "生成结果"
+      }
+    ],
+    "comfy": {
+      "class_type": "SaveGLB",
+      "terminal": true
+    }
+  },
+  {
+    "type": "comfy_custom",
+    "label": "Comfy · 其他已安装 Comfy 节点",
+    "english": "__custom__",
+    "family": "DAT",
+    "description": "本地 ComfyUI __custom__；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。",
+    "params": [
+      {
+        "key": "class_type",
+        "label": "Comfy 类名",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "inputs_json",
+        "label": "输入参数 JSON",
+        "type": "text",
+        "default": "{}"
+      },
+      {
+        "key": "input_names",
+        "label": "连线输入名称（逗号分隔）",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "key": "output_index",
+        "label": "起始输出编号",
+        "type": "number",
+        "default": 0,
+        "min": 0,
+        "max": 32,
+        "step": 1
+      },
+      {
+        "key": "is_output",
+        "label": "这是保存输出节点",
+        "type": "boolean",
+        "default": false
+      }
+    ],
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "any",
+        "label": "输入 1"
+      },
+      {
+        "id": "in2",
+        "kind": "any",
+        "label": "输入 2"
+      },
+      {
+        "id": "in3",
+        "kind": "any",
+        "label": "输入 3"
+      },
+      {
+        "id": "in4",
+        "kind": "any",
+        "label": "输入 4"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "any",
+        "label": "输出 0"
+      },
+      {
+        "id": "out2",
+        "kind": "any",
+        "label": "输出 1"
+      },
+      {
+        "id": "out3",
+        "kind": "any",
+        "label": "输出 2"
+      },
+      {
+        "id": "out4",
+        "kind": "any",
+        "label": "输出 3"
+      }
+    ],
+    "comfy": {
+      "class_type": "__custom__",
+      "terminal": false
+    }
+  },
+  {
     "type": "noise",
     "label": "流动噪声",
     "english": "Noise",

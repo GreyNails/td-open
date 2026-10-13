@@ -1,0 +1,80 @@
+{
+  "id": "example_local-flux",
+  "name": "本地 · FLUX.2 图片",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "local_image_1",
+      "type": "local_image",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "本地图片生成",
+        "params": {
+          "model_id": "flux-klein-4b",
+          "prompt": "A small ceramic robot, clean white background, studio photography",
+          "width": 512,
+          "height": 512,
+          "steps": 4,
+          "cfg": 1,
+          "seed": 42,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "color_2",
+      "type": "color",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "色彩调整",
+        "params": {
+          "hue": 0,
+          "saturation": 1.2,
+          "brightness": 1.1
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "local_image_1",
+      "target": "color_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "color_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "local-flux"
+  }
+}

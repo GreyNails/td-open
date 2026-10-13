@@ -20,7 +20,7 @@ for family,count in Counter(n['family'] for n in manifest).items():
     intro += f'## {family}（{count} 个）\n\n| 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |\n| --- | --- | --- | --- |\n'
     for n in (n for n in manifest if n['family']==family):
         ports=lambda direction: '、'.join(f"{port['id']}:{port['kind']}" for port in n[direction]) or '—'
-        runtime='外部适配器（未内置）' if n.get('reference', {}).get('level')=='bridge' else '手动 Python 服务' if n['type'].startswith('python_script_') else '协议服务' if n['type'].startswith('io_') else '服务' if family=='AI' or n['type']=='web_render_top' else '浏览器 / 服务端' if n['type'] in STATELESS_TYPES or n['type'] in CHANNEL_STATELESS_TYPES or n['type'] in {'lfo','constant','math','text'} else '浏览器'
+        runtime='手动本地 ComfyUI / 模型环境' if n['type'].startswith(('local_','comfy_')) else '外部适配器（未内置）' if n.get('reference', {}).get('level')=='bridge' else '手动 Python 服务' if n['type'].startswith('python_script_') else '协议服务' if n['type'].startswith('io_') else '服务' if family=='AI' or n['type']=='web_render_top' else '浏览器 / 服务端' if n['type'] in STATELESS_TYPES or n['type'] in CHANNEL_STATELESS_TYPES or n['type'] in {'lfo','constant','math','text'} else '浏览器'
         params='；'.join(f"`{parameter['key']}={safe(parameter['default'])}`" for parameter in n['params'])
         intro+=f"| {safe(n['label'])} / `{n['type']}` | {ports('inputs')} → {ports('outputs')} | {runtime} | {safe(n['description'])}"+(f'<br>{params}' if params else '')+' |\n'
     intro+='\n'

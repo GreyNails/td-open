@@ -44,7 +44,9 @@ def register_operator(spec: dict, evaluator: Callable | None = None) -> None:
 #   node scripts/sync-catalog.mjs
 SERVER_BUILTINS = STATELESS_TYPES | CHANNEL_STATELESS_TYPES | {"constant", "lfo", "math"}
 for _spec in json.loads(Path(__file__).with_name("operator_catalog.json").read_text(encoding="utf-8")):
-    if _spec["type"].startswith("ai_") or _spec["type"] == "mcp_tool":
+    if _spec['type'].startswith(('local_','comfy_')):
+        _spec['runtime']='local_model'
+    elif _spec["type"].startswith("ai_") or _spec["type"] == "mcp_tool":
         _spec["runtime"] = "provider"
     elif _spec["type"] in SERVER_BUILTINS:
         _spec["runtime"] = "server"

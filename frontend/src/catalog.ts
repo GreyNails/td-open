@@ -1,6 +1,7 @@
 import type { GraphNode, NodeSpec, Param, Port, Project } from "./types";
 import { decorateReferenceProject } from "./referenceTemplates";
 import { mediaCatalog } from "./nodes/mediaCatalog";
+import { localAICatalog, comfyCatalog } from "./nodes/localAICatalog";
 import { referenceTopCatalog } from "./nodes/referenceTopCatalog";
 import { compatibilityTopCatalog } from "./nodes/compatibilityTopCatalog";
 import { browserOutputCatalog } from "./nodes/browserOutputCatalog";
@@ -78,6 +79,8 @@ function spec(
   return { type, label, english, family, description, params, inputs, outputs };
 }
 export const catalog: NodeSpec[] = [
+  ...localAICatalog,
+  ...comfyCatalog,
   spec(
     "noise",
     "流动噪声",
@@ -449,12 +452,17 @@ export function preset(kind = "flow"): Project {
     ns.push(n);
     return n;
   };
-  const link = (a: GraphNode, b: GraphNode, targetHandle = "in") =>
+  const link = (
+    a: GraphNode,
+    b: GraphNode,
+    targetHandle = "in",
+    sourceHandle = "out",
+  ) =>
     es.push({
       id: uid("edge"),
       source: a.id,
       target: b.id,
-      sourceHandle: "out",
+      sourceHandle,
       targetHandle,
     });
   let name = "流光实验 · Flow study";
@@ -481,8 +489,8 @@ export function preset(kind = "flow"): Project {
       rows.set(levels[i], row + 1);
       add(type, levels[i] * 245, row * 205, params);
     });
-    for (const [from, to, handle] of recipe.edges)
-      link(ns[from], ns[to], handle);
+    for (const [from, to, handle, sourceHandle] of recipe.edges)
+      link(ns[from], ns[to], handle, sourceHandle);
   }
   if (kind === "flow") {
     const n = add("noise", 0, 25);

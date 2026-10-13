@@ -10,6 +10,7 @@ import ai from "../../docs/AI_API.md?raw";
 import mcp from "../../docs/MCP_GUIDE.md?raw";
 import http from "../../docs/HTTP_API.md?raw";
 import io from "../../docs/IO_GUIDE.md?raw";
+import local from "../../docs/LOCAL_AI.md?raw";
 import "./docs.css";
 
 const documents: {
@@ -19,6 +20,13 @@ const documents: {
   file: string;
   source: string;
 }[] = [
+  {
+    id: "local",
+    title: "本地模型与 ComfyUI",
+    summary: "一键安装、权重与离线生成",
+    file: "LOCAL_AI.md",
+    source: local,
+  },
   {
     id: "start",
     title: "接入总览",

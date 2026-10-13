@@ -1,0 +1,253 @@
+{
+  "id": "example_local-comfy-z",
+  "name": "Comfy · 完整 Z-Image 采样网络",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "comfy_unet_1",
+      "type": "comfy_unet",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "Comfy · 加载扩散模型",
+        "params": {
+          "unet_name": "z_image_turbo_int8_convrot.safetensors",
+          "weight_dtype": "default"
+        }
+      }
+    },
+    {
+      "id": "comfy_clip_2",
+      "type": "comfy_clip",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "Comfy · 加载文本编码器",
+        "params": {
+          "clip_name": "qwen_3_4b_fp8_mixed.safetensors",
+          "type": "lumina2",
+          "device": "cpu"
+        }
+      }
+    },
+    {
+      "id": "comfy_vae_loader_3",
+      "type": "comfy_vae_loader",
+      "position": {
+        "x": 0,
+        "y": 410
+      },
+      "data": {
+        "label": "Comfy · 加载 VAE",
+        "params": {
+          "vae_name": "ae.safetensors"
+        }
+      }
+    },
+    {
+      "id": "comfy_text_4",
+      "type": "comfy_text",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "Comfy · 提示词编码",
+        "params": {
+          "text": "A small ceramic robot, clean white background, studio photography"
+        }
+      }
+    },
+    {
+      "id": "comfy_zero_condition_5",
+      "type": "comfy_zero_condition",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "Comfy · 清空负向条件",
+        "params": {}
+      }
+    },
+    {
+      "id": "comfy_latent_6",
+      "type": "comfy_latent",
+      "position": {
+        "x": 0,
+        "y": 615
+      },
+      "data": {
+        "label": "Comfy · 空白潜空间（16通道）",
+        "params": {
+          "width": 512,
+          "height": 512,
+          "batch_size": 1
+        }
+      }
+    },
+    {
+      "id": "comfy_flow_sampling_7",
+      "type": "comfy_flow_sampling",
+      "position": {
+        "x": 245,
+        "y": 205
+      },
+      "data": {
+        "label": "Comfy · Flow 模型采样配置",
+        "params": {
+          "shift": 3
+        }
+      }
+    },
+    {
+      "id": "comfy_sampler_8",
+      "type": "comfy_sampler",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "Comfy · 扩散采样",
+        "params": {
+          "seed": 42,
+          "steps": 9,
+          "cfg": 1,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "denoise": 1
+        }
+      }
+    },
+    {
+      "id": "comfy_vae_decode_9",
+      "type": "comfy_vae_decode",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "Comfy · 图像解码",
+        "params": {}
+      }
+    },
+    {
+      "id": "comfy_save_image_10",
+      "type": "comfy_save_image",
+      "position": {
+        "x": 1225,
+        "y": 0
+      },
+      "data": {
+        "label": "Comfy · 保存图片并返回工作台",
+        "params": {
+          "filename_prefix": "td_open/image",
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "output_11",
+      "type": "output",
+      "position": {
+        "x": 1470,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "comfy_unet_1",
+      "target": "comfy_flow_sampling_7",
+      "sourceHandle": "model",
+      "targetHandle": "model"
+    },
+    {
+      "id": "edge_2",
+      "source": "comfy_clip_2",
+      "target": "comfy_text_4",
+      "sourceHandle": "clip",
+      "targetHandle": "clip"
+    },
+    {
+      "id": "edge_3",
+      "source": "comfy_text_4",
+      "target": "comfy_zero_condition_5",
+      "sourceHandle": "conditioning",
+      "targetHandle": "conditioning"
+    },
+    {
+      "id": "edge_4",
+      "source": "comfy_text_4",
+      "target": "comfy_sampler_8",
+      "sourceHandle": "conditioning",
+      "targetHandle": "positive"
+    },
+    {
+      "id": "edge_5",
+      "source": "comfy_zero_condition_5",
+      "target": "comfy_sampler_8",
+      "sourceHandle": "conditioning",
+      "targetHandle": "negative"
+    },
+    {
+      "id": "edge_6",
+      "source": "comfy_latent_6",
+      "target": "comfy_sampler_8",
+      "sourceHandle": "samples",
+      "targetHandle": "latent_image"
+    },
+    {
+      "id": "edge_7",
+      "source": "comfy_flow_sampling_7",
+      "target": "comfy_sampler_8",
+      "sourceHandle": "model",
+      "targetHandle": "model"
+    },
+    {
+      "id": "edge_8",
+      "source": "comfy_sampler_8",
+      "target": "comfy_vae_decode_9",
+      "sourceHandle": "samples",
+      "targetHandle": "samples"
+    },
+    {
+      "id": "edge_9",
+      "source": "comfy_vae_loader_3",
+      "target": "comfy_vae_decode_9",
+      "sourceHandle": "vae",
+      "targetHandle": "vae"
+    },
+    {
+      "id": "edge_10",
+      "source": "comfy_vae_decode_9",
+      "target": "comfy_save_image_10",
+      "sourceHandle": "image",
+      "targetHandle": "images"
+    },
+    {
+      "id": "edge_11",
+      "source": "comfy_save_image_10",
+      "target": "output_11",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "local-comfy-z"
+  }
+}

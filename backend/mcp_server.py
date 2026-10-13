@@ -56,6 +56,43 @@ async def list_operators() -> Any:
 
 
 @mcp.tool()
+async def get_local_model_status() -> Any:
+    """Inspect local GPU, installed model profiles and environment. Read only."""
+    result=await app_request("GET", "/api/local-ai/status")
+    return {**result,"profiles":[{key:value for key,value in profile.items() if key!="files"} for profile in result["profiles"]]}
+
+
+@mcp.tool()
+async def run_local_model(profile_id: str, parameters: dict[str, Any], inputs: dict[str, str] | None = None) -> Any:
+    """Explicitly queue real local GPU inference when the user requests generation.
+    Inspect get_local_model_status first. Inputs use uploaded /api/assets or
+    /api/exports URLs: image, image2, mask, audio. Returns a job ID immediately.
+    Poll get_local_model_job; save its result_url into a node with graph commands
+    if requested. This does not automatically modify any saved project.
+    """
+    from backend.local_ai.registry import get_profile
+    get_profile(profile_id)
+    return await app_request("POST", "/api/local-ai/generate", {"profile_id":profile_id,"parameters":parameters,"inputs":inputs or {},"metadata":{"origin":"mcp"}})
+
+
+def local_job_path(job_id: str) -> str:
+    if not re.fullmatch(r"[a-f0-9]{32}",job_id):raise ValueError("Invalid local model job ID")
+    return "/api/local-ai/jobs/"+job_id
+
+
+@mcp.tool()
+async def get_local_model_job(job_id: str) -> Any:
+    """Read GPU task status, progress and real downloadable output URLs."""
+    return await app_request("GET",local_job_path(job_id))
+
+
+@mcp.tool()
+async def cancel_local_model_job(job_id: str) -> Any:
+    """Cancel the specified queued or running local model job when requested."""
+    return await app_request("POST",local_job_path(job_id)+"/cancel",{})
+
+
+@mcp.tool()
 async def apply_graph_commands(project_id: str, commands: list[dict[str, Any]], apply: bool = False) -> dict[str, Any]:
     """Preview or apply graph edits atomically. Each command uses 'op':
     add_node(type,id?,params?,position?), set_param(id,key,value),

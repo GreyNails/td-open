@@ -1,9 +1,10 @@
+import { localTemplates } from "./localTemplates";
 import { referenceTemplates } from "./referenceTemplates";
 import type { Params } from "./types";
 export type RecipeNode = string | [string, Params];
 export type Recipe = {
   nodes: RecipeNode[];
-  edges: [number, number, string?][];
+  edges: [number, number, string?, string?][];
 };
 export type ExampleTemplate = {
   id: string;
@@ -12,7 +13,7 @@ export type ExampleTemplate = {
   level: "入门" | "进阶";
   description: string;
   learn: string;
-  requires?: "audio" | "ai" | "mcp";
+  requires?: "audio" | "ai" | "mcp" | "local";
   recipe?: Recipe;
   count?: number;
 };
@@ -22,7 +23,7 @@ const chain = (...nodes: RecipeNode[]): Recipe => {
 };
 const graph = (
   nodes: RecipeNode[],
-  edges: [number, number, string?][],
+  edges: [number, number, string?, string?][],
 ): Recipe => ({ nodes, edges });
 const t = (
   id: string,
@@ -45,6 +46,7 @@ const t = (
 });
 export const templates: ExampleTemplate[] = [
   ...referenceTemplates,
+  ...localTemplates,
   t(
     "flow",
     "流光实验",

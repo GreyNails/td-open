@@ -351,7 +351,7 @@ def test_actual_stdio_server_handshake_and_tool_discovery():
                 initialized = await session.initialize()
                 assert initialized.serverInfo.name == "TD Open"
                 listing = await session.list_tools()
-                assert {tool.name for tool in listing.tools} == {"list_projects", "get_project", "list_operators", "apply_graph_commands"}
+                assert {tool.name for tool in listing.tools} == {"list_projects", "get_project", "list_operators", "apply_graph_commands", "get_local_model_status", "run_local_model", "get_local_model_job", "cancel_local_model_job"}
     asyncio.run(asyncio.wait_for(check(), timeout=20))
 
 

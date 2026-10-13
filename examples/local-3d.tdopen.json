@@ -1,0 +1,101 @@
+{
+  "id": "example_local-3d",
+  "name": "本地 · 图片变成三维",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "media_1",
+      "type": "media",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "图片 / 视频",
+        "params": {
+          "url": "",
+          "fit": "cover"
+        }
+      }
+    },
+    {
+      "id": "local_3d_2",
+      "type": "local_3d",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "本地三维模型生成",
+        "params": {
+          "input_url": "",
+          "steps": 30,
+          "cfg": 5,
+          "resolution": "128",
+          "clean_mesh": true,
+          "seed": 42,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "render_3",
+      "type": "render",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a888ff",
+          "wireframe": false,
+          "speed": 0
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "media_1",
+      "target": "local_3d_2",
+      "sourceHandle": "out",
+      "targetHandle": "image"
+    },
+    {
+      "id": "edge_2",
+      "source": "local_3d_2",
+      "target": "render_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "render_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "local-3d"
+  }
+}

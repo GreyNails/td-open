@@ -1,0 +1,59 @@
+{
+  "id": "example_local-video",
+  "name": "本地 · 文生视频",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "local_video_1",
+      "type": "local_video",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "本地视频生成",
+        "params": {
+          "prompt": "A tiny ceramic robot slowly waves one arm in a white studio, smooth movement",
+          "input_url": "",
+          "width": 512,
+          "height": 320,
+          "frames": 17,
+          "fps": 16,
+          "steps": 20,
+          "cfg": 5,
+          "seed": 42,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "output_2",
+      "type": "output",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "local_video_1",
+      "target": "output_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "local-video"
+  }
+}

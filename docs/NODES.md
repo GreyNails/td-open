@@ -1,10 +1,166 @@
 # 节点手册
 
-当前目录含 699 个节点入口：204 TOP、211 CHOP、129 SOP、5 AI、1 OUT、40 COMP、96 DAT、13 MAT。其中 92 个入口需要外部 SDK/设备适配器，不计为内置原生功能。完整逐项映射见 [参考能力清单](reference-capabilities.json)。
+当前目录含 744 个节点入口：18 AI、128 DAT、204 TOP、211 CHOP、129 SOP、1 OUT、40 COMP、13 MAT。其中 92 个入口需要外部 SDK/设备适配器，不计为内置原生功能。完整逐项映射见 [参考能力清单](reference-capabilities.json)。
 
 浏览器执行实际图像、采样、表格、几何与场景运算；Python 服务提供无状态数据求值、脚本与协议。节点使用同名创作概念，但不是 TouchDesigner 参数/数值/API 兼容声明。脚本必须手动运行，设备与音频权限必须显式启用。下表给出默认参数，范围与说明以界面或共享 JSON 目录为准。
 
 完整案例见 [案例索引](EXAMPLES.md)，实现边界见 [功能矩阵](FEATURE_MATRIX.md)，协议与外部驱动见 [I/O 指南](IO_PROTOCOLS.md)。
+
+## AI（18 个）
+
+| 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
+| --- | --- | --- | --- |
+| 本地图片生成 / `local_image` | — → out:TOP | 手动本地 ComfyUI / 模型环境 | 使用本地 FLUX.2 Klein / Z-Image 权重生成图片，手动执行，不需要 API Key。<br>`model_id=flux-klein-4b`；`prompt=A small ceramic robot, white background, studio lighting`；`width=512`；`height=512`；`steps=4`；`cfg=1`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| 本地参考图编辑 / `local_image_edit` | image:TOP、image2:TOP → out:TOP | 手动本地 ComfyUI / 模型环境 | FLUX.2 Klein 根据描述编辑一张或两张参考图，支持文生与参考图联合条件。<br>`prompt=A small ceramic robot, white background, studio lighting`；`input_url=`；`reference_url=`；`width=512`；`height=512`；`steps=4`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| 本地图像重绘 / `local_image_to_image` | image:TOP → out:TOP | 手动本地 ComfyUI / 模型环境 | Z-Image 对输入图像进行扩散重绘，降噪强度控制改动程度。<br>`prompt=A small ceramic robot, white background, studio lighting`；`input_url=`；`width=512`；`height=512`；`denoise=0.65`；`steps=9`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| 本地遮罩修复 / `local_inpaint` | image:TOP、mask:TOP → out:TOP | 手动本地 ComfyUI / 模型环境 | 白色遮罩区域参与重绘，黑色区域保留原图。输入原图和独立灰度遮罩。<br>`prompt=A small ceramic robot, white background, studio lighting`；`input_url=`；`mask_url=`；`width=512`；`height=512`；`denoise=0.8`；`steps=9`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| 本地音乐生成 / `local_music` | audio:CHOP → out:CHOP | 手动本地 ComfyUI / 模型环境 | ACE-Step 1.5 Turbo 通过风格描述与歌词生成真实音频；可提供参考音色。<br>`prompt=Warm instrumental electronic music, soft piano, mellow synth bass, steady drums, 120 BPM`；`lyrics=[Instrumental]`；`duration=10`；`bpm=120`；`language=en`；`keyscale=C major`；`generate_audio_codes=False`；`steps=8`；`input_url=`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| 本地三维模型生成 / `local_3d` | image:TOP → out:SOP | 手动本地 ComfyUI / 模型环境 | Hunyuan3D 2.1 从参考图生成 GLB 几何网格；该预设不包含纹理绘制。<br>`input_url=`；`steps=30`；`cfg=5`；`resolution=128`；`clean_mesh=True`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| 本地音乐分轨 / `local_stems` | audio:CHOP → out:CHOP | 手动本地 ComfyUI / 模型环境 | Demucs 四轨（人声/鼓/贝斯/其他）或 MelBand RoFormer 人声/伴奏双轨；所有分轨可下载或单独播放。<br>`model_id=demucs-4`；`input_url=`；`segment=4`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| 本地视频生成 / `local_video` | image:TOP → out:TOP | 手动本地 ComfyUI / 模型环境 | Wan 2.2 TI2V 5B 支持文生视频和图生视频，使用低显存分块解码。<br>`prompt=A small ceramic robot, white background, studio lighting`；`input_url=`；`width=512`；`height=320`；`frames=17`；`fps=16`；`steps=20`；`cfg=5`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| ComfyUI 工作流 / `comfy_workflow` | — → out:any | 手动本地 ComfyUI / 模型环境 | 导入 API 格式工作流，运行当前本地 ComfyUI 中安装的节点，返回全部图片、音频、视频与模型资源。<br>`workflow_json={}`；`output_kind=image`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| Comfy · 保存图片并返回工作台 / `comfy_save_image` | images:TOP → out:TOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI SaveImage；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`filename_prefix=td_open/image`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| Comfy · 保存音频并返回工作台 / `comfy_save_audio` | audio:AUDIO → out:CHOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI TDOpenSaveWAV；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`filename_prefix=td_open/audio`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| Comfy · 保存视频并返回工作台 / `comfy_save_video` | video:VIDEO → out:TOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI SaveVideo；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`filename_prefix=td_open/video`；`format=mp4`；`codec=h264`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| Comfy · 保存网格并返回工作台 / `comfy_save_mesh` | mesh:MESH → out:SOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI SaveGLB；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`filename_prefix=td_open/mesh`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| AI 图片 / `ai_image` | — → out:TOP | 服务 | 选择已配置的服务，填写提示词后点击运行。请求只在手动运行时发出。<br>`prompt=`；`provider_id=`；`result_url=`；`result_text=` |
+| AI 音乐 / `ai_music` | — → out:CHOP | 服务 | 选择已配置的服务，填写提示词后点击运行。请求只在手动运行时发出。<br>`prompt=`；`provider_id=`；`result_url=`；`result_text=` |
+| AI 三维 / `ai_3d` | — → out:SOP | 服务 | 选择已配置的服务，填写提示词后点击运行。请求只在手动运行时发出。<br>`prompt=`；`provider_id=`；`result_url=`；`result_text=` |
+| AI 文本 / `ai_text` | — → out:DAT | 服务 | 选择已配置的服务，填写提示词后点击运行。请求只在手动运行时发出。<br>`prompt=`；`provider_id=`；`result_url=`；`result_text=` |
+| MCP 工具 / `mcp_tool` | — → out:DAT | 服务 | 调用已连接 MCP 服务器提供的工具。执行前请确认工具用途。<br>`server_id=`；`tool=`；`arguments={}` |
+
+## DAT（128 个）
+
+| 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
+| --- | --- | --- | --- |
+| Comfy · 加载检查点 / `comfy_checkpoint` | — → model:MODEL、clip:CLIP、vae:VAE | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI CheckpointLoaderSimple；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`ckpt_name=` |
+| Comfy · 加载扩散模型 / `comfy_unet` | — → model:MODEL | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI UNETLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`unet_name=`；`weight_dtype=default` |
+| Comfy · 加载文本编码器 / `comfy_clip` | — → clip:CLIP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI CLIPLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`clip_name=`；`type=lumina2`；`device=cpu` |
+| Comfy · 加载双文本编码器 / `comfy_dual_clip` | — → clip:CLIP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI DualCLIPLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`clip_name1=`；`clip_name2=`；`type=ace`；`device=cpu` |
+| Comfy · 加载 VAE / `comfy_vae_loader` | — → vae:VAE | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI VAELoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`vae_name=` |
+| Comfy · LoRA 风格叠加 / `comfy_lora` | model:MODEL、clip:CLIP → model:MODEL、clip:CLIP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI LoraLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`lora_name=`；`strength_model=1`；`strength_clip=1` |
+| Comfy · 提示词编码 / `comfy_text` | clip:CLIP → conditioning:CONDITIONING | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI CLIPTextEncode；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`text=` |
+| Comfy · 清空负向条件 / `comfy_zero_condition` | conditioning:CONDITIONING → conditioning:CONDITIONING | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ConditioningZeroOut；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。 |
+| Comfy · 空白潜空间（16通道） / `comfy_latent` | — → samples:LATENT | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI EmptySD3LatentImage；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`width=512`；`height=512`；`batch_size=1` |
+| Comfy · 空白潜空间（4通道） / `comfy_sd_latent` | — → samples:LATENT | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI EmptyLatentImage；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`width=512`；`height=512`；`batch_size=1` |
+| Comfy · 扩散采样 / `comfy_sampler` | model:MODEL、positive:CONDITIONING、negative:CONDITIONING、latent_image:LATENT → samples:LATENT | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI KSampler；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`seed=42`；`steps=20`；`cfg=7`；`sampler_name=euler`；`scheduler=normal`；`denoise=1` |
+| Comfy · Flow 模型采样配置 / `comfy_flow_sampling` | model:MODEL → model:MODEL | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ModelSamplingAuraFlow；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`shift=3` |
+| Comfy · SD3 / Wan 采样配置 / `comfy_sd3_sampling` | model:MODEL → model:MODEL | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ModelSamplingSD3；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`shift=8` |
+| Comfy · 图像编码 / `comfy_vae_encode` | pixels:TOP、vae:VAE → samples:LATENT | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI VAEEncode；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。 |
+| Comfy · 图像解码 / `comfy_vae_decode` | samples:LATENT、vae:VAE → image:TOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI VAEDecode；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。 |
+| Comfy · 分块解码 / `comfy_vae_decode_tiled` | samples:LATENT、vae:VAE → image:TOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI VAEDecodeTiled；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`tile_size=512`；`overlap=64`；`temporal_size=16`；`temporal_overlap=4` |
+| Comfy · 读取工作台图片 / `comfy_image` | — → image:TOP、mask:MASK | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI LoadImage；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`input_url=` |
+| Comfy · 图像转遮罩 / `comfy_mask` | image:TOP → mask:MASK | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ImageToMask；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`channel=red` |
+| Comfy · 遮罩重绘编码 / `comfy_inpaint_encode` | pixels:TOP、vae:VAE、mask:MASK → samples:LATENT | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI VAEEncodeForInpaint；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`grow_mask_by=8` |
+| Comfy · 潜空间降噪遮罩 / `comfy_latent_mask` | samples:LATENT、mask:MASK → samples:LATENT | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI SetLatentNoiseMask；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。 |
+| Comfy · 加载 ControlNet / `comfy_controlnet_loader` | — → control_net:CONTROL_NET | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ControlNetLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`control_net_name=` |
+| Comfy · 应用 ControlNet / `comfy_controlnet` | positive:CONDITIONING、negative:CONDITIONING、control_net:CONTROL_NET、image:TOP、vae:VAE → positive:CONDITIONING、negative:CONDITIONING | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ControlNetApplyAdvanced；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`strength=1`；`start_percent=0`；`end_percent=1` |
+| Comfy · 边缘控制图 / `comfy_canny` | image:TOP → image:TOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI Canny；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`low_threshold=0.1`；`high_threshold=0.4` |
+| Comfy · 图像缩放 / `comfy_resize` | image:TOP → image:TOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ImageScale；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`upscale_method=lanczos`；`width=512`；`height=512`；`crop=disabled` |
+| Comfy · 加载放大模型 / `comfy_upscale_loader` | — → upscale_model:UPSCALE_MODEL | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI UpscaleModelLoader；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`model_name=` |
+| Comfy · 模型放大图像 / `comfy_upscale` | upscale_model:UPSCALE_MODEL、image:TOP → image:TOP | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ImageUpscaleWithModel；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。 |
+| Comfy · 参考图潜空间条件 / `comfy_reference` | conditioning:CONDITIONING、latent:LATENT → conditioning:CONDITIONING | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI ReferenceLatent；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。 |
+| Comfy · 读取工作台音频 / `comfy_audio` | — → audio:AUDIO | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI LoadAudio；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`input_url=` |
+| Comfy · 音频编码 / `comfy_audio_encode` | audio:AUDIO、vae:VAE → samples:LATENT | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI VAEEncodeAudio；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。 |
+| Comfy · 音频解码 / `comfy_audio_decode` | samples:LATENT、vae:VAE → audio:AUDIO | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI VAEDecodeAudio；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。 |
+| Comfy · 图像帧序列转视频 / `comfy_create_video` | images:TOP、audio:AUDIO → video:VIDEO | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI CreateVideo；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`fps=24` |
+| Comfy · 其他已安装 Comfy 节点 / `comfy_custom` | in:any、in2:any、in3:any、in4:any → out:any、out2:any、out3:any、out4:any | 手动本地 ComfyUI / 模型环境 | 本地 ComfyUI __custom__；连接组成工作流，在保存节点手动运行。模型文件可在本地模型中心查看。<br>`class_type=`；`inputs_json={}`；`input_names=`；`output_index=0`；`is_output=False` |
+| DAT 组件输入 / `network_in_dat` | — → out:DAT | 浏览器 | 从所属组件的指定编号输入端口读取数据。根网络无输入时返回空值。<br>`index=1` |
+| DAT 组件输出 / `network_out_dat` | in:DAT → out:DAT | 浏览器 | 将内部网络结果输出到组件外部的指定端口。<br>`index=1` |
+| DAT 路径引用 / `operator_select_dat` | — → out:DAT | 浏览器 | 通过节点 ID 路径读取算子输出。支持 / 根路径、../ 父级路径以及组件内部路径。循环引用会显示运行错误。<br>`path=` |
+| 多点触控 / `browser_multi_touch_in` | — → out:DAT | 浏览器 | 真实浏览器输入；未连接设备时返回空通道。Panel 通过 path 读取组件参数。<br>`keys=Space ArrowLeft ArrowRight`；`path=`；`device=0`；`channel=0`；`velocity=100`；`enabled=False` |
+| MIDI 事件 / `browser_midi_event` | — → out:DAT | 浏览器 | 使用 Web MIDI API。点击启用 MIDI 后选择设备索引；输出需要开启 enabled。浏览器和系统必须支持 MIDI。<br>`keys=Space ArrowLeft ArrowRight`；`path=`；`device=0`；`channel=0`；`velocity=100`；`enabled=False` |
+| 键盘事件表 / `browser_keyboard_dat` | — → out:DAT | 浏览器 | 读取真实浏览器事件或当前屏幕信息；MIDI需要显式启用，Monitors目前报告当前显示器。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
+| MIDI 事件表 / `browser_midi_dat` | — → out:DAT | 浏览器 | 读取真实浏览器事件或当前屏幕信息；MIDI需要显式启用，Monitors目前报告当前显示器。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
+| 音频设备列表 / `browser_audio_devices` | — → out:DAT | 浏览器 | 列举浏览器可访问的媒体设备。设备名称是否可见取决于浏览器媒体权限。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
+| 视频设备列表 / `browser_video_devices` | — → out:DAT | 浏览器 | 列举浏览器可访问的媒体设备。设备名称是否可见取决于浏览器媒体权限。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
+| 屏幕信息 / `browser_monitors` | — → out:DAT | 浏览器 | 读取真实浏览器事件或当前屏幕信息；MIDI需要显式启用，Monitors目前报告当前显示器。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
+| Python 脚本 DAT / `python_script_dat` | in:DAT → out:DAT | 手动 Python 服务 | 显式点击运行 Python 才会执行 cook(inputs, time)。使用本机账户权限，支持安装的 Python 包；脚本与日志保存在本项目。返回 TD Open 的通道/表格/网格/图像数据，不支持 TouchDesigner op()/scriptOp 对象。<br>`code=def cook(inputs, time): ↵     return {"kind":"table", "rows":[["name","value"],["time",str(time)],["message","Hello Python"]]}` |
+| 媒体文件信息 / `media_file_info` | — → out:DAT | 浏览器 | 点击启用读取音频元信息，输出时长、采样率、通道数、样本数和解码状态。<br>`url=` |
+| 原生表格 / `native_table` | — → out:DAT | 浏览器 / 服务端 | CSV 编辑内容转成真正二维表格值，保持空单元格和带引号换行。<br>`csv=name,value ↵ alpha,1 ↵ beta,2` |
+| 通道转表格 / `channels_to_dat` | in:CHOP → out:DAT | 浏览器 / 服务端 | 每条通道变为一列，保留名称和完整采样序列。<br>`header=True`；`precision=6` |
+| 几何转表格 / `sop_to_dat` | in:SOP → out:DAT | 浏览器 | 将世界坐标顶点转换为含索引和 XYZ 列的表格。<br>`maximum=4096` |
+| 选择表格区域 / `native_select` | in:DAT → out:DAT | 浏览器 / 服务端 | 按行范围和任意列索引选择原生表格。<br>`start=0`；`length=100`；`columns=` |
+| 重排表格 / `native_reorder` | in:DAT → out:DAT | 浏览器 | 按索引重排指定轴，或者反转所有行或列。<br>`mode=rows`；`indices=0,1` |
+| 合并表格 / `native_merge` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 按行或列连接原生表格，并保留单元格边界。<br>`mode=rows`；`skip_header=False` |
+| 表格转置 / `native_transpose` | in:DAT → out:DAT | 浏览器 / 服务端 | 把原生表格的行列互换，缺失单元格补为空字符串。 |
+| 表格排序 / `native_sort` | in:DAT → out:DAT | 浏览器 / 服务端 | 按指定列稳定排序，可选择数字比较和保留表头。<br>`column=0`；`numeric=False`；`descending=False`；`header=True` |
+| 插入表格 / `native_insert` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 在指定行或列位置插入第二张表格的数据。<br>`mode=rows`；`index=1` |
+| 表格键值查找 / `lookup_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 根据键列精确匹配，返回指定值列或完整匹配行。<br>`key=alpha`；`key_column=0`；`value_column=1` |
+| 表格格式转换 / `native_convert` | in:DAT → out:DAT | 浏览器 / 服务端 | 在 CSV、TSV、JSON 二维数组和原生表格之间转换。<br>`mode=table`；`input_format=csv` |
+| 表格替换 / `native_substitute` | in:DAT → out:DAT | 浏览器 | 对所有单元格执行字面文本替换或受限长度的正则替换。<br>`search=alpha`；`replacement=A`；`regex=False`；`case_sensitive=True` |
+| 切换数据 / `dat_switch` | in:DAT、in2:DAT、mod:CHOP → out:DAT | 浏览器 / 服务端 | 根据参数或 CHOP 选择完整表格或文本输入。<br>`index=0` |
+| 数据直通 / `dat_null` | in:DAT → out:DAT | 浏览器 / 服务端 | 保留文本或原生表格的类型和所有单元格。 |
+| 数据结构信息 / `dat_info` | in:DAT → out:DAT | 浏览器 / 服务端 | 输出行数、最大列数、单元格数和序列化字符数。 |
+| 计算表格表达式 / `dat_evaluate` | in:DAT → out:DAT | 浏览器 / 服务端 | 对每个数值单元格执行安全算式，x 为数值，row/col 为索引。<br>`expression=x*2+row`；`header=True` |
+| 检查结构 / `dat_examine` | in:DAT → out:DAT | 浏览器 | 将输入值的字段、类型和内容展开为可读表格。 |
+| 数据历史队列 / `dat_fifo` | in:DAT → out:DAT | 浏览器 | 输入变化时追加行，并保存指定容量的历史表格。<br>`capacity=100`；`changes_only=True` |
+| 数据片段 / `dat_clip` | in:DAT、index:CHOP → out:DAT | 浏览器 | 按播放时间或输入索引从表格读取一行。<br>`rate=1`；`loop=True` |
+| 帧执行事件 / `dat_execute` | — → out:DAT | 浏览器 | 每个不同播放时间生成 frame 事件表；下游可读取事件，不运行隐式脚本。<br>`capacity=64` |
+| 信号变化事件 / `dat_chop_execute` | in:CHOP → out:DAT | 浏览器 | 输出通道变化、上升沿和下降沿的事件记录。<br>`mode=change`；`threshold=0.5`；`capacity=64` |
+| 表格变化事件 / `dat_dat_execute` | in:DAT → out:DAT | 浏览器 | 原生表格变化时产生包含行列和新旧值的事件表。<br>`capacity=64` |
+| 节点网络事件 / `dat_op_execute` | — → out:DAT | 浏览器 | 监听项目节点新增、移除、类型变化并输出事件记录。<br>`capacity=64` |
+| 参数变化事件 / `dat_parameter_execute` | — → out:DAT | 浏览器 | 监听指定节点参数，并记录变化前后的值。<br>`node_id=`；`parameter=`；`capacity=64` |
+| 参数组事件 / `dat_pargroup_execute` | — → out:DAT | 浏览器 | 监听指定节点参数组，一次变动输出完整分组值。<br>`node_id=`；`parameters=x,y,z`；`capacity=64` |
+| 查找节点 / `dat_op_find` | — → out:DAT | 浏览器 | 按类型、名称和 ID 通配符查找当前项目节点。<br>`pattern=*`；`type=*` |
+| 参数表格 / `dat_parameter` | — → out:DAT | 浏览器 | 将指定节点的所有参数展开成参数名、值和类型表格。<br>`node_id=` |
+| 执行统计表 / `dat_perform` | — → out:DAT | 浏览器 | 输出项目节点数、连接数、播放时间和本节点执行次数。 |
+| 数据校验报告 / `dat_error` | in:DAT → out:DAT | 浏览器 | 检查重复表头、行宽不一致、空值和非数字单元格，输出问题位置。<br>`numeric=False`；`header=True` |
+| 声明式表格脚本 / `dat_script` | in:DAT → out:DAT | 浏览器 | 用 JSON 操作序列进行筛选、投影、排序和安全单元格计算。<br>`program=[{"op":"select","columns":[0,1]},{"op":"sort","column":0}]` |
+| XML 数据 / `xml_dat` | in:DAT → out:DAT | 浏览器 | 将 XML 元素、路径、属性和文本展开成表格；DTD 与外部实体被拒绝。<br>`xml=<scene><item name="cube">1</item><item name="sphere">2</item></scene>`；`tag=` |
+| JSON 结构表 / `native_json` | in:DAT → out:DAT | 浏览器 | 解析、选择和更新 JSON 路径，并可将对象数组转换为原生表格。<br>`mode=table`；`path=`；`value=0` |
+| 文本与表格编辑 / `native_text` | in:DAT → out:DAT | 浏览器 / 服务端 | 提供独立可编辑文本，连接表格时按指定分隔符排版为文本。<br>`text=Hello TD Open`；`separator=	`；`append=False` |
+| 面板交互事件 / `dat_panel_execute` | — → out:DAT | 浏览器 | 监听组件路径的面板值变化，输出变化、按下或松开的事件表；下游消费事件，不运行隐式 Python 回调。<br>`path=`；`values=value,select`；`mode=change`；`capacity=64` |
+| 三维拾取表格 / `render_pick_dat` | in:COMP → out:DAT | 浏览器 | 复用真实相机射线拾取，将命中对象、坐标、法线和距离写入二维数据表。<br>`x=0`；`y=0`；`columns=hit,object,tx,ty,tz,nx,ny,nz,distance` |
+| Art-Net / `ref_dat_art_net` | in:DAT → out:DAT | 浏览器 | 真实 Art-Net ArtDMX 数据报，1–512 通道，数值范围 0–255。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=6454`；`universe=0` |
+| CPlusPlus · 外部桥接 / `ref_dat_cplusplus` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：Native C++ compiler + SDK/plugin host adapter; exports portable data over the open bridge, not binary ABI compatibility。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=cpp` |
+| EtherDream · 外部桥接 / `ref_dat_etherdream` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：Supported Ether Dream / Pangolin DAC SDK, scanner and device interlock。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=laser` |
+| File In / `ref_dat_file_in` | — → out:DAT | 浏览器 | 在项目 data/io 内读取 UTF-8 / JSON 数据；CHOP 使用完整多通道 JSON 格式。<br>`enabled=False`；`interval=500`；`path=example.json` |
+| File Out / `ref_dat_file_out` | in:DAT → out:DAT | 浏览器 | 在项目 data/io 内写入 UTF-8 / JSON 数据；CHOP 使用完整多通道 JSON 格式。<br>`enabled=False`；`interval=500`；`path=example.json`；`append=False` |
+| Folder / `ref_dat_folder` | — → out:DAT | 浏览器 | 读取项目 data/io 内的目录、文件大小和修改时间。<br>`enabled=False`；`interval=500`；`path=` |
+| MPCDI · 外部桥接 / `ref_dat_mpcdi` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：MPCDI calibration archive parser and calibrated display pipeline。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=mpcdi` |
+| MQTT Client / `ref_dat_mqtt_client` | in:DAT → out:DAT | 浏览器 | 真实 MQTT 3.1.1 客户端：订阅，QoS 0 发布，接收 QoS 0/1 与保留消息。<br>`enabled=False`；`interval=100`；`mode=connect`；`host=127.0.0.1`；`port=1883`；`topic=td-open/#`；`publish_topic=td-open/value` |
+| NDI · 外部桥接 / `ref_dat_ndi` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：NDI SDK/runtime, licensed SDK adapter and a reachable NDI source。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=ndi` |
+| OSC In / `ref_dat_osc_in` | — → out:DAT | 浏览器 | 真实 OSC 1.0 UDP 消息与 bundle 读取，支持数值、文字、布尔和 blob。TUIO 保留原始地址与参数；Sync 使用开放 OSC 消息。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9000`；`address=/td-open` |
+| OSC Out / `ref_dat_osc_out` | in:DAT → out:DAT | 浏览器 | 真实 OSC 1.0 UDP 消息与 bundle 读取，支持数值、文字、布尔和 blob。TUIO 保留原始地址与参数；Sync 使用开放 OSC 消息。<br>`enabled=False`；`interval=100`；`mode=connect`；`host=127.0.0.1`；`port=9000`；`address=/td-open` |
+| Serial / `ref_dat_serial` | in:DAT → out:DAT | 浏览器 | 真实 POSIX 串口 8N1 读写（Linux / macOS）；需要设备权限，按接收字节块输出。<br>`enabled=False`；`interval=100`；`device=/dev/ttyUSB0`；`baud=115200` |
+| SocketIO · 外部桥接 / `ref_dat_socketio` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：Socket.IO/Engine.IO client adapter; raw WebSocket is a different protocol。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=socketio` |
+| TCP/IP / `ref_dat_tcp_ip` | in:DAT → out:DAT | 浏览器 | 真实 TCP 连接与监听，支持换行 / 32 位长度 / 原始流消息边界；Pipe 使用开放 TCP，不兼容私有 Pipe 协议。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9001`；`framing=newline` |
+| Touch In / `ref_dat_touch_in` | — → out:DAT | 浏览器 | 通过 TD Open 开放 JSON 桥接协议交换数据，接收 POST /api/io/bridge/{通道}。Touch 私有网络协议未内置。<br>`enabled=False`；`interval=100`；`channel=td-open` |
+| Touch Out / `ref_dat_touch_out` | in:DAT → out:DAT | 浏览器 | 通过 TD Open 开放 JSON 桥接协议交换数据，接收 POST /api/io/bridge/{通道}。Touch 私有网络协议未内置。<br>`enabled=False`；`interval=100`；`channel=td-open` |
+| TUIO In / `ref_dat_tuio_in` | — → out:DAT | 浏览器 | 真实 OSC 1.0 UDP 消息与 bundle 读取，支持数值、文字、布尔和 blob。TUIO 保留原始地址与参数；Sync 使用开放 OSC 消息。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9000`；`address=/tuio/2Dcur` |
+| UDP In / `ref_dat_udp_in` | — → out:DAT | 浏览器 | 真实 UDP 文本 / JSON 数据报收发。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9001` |
+| UDP Out / `ref_dat_udp_out` | in:DAT → out:DAT | 浏览器 | 真实 UDP 文本 / JSON 数据报收发。<br>`enabled=False`；`interval=100`；`mode=connect`；`host=127.0.0.1`；`port=9001` |
+| Web Client / `ref_dat_web_client` | — → out:DAT | 浏览器 | 发出真实 HTTP 请求，输出状态码、响应头与 JSON / 文本响应。启用后按间隔刷新。<br>`enabled=False`；`interval=100`；`url=http://127.0.0.1:8765/api/health`；`method=GET`；`headers={}` |
+| Web Server / `ref_dat_web_server` | in:DAT → out:DAT | 浏览器 | 在当前服务 /api/io/web/{名称} 提供 JSON GET / POST 端点；收到 POST 后更新节点，输入可发布到 GET 响应。<br>`enabled=False`；`interval=100`；`channel=example` |
+| WebRTC · 外部桥接 / `ref_dat_webrtc` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：External WebRTC signaling + RTP/codec adapter; this bridge transports decoded frames。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=webrtc` |
+| WebSocket / `ref_dat_websocket` | in:DAT → out:DAT | 浏览器 | 真实 RFC 6455 WebSocket 收发文本 / JSON / base64 图像。Video Stream 使用开放逐帧 JSON，不包含 RTSP / RTMP 编解码器。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9001`；`url=ws://127.0.0.1:9001` |
+| 文本数据 / `text_dat` | — → out:DAT | 浏览器 / 服务端 | 提供文本、JSON 或提示词，可接到文字画面及文本处理节点。<br>`text=Hello, TD Open` |
+| 拼接文本 / `concatenate` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 把两路文本用分隔符连接，未连接时使用备用文本。<br>`text=Hello`；`text2=world`；`separator= ` |
+| 文本替换 / `replace_text` | in:DAT → out:DAT | 浏览器 / 服务端 | 按字面内容替换全部匹配文字；不执行脚本或正则表达式。<br>`find=Hello`；`replace=你好` |
+| 文本格式 / `case_text` | in:DAT → out:DAT | 浏览器 / 服务端 | 转换大小写、去除两端空格，或反转文本字符。<br>`mode=upper` |
+| 文本拆分 / `split_text` | in:DAT → out:DAT | 浏览器 / 服务端 | 按分隔符拆分文本，输出 JSON 数组，供 JSON 取值节点读取。<br>`separator=,`；`trim=True` |
+| JSON 取值 / `json_select` | in:DAT → out:DAT | 浏览器 / 服务端 | 按点分路径读取 JSON，例如 items.0.name；缺失路径返回备用文本。<br>`path=name`；`fallback=` |
+| CSV 表格 / `table_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 存储 CSV 文本，也可按零起始行列索引选取单元格；支持引号和单元格内换行。<br>`csv=name,value ↵ alpha,1 ↵ beta,2`；`mode=csv`；`row=1`；`column=1` |
+| 文本转数值 / `dat_to_chop` | in:DAT → out:CHOP | 浏览器 / 服务端 | 把文本解析为有限数值，解析失败时使用备用数值。<br>`fallback=0` |
+| 文本长度 / `text_length` | in:DAT → out:CHOP | 浏览器 / 服务端 | 按 Unicode 字符、行数或单词数统计文本，输出可用于信号计算。<br>`mode=characters` |
+| 文本切片 / `substring_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 以 Unicode 字符为单位截取文本，负起点从结尾计算。<br>`start=0`；`length=10` |
+| 文本补齐 / `pad_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 向文本左侧或右侧重复补齐指定字符。<br>`length=8`；`fill=0`；`side=left` |
+| 文本模板 / `format_dat` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 模板中的 {in} 与 {in2} 会替换为对应输入；不会执行代码。<br>`template=第一路：{in} ↵ 第二路：{in2}` |
+| 文本编码 / `encode_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 在 UTF-8 文本与 Base64、URL 编码之间转换。<br>`mode=base64_encode` |
+| 文本排序 / `sort_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 按行或 JSON 数组排序，可启用数值排序和倒序。<br>`format=lines`；`numeric=False`；`descending=False` |
+| 文本去重 / `unique_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 按首次出现顺序去除重复行或 JSON 数组值。<br>`format=lines` |
+| 文本筛选 / `filter_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 保留包含指定文字、指定前缀或后缀的行，支持反选。<br>`query=a`；`mode=contains`；`invert=False` |
+| 数组连接 / `join_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 将 JSON 数组转成带分隔符的文本，对象元素以 JSON 显示。<br>`separator=, ` |
+| JSON 合并 / `json_merge` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 合并两个 JSON 对象；同名键采用第二路的值。 |
+| JSON 写入 / `json_set` | in:DAT → out:DAT | 浏览器 / 服务端 | 通过点分路径更新 JSON 对象的嵌套值，支持数组索引。<br>`path=settings.amount`；`value=1` |
+| JSON 键值 / `json_keys` | in:DAT → out:DAT | 浏览器 / 服务端 | 提取对象的键、值或键值对，输出 JSON 数组。<br>`mode=keys` |
+| 表格转置 / `table_transpose` | in:DAT → out:DAT | 浏览器 / 服务端 | 交换 CSV 表格的行和列，缺失单元格补为空文本。 |
+| 表格选择 / `table_select` | in:DAT → out:DAT | 浏览器 / 服务端 | 按行范围和列索引提取 CSV 子表。<br>`start=0`；`count=10`；`columns=` |
+| 表格排序 / `table_sort` | in:DAT → out:DAT | 浏览器 / 服务端 | 按指定 CSV 列稳定排序，可保留表头。<br>`column=1`；`header=True`；`numeric=True`；`descending=False` |
+| 表格拼接 / `table_merge` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 纵向追加行或横向拼接列，正确保留 CSV 引号和换行。<br>`axis=rows`；`skip_header=True` |
+| 表格转对象 / `table_to_json` | in:DAT → out:DAT | 浏览器 / 服务端 | 将 CSV 表头映射成每行对象的键，并可把数字单元格转换为数值。<br>`numeric=True` |
+| 数值转文本 / `chop_to_dat` | in:CHOP → out:DAT | 浏览器 / 服务端 | 把数值信号格式化为指定小数位的文本，便于字幕或数据导出。<br>`digits=2`；`prefix=`；`suffix=` |
 
 ## TOP（204 个）
 
@@ -565,16 +721,6 @@
 | 几何边线 / `wireframe_sop` | in:SOP → out:SOP | 浏览器 | 将输入网格转换为真实线段边线，可选择保留三角网格或仅保留硬边。<br>`mode=edges`；`threshold=20` |
 | 包围盒 / `bounds_sop` | in:SOP → out:SOP | 浏览器 | 计算输入整体变换后的轴对齐包围盒，输出线框或实体盒。<br>`wireframe=True` |
 
-## AI（5 个）
-
-| 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
-| --- | --- | --- | --- |
-| AI 图片 / `ai_image` | — → out:TOP | 服务 | 选择已配置的服务，填写提示词后点击运行。请求只在手动运行时发出。<br>`prompt=`；`provider_id=`；`result_url=`；`result_text=` |
-| AI 音乐 / `ai_music` | — → out:CHOP | 服务 | 选择已配置的服务，填写提示词后点击运行。请求只在手动运行时发出。<br>`prompt=`；`provider_id=`；`result_url=`；`result_text=` |
-| AI 三维 / `ai_3d` | — → out:SOP | 服务 | 选择已配置的服务，填写提示词后点击运行。请求只在手动运行时发出。<br>`prompt=`；`provider_id=`；`result_url=`；`result_text=` |
-| AI 文本 / `ai_text` | — → out:DAT | 服务 | 选择已配置的服务，填写提示词后点击运行。请求只在手动运行时发出。<br>`prompt=`；`provider_id=`；`result_url=`；`result_text=` |
-| MCP 工具 / `mcp_tool` | — → out:DAT | 服务 | 调用已连接 MCP 服务器提供的工具。执行前请确认工具用途。<br>`server_id=`；`tool=`；`arguments={}` |
-
 ## OUT（1 个）
 
 | 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
@@ -625,107 +771,6 @@
 | USD · 外部桥接 / `ref_comp_usd` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：OpenUSD native library and USD stage to scene JSON adapter。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=usd` |
 | Nvidia Flex Solver · 外部桥接 / `ref_comp_nvidia_flex_solver` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：NVIDIA FleX SDK + compatible NVIDIA GPU + native solver adapter。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=nvidia_flex` |
 | GLSL 面板 / `glsl_comp` | in:TOP、mod:CHOP → out:TOP | 浏览器 | 实际编译并执行WebGL2 GLSL ES 3.00片段着色器，暴露uInput0/uInput1/uTime/uResolution/uMod；不是TD完整shader ABI。<br>`code=#version 300 es ↵ precision highp float; ↵ uniform sampler2D uInput0; ↵ uniform sampler2D uInput1; ↵ uniform vec2 uResolution; ↵ uniform float uTime; ↵ uniform float uMod; ↵ in vec2 vUV; ↵ out vec4 fragColor; ↵ void main(){ ↵   vec4 source=texture(uInput0,vUV); ↵   vec3 waves=0.5+0.5*cos(uTime+vUV.xyx*6.283+vec3(0,2,4)); ↵   fragColor=vec4(mix(waves,source.rgb,source.a*0.65),1.0); ↵ }` |
-
-## DAT（96 个）
-
-| 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
-| --- | --- | --- | --- |
-| DAT 组件输入 / `network_in_dat` | — → out:DAT | 浏览器 | 从所属组件的指定编号输入端口读取数据。根网络无输入时返回空值。<br>`index=1` |
-| DAT 组件输出 / `network_out_dat` | in:DAT → out:DAT | 浏览器 | 将内部网络结果输出到组件外部的指定端口。<br>`index=1` |
-| DAT 路径引用 / `operator_select_dat` | — → out:DAT | 浏览器 | 通过节点 ID 路径读取算子输出。支持 / 根路径、../ 父级路径以及组件内部路径。循环引用会显示运行错误。<br>`path=` |
-| 多点触控 / `browser_multi_touch_in` | — → out:DAT | 浏览器 | 真实浏览器输入；未连接设备时返回空通道。Panel 通过 path 读取组件参数。<br>`keys=Space ArrowLeft ArrowRight`；`path=`；`device=0`；`channel=0`；`velocity=100`；`enabled=False` |
-| MIDI 事件 / `browser_midi_event` | — → out:DAT | 浏览器 | 使用 Web MIDI API。点击启用 MIDI 后选择设备索引；输出需要开启 enabled。浏览器和系统必须支持 MIDI。<br>`keys=Space ArrowLeft ArrowRight`；`path=`；`device=0`；`channel=0`；`velocity=100`；`enabled=False` |
-| 键盘事件表 / `browser_keyboard_dat` | — → out:DAT | 浏览器 | 读取真实浏览器事件或当前屏幕信息；MIDI需要显式启用，Monitors目前报告当前显示器。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
-| MIDI 事件表 / `browser_midi_dat` | — → out:DAT | 浏览器 | 读取真实浏览器事件或当前屏幕信息；MIDI需要显式启用，Monitors目前报告当前显示器。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
-| 音频设备列表 / `browser_audio_devices` | — → out:DAT | 浏览器 | 列举浏览器可访问的媒体设备。设备名称是否可见取决于浏览器媒体权限。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
-| 视频设备列表 / `browser_video_devices` | — → out:DAT | 浏览器 | 列举浏览器可访问的媒体设备。设备名称是否可见取决于浏览器媒体权限。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
-| 屏幕信息 / `browser_monitors` | — → out:DAT | 浏览器 | 读取真实浏览器事件或当前屏幕信息；MIDI需要显式启用，Monitors目前报告当前显示器。<br>`mapping={"volume":[176,7],"note":[144,60]}` |
-| Python 脚本 DAT / `python_script_dat` | in:DAT → out:DAT | 手动 Python 服务 | 显式点击运行 Python 才会执行 cook(inputs, time)。使用本机账户权限，支持安装的 Python 包；脚本与日志保存在本项目。返回 TD Open 的通道/表格/网格/图像数据，不支持 TouchDesigner op()/scriptOp 对象。<br>`code=def cook(inputs, time): ↵     return {"kind":"table", "rows":[["name","value"],["time",str(time)],["message","Hello Python"]]}` |
-| 媒体文件信息 / `media_file_info` | — → out:DAT | 浏览器 | 点击启用读取音频元信息，输出时长、采样率、通道数、样本数和解码状态。<br>`url=` |
-| 原生表格 / `native_table` | — → out:DAT | 浏览器 / 服务端 | CSV 编辑内容转成真正二维表格值，保持空单元格和带引号换行。<br>`csv=name,value ↵ alpha,1 ↵ beta,2` |
-| 通道转表格 / `channels_to_dat` | in:CHOP → out:DAT | 浏览器 / 服务端 | 每条通道变为一列，保留名称和完整采样序列。<br>`header=True`；`precision=6` |
-| 几何转表格 / `sop_to_dat` | in:SOP → out:DAT | 浏览器 | 将世界坐标顶点转换为含索引和 XYZ 列的表格。<br>`maximum=4096` |
-| 选择表格区域 / `native_select` | in:DAT → out:DAT | 浏览器 / 服务端 | 按行范围和任意列索引选择原生表格。<br>`start=0`；`length=100`；`columns=` |
-| 重排表格 / `native_reorder` | in:DAT → out:DAT | 浏览器 | 按索引重排指定轴，或者反转所有行或列。<br>`mode=rows`；`indices=0,1` |
-| 合并表格 / `native_merge` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 按行或列连接原生表格，并保留单元格边界。<br>`mode=rows`；`skip_header=False` |
-| 表格转置 / `native_transpose` | in:DAT → out:DAT | 浏览器 / 服务端 | 把原生表格的行列互换，缺失单元格补为空字符串。 |
-| 表格排序 / `native_sort` | in:DAT → out:DAT | 浏览器 / 服务端 | 按指定列稳定排序，可选择数字比较和保留表头。<br>`column=0`；`numeric=False`；`descending=False`；`header=True` |
-| 插入表格 / `native_insert` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 在指定行或列位置插入第二张表格的数据。<br>`mode=rows`；`index=1` |
-| 表格键值查找 / `lookup_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 根据键列精确匹配，返回指定值列或完整匹配行。<br>`key=alpha`；`key_column=0`；`value_column=1` |
-| 表格格式转换 / `native_convert` | in:DAT → out:DAT | 浏览器 / 服务端 | 在 CSV、TSV、JSON 二维数组和原生表格之间转换。<br>`mode=table`；`input_format=csv` |
-| 表格替换 / `native_substitute` | in:DAT → out:DAT | 浏览器 | 对所有单元格执行字面文本替换或受限长度的正则替换。<br>`search=alpha`；`replacement=A`；`regex=False`；`case_sensitive=True` |
-| 切换数据 / `dat_switch` | in:DAT、in2:DAT、mod:CHOP → out:DAT | 浏览器 / 服务端 | 根据参数或 CHOP 选择完整表格或文本输入。<br>`index=0` |
-| 数据直通 / `dat_null` | in:DAT → out:DAT | 浏览器 / 服务端 | 保留文本或原生表格的类型和所有单元格。 |
-| 数据结构信息 / `dat_info` | in:DAT → out:DAT | 浏览器 / 服务端 | 输出行数、最大列数、单元格数和序列化字符数。 |
-| 计算表格表达式 / `dat_evaluate` | in:DAT → out:DAT | 浏览器 / 服务端 | 对每个数值单元格执行安全算式，x 为数值，row/col 为索引。<br>`expression=x*2+row`；`header=True` |
-| 检查结构 / `dat_examine` | in:DAT → out:DAT | 浏览器 | 将输入值的字段、类型和内容展开为可读表格。 |
-| 数据历史队列 / `dat_fifo` | in:DAT → out:DAT | 浏览器 | 输入变化时追加行，并保存指定容量的历史表格。<br>`capacity=100`；`changes_only=True` |
-| 数据片段 / `dat_clip` | in:DAT、index:CHOP → out:DAT | 浏览器 | 按播放时间或输入索引从表格读取一行。<br>`rate=1`；`loop=True` |
-| 帧执行事件 / `dat_execute` | — → out:DAT | 浏览器 | 每个不同播放时间生成 frame 事件表；下游可读取事件，不运行隐式脚本。<br>`capacity=64` |
-| 信号变化事件 / `dat_chop_execute` | in:CHOP → out:DAT | 浏览器 | 输出通道变化、上升沿和下降沿的事件记录。<br>`mode=change`；`threshold=0.5`；`capacity=64` |
-| 表格变化事件 / `dat_dat_execute` | in:DAT → out:DAT | 浏览器 | 原生表格变化时产生包含行列和新旧值的事件表。<br>`capacity=64` |
-| 节点网络事件 / `dat_op_execute` | — → out:DAT | 浏览器 | 监听项目节点新增、移除、类型变化并输出事件记录。<br>`capacity=64` |
-| 参数变化事件 / `dat_parameter_execute` | — → out:DAT | 浏览器 | 监听指定节点参数，并记录变化前后的值。<br>`node_id=`；`parameter=`；`capacity=64` |
-| 参数组事件 / `dat_pargroup_execute` | — → out:DAT | 浏览器 | 监听指定节点参数组，一次变动输出完整分组值。<br>`node_id=`；`parameters=x,y,z`；`capacity=64` |
-| 查找节点 / `dat_op_find` | — → out:DAT | 浏览器 | 按类型、名称和 ID 通配符查找当前项目节点。<br>`pattern=*`；`type=*` |
-| 参数表格 / `dat_parameter` | — → out:DAT | 浏览器 | 将指定节点的所有参数展开成参数名、值和类型表格。<br>`node_id=` |
-| 执行统计表 / `dat_perform` | — → out:DAT | 浏览器 | 输出项目节点数、连接数、播放时间和本节点执行次数。 |
-| 数据校验报告 / `dat_error` | in:DAT → out:DAT | 浏览器 | 检查重复表头、行宽不一致、空值和非数字单元格，输出问题位置。<br>`numeric=False`；`header=True` |
-| 声明式表格脚本 / `dat_script` | in:DAT → out:DAT | 浏览器 | 用 JSON 操作序列进行筛选、投影、排序和安全单元格计算。<br>`program=[{"op":"select","columns":[0,1]},{"op":"sort","column":0}]` |
-| XML 数据 / `xml_dat` | in:DAT → out:DAT | 浏览器 | 将 XML 元素、路径、属性和文本展开成表格；DTD 与外部实体被拒绝。<br>`xml=<scene><item name="cube">1</item><item name="sphere">2</item></scene>`；`tag=` |
-| JSON 结构表 / `native_json` | in:DAT → out:DAT | 浏览器 | 解析、选择和更新 JSON 路径，并可将对象数组转换为原生表格。<br>`mode=table`；`path=`；`value=0` |
-| 文本与表格编辑 / `native_text` | in:DAT → out:DAT | 浏览器 / 服务端 | 提供独立可编辑文本，连接表格时按指定分隔符排版为文本。<br>`text=Hello TD Open`；`separator=	`；`append=False` |
-| 面板交互事件 / `dat_panel_execute` | — → out:DAT | 浏览器 | 监听组件路径的面板值变化，输出变化、按下或松开的事件表；下游消费事件，不运行隐式 Python 回调。<br>`path=`；`values=value,select`；`mode=change`；`capacity=64` |
-| 三维拾取表格 / `render_pick_dat` | in:COMP → out:DAT | 浏览器 | 复用真实相机射线拾取，将命中对象、坐标、法线和距离写入二维数据表。<br>`x=0`；`y=0`；`columns=hit,object,tx,ty,tz,nx,ny,nz,distance` |
-| Art-Net / `ref_dat_art_net` | in:DAT → out:DAT | 浏览器 | 真实 Art-Net ArtDMX 数据报，1–512 通道，数值范围 0–255。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=6454`；`universe=0` |
-| CPlusPlus · 外部桥接 / `ref_dat_cplusplus` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：Native C++ compiler + SDK/plugin host adapter; exports portable data over the open bridge, not binary ABI compatibility。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=cpp` |
-| EtherDream · 外部桥接 / `ref_dat_etherdream` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：Supported Ether Dream / Pangolin DAC SDK, scanner and device interlock。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=laser` |
-| File In / `ref_dat_file_in` | — → out:DAT | 浏览器 | 在项目 data/io 内读取 UTF-8 / JSON 数据；CHOP 使用完整多通道 JSON 格式。<br>`enabled=False`；`interval=500`；`path=example.json` |
-| File Out / `ref_dat_file_out` | in:DAT → out:DAT | 浏览器 | 在项目 data/io 内写入 UTF-8 / JSON 数据；CHOP 使用完整多通道 JSON 格式。<br>`enabled=False`；`interval=500`；`path=example.json`；`append=False` |
-| Folder / `ref_dat_folder` | — → out:DAT | 浏览器 | 读取项目 data/io 内的目录、文件大小和修改时间。<br>`enabled=False`；`interval=500`；`path=` |
-| MPCDI · 外部桥接 / `ref_dat_mpcdi` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：MPCDI calibration archive parser and calibrated display pipeline。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=mpcdi` |
-| MQTT Client / `ref_dat_mqtt_client` | in:DAT → out:DAT | 浏览器 | 真实 MQTT 3.1.1 客户端：订阅，QoS 0 发布，接收 QoS 0/1 与保留消息。<br>`enabled=False`；`interval=100`；`mode=connect`；`host=127.0.0.1`；`port=1883`；`topic=td-open/#`；`publish_topic=td-open/value` |
-| NDI · 外部桥接 / `ref_dat_ndi` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：NDI SDK/runtime, licensed SDK adapter and a reachable NDI source。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=ndi` |
-| OSC In / `ref_dat_osc_in` | — → out:DAT | 浏览器 | 真实 OSC 1.0 UDP 消息与 bundle 读取，支持数值、文字、布尔和 blob。TUIO 保留原始地址与参数；Sync 使用开放 OSC 消息。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9000`；`address=/td-open` |
-| OSC Out / `ref_dat_osc_out` | in:DAT → out:DAT | 浏览器 | 真实 OSC 1.0 UDP 消息与 bundle 读取，支持数值、文字、布尔和 blob。TUIO 保留原始地址与参数；Sync 使用开放 OSC 消息。<br>`enabled=False`；`interval=100`；`mode=connect`；`host=127.0.0.1`；`port=9000`；`address=/td-open` |
-| Serial / `ref_dat_serial` | in:DAT → out:DAT | 浏览器 | 真实 POSIX 串口 8N1 读写（Linux / macOS）；需要设备权限，按接收字节块输出。<br>`enabled=False`；`interval=100`；`device=/dev/ttyUSB0`；`baud=115200` |
-| SocketIO · 外部桥接 / `ref_dat_socketio` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：Socket.IO/Engine.IO client adapter; raw WebSocket is a different protocol。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=socketio` |
-| TCP/IP / `ref_dat_tcp_ip` | in:DAT → out:DAT | 浏览器 | 真实 TCP 连接与监听，支持换行 / 32 位长度 / 原始流消息边界；Pipe 使用开放 TCP，不兼容私有 Pipe 协议。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9001`；`framing=newline` |
-| Touch In / `ref_dat_touch_in` | — → out:DAT | 浏览器 | 通过 TD Open 开放 JSON 桥接协议交换数据，接收 POST /api/io/bridge/{通道}。Touch 私有网络协议未内置。<br>`enabled=False`；`interval=100`；`channel=td-open` |
-| Touch Out / `ref_dat_touch_out` | in:DAT → out:DAT | 浏览器 | 通过 TD Open 开放 JSON 桥接协议交换数据，接收 POST /api/io/bridge/{通道}。Touch 私有网络协议未内置。<br>`enabled=False`；`interval=100`；`channel=td-open` |
-| TUIO In / `ref_dat_tuio_in` | — → out:DAT | 浏览器 | 真实 OSC 1.0 UDP 消息与 bundle 读取，支持数值、文字、布尔和 blob。TUIO 保留原始地址与参数；Sync 使用开放 OSC 消息。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9000`；`address=/tuio/2Dcur` |
-| UDP In / `ref_dat_udp_in` | — → out:DAT | 浏览器 | 真实 UDP 文本 / JSON 数据报收发。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9001` |
-| UDP Out / `ref_dat_udp_out` | in:DAT → out:DAT | 浏览器 | 真实 UDP 文本 / JSON 数据报收发。<br>`enabled=False`；`interval=100`；`mode=connect`；`host=127.0.0.1`；`port=9001` |
-| Web Client / `ref_dat_web_client` | — → out:DAT | 浏览器 | 发出真实 HTTP 请求，输出状态码、响应头与 JSON / 文本响应。启用后按间隔刷新。<br>`enabled=False`；`interval=100`；`url=http://127.0.0.1:8765/api/health`；`method=GET`；`headers={}` |
-| Web Server / `ref_dat_web_server` | in:DAT → out:DAT | 浏览器 | 在当前服务 /api/io/web/{名称} 提供 JSON GET / POST 端点；收到 POST 后更新节点，输入可发布到 GET 响应。<br>`enabled=False`；`interval=100`；`channel=example` |
-| WebRTC · 外部桥接 / `ref_dat_webrtc` | — → out:DAT | 外部适配器（未内置） | 外部适配器（未内置原生驱动）。依赖：External WebRTC signaling + RTP/codec adapter; this bridge transports decoded frames。通过开放桥接接收真实数据；没有设备/适配器时会明确提示等待。<br>`enabled=False`；`interval=100`；`channel=webrtc` |
-| WebSocket / `ref_dat_websocket` | in:DAT → out:DAT | 浏览器 | 真实 RFC 6455 WebSocket 收发文本 / JSON / base64 图像。Video Stream 使用开放逐帧 JSON，不包含 RTSP / RTMP 编解码器。<br>`enabled=False`；`interval=100`；`mode=listen`；`host=127.0.0.1`；`port=9001`；`url=ws://127.0.0.1:9001` |
-| 文本数据 / `text_dat` | — → out:DAT | 浏览器 / 服务端 | 提供文本、JSON 或提示词，可接到文字画面及文本处理节点。<br>`text=Hello, TD Open` |
-| 拼接文本 / `concatenate` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 把两路文本用分隔符连接，未连接时使用备用文本。<br>`text=Hello`；`text2=world`；`separator= ` |
-| 文本替换 / `replace_text` | in:DAT → out:DAT | 浏览器 / 服务端 | 按字面内容替换全部匹配文字；不执行脚本或正则表达式。<br>`find=Hello`；`replace=你好` |
-| 文本格式 / `case_text` | in:DAT → out:DAT | 浏览器 / 服务端 | 转换大小写、去除两端空格，或反转文本字符。<br>`mode=upper` |
-| 文本拆分 / `split_text` | in:DAT → out:DAT | 浏览器 / 服务端 | 按分隔符拆分文本，输出 JSON 数组，供 JSON 取值节点读取。<br>`separator=,`；`trim=True` |
-| JSON 取值 / `json_select` | in:DAT → out:DAT | 浏览器 / 服务端 | 按点分路径读取 JSON，例如 items.0.name；缺失路径返回备用文本。<br>`path=name`；`fallback=` |
-| CSV 表格 / `table_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 存储 CSV 文本，也可按零起始行列索引选取单元格；支持引号和单元格内换行。<br>`csv=name,value ↵ alpha,1 ↵ beta,2`；`mode=csv`；`row=1`；`column=1` |
-| 文本转数值 / `dat_to_chop` | in:DAT → out:CHOP | 浏览器 / 服务端 | 把文本解析为有限数值，解析失败时使用备用数值。<br>`fallback=0` |
-| 文本长度 / `text_length` | in:DAT → out:CHOP | 浏览器 / 服务端 | 按 Unicode 字符、行数或单词数统计文本，输出可用于信号计算。<br>`mode=characters` |
-| 文本切片 / `substring_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 以 Unicode 字符为单位截取文本，负起点从结尾计算。<br>`start=0`；`length=10` |
-| 文本补齐 / `pad_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 向文本左侧或右侧重复补齐指定字符。<br>`length=8`；`fill=0`；`side=left` |
-| 文本模板 / `format_dat` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 模板中的 {in} 与 {in2} 会替换为对应输入；不会执行代码。<br>`template=第一路：{in} ↵ 第二路：{in2}` |
-| 文本编码 / `encode_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 在 UTF-8 文本与 Base64、URL 编码之间转换。<br>`mode=base64_encode` |
-| 文本排序 / `sort_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 按行或 JSON 数组排序，可启用数值排序和倒序。<br>`format=lines`；`numeric=False`；`descending=False` |
-| 文本去重 / `unique_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 按首次出现顺序去除重复行或 JSON 数组值。<br>`format=lines` |
-| 文本筛选 / `filter_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 保留包含指定文字、指定前缀或后缀的行，支持反选。<br>`query=a`；`mode=contains`；`invert=False` |
-| 数组连接 / `join_dat` | in:DAT → out:DAT | 浏览器 / 服务端 | 将 JSON 数组转成带分隔符的文本，对象元素以 JSON 显示。<br>`separator=, ` |
-| JSON 合并 / `json_merge` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 合并两个 JSON 对象；同名键采用第二路的值。 |
-| JSON 写入 / `json_set` | in:DAT → out:DAT | 浏览器 / 服务端 | 通过点分路径更新 JSON 对象的嵌套值，支持数组索引。<br>`path=settings.amount`；`value=1` |
-| JSON 键值 / `json_keys` | in:DAT → out:DAT | 浏览器 / 服务端 | 提取对象的键、值或键值对，输出 JSON 数组。<br>`mode=keys` |
-| 表格转置 / `table_transpose` | in:DAT → out:DAT | 浏览器 / 服务端 | 交换 CSV 表格的行和列，缺失单元格补为空文本。 |
-| 表格选择 / `table_select` | in:DAT → out:DAT | 浏览器 / 服务端 | 按行范围和列索引提取 CSV 子表。<br>`start=0`；`count=10`；`columns=` |
-| 表格排序 / `table_sort` | in:DAT → out:DAT | 浏览器 / 服务端 | 按指定 CSV 列稳定排序，可保留表头。<br>`column=1`；`header=True`；`numeric=True`；`descending=False` |
-| 表格拼接 / `table_merge` | in:DAT、in2:DAT → out:DAT | 浏览器 / 服务端 | 纵向追加行或横向拼接列，正确保留 CSV 引号和换行。<br>`axis=rows`；`skip_header=True` |
-| 表格转对象 / `table_to_json` | in:DAT → out:DAT | 浏览器 / 服务端 | 将 CSV 表头映射成每行对象的键，并可把数字单元格转换为数值。<br>`numeric=True` |
-| 数值转文本 / `chop_to_dat` | in:CHOP → out:DAT | 浏览器 / 服务端 | 把数值信号格式化为指定小数位的文本，便于字幕或数据导出。<br>`digits=2`；`prefix=`；`suffix=` |
 
 ## MAT（13 个）
 

@@ -118,7 +118,7 @@ let guide = header;
 for (const category of new Set(templates.map((t) => t.category))) {
   guide += `## ${category}\n\n| 案例 | 节点数 | 练习方向 | 运行条件 |\n| --- | ---: | --- | --- |\n`;
   for (const t of templates.filter((t) => t.category === category))
-    guide += `| [${t.name}](../examples/${t.id}.tdopen.json) | ${documents.get(t.id).nodes.length} | ${t.learn.replaceAll("|", "／")} | ${t.requires === "ai" ? "配置 AI 服务，手动生成" : t.requires === "mcp" ? "连接 MCP，手动调用" : t.requires === "audio" ? "导入音频或授权麦克风" : "无需外部服务"} |\n`;
+    guide += `| [${t.name}](../examples/${t.id}.tdopen.json) | ${documents.get(t.id).nodes.length} | ${t.learn.replaceAll("|", "／")} | ${t.requires === "ai" ? "配置 AI 服务，手动生成" : t.requires === "mcp" ? "连接 MCP，手动调用" : t.requires === "local" ? "安装本地模型，手动生成" : t.requires === "audio" ? "导入音频或授权麦克风" : "无需外部服务"} |\n`;
   guide += "\n";
 }
 guide +=

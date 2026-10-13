@@ -1,0 +1,81 @@
+{
+  "id": "example_local-img2img",
+  "name": "本地 · 图生图",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "noise_1",
+      "type": "noise",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "流动噪声",
+        "params": {
+          "scale": 5,
+          "speed": 0.25,
+          "detail": 4,
+          "seed": 1
+        }
+      }
+    },
+    {
+      "id": "local_image_to_image_2",
+      "type": "local_image_to_image",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "本地图像重绘",
+        "params": {
+          "prompt": "An abstract watercolor landscape, soft pastel colors",
+          "input_url": "",
+          "width": 512,
+          "height": 512,
+          "denoise": 0.65,
+          "steps": 9,
+          "seed": 42,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "output_3",
+      "type": "output",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "local_image_to_image_2",
+      "sourceHandle": "out",
+      "targetHandle": "image"
+    },
+    {
+      "id": "edge_2",
+      "source": "local_image_to_image_2",
+      "target": "output_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "local-img2img"
+  }
+}

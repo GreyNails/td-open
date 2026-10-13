@@ -1,0 +1,57 @@
+{
+  "id": "example_local-z-image",
+  "name": "本地 · Z-Image 中文海报",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "local_image_1",
+      "type": "local_image",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "本地图片生成",
+        "params": {
+          "model_id": "z-image-turbo",
+          "prompt": "一张极简海报，白色陶瓷机器人，浅蓝色背景，标题文字：你好，未来",
+          "width": 512,
+          "height": 512,
+          "steps": 9,
+          "cfg": 1,
+          "seed": 42,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "output_2",
+      "type": "output",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "local_image_1",
+      "target": "output_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "local-z-image"
+  }
+}

@@ -7,7 +7,7 @@
 | 你要完成的事 | 在哪里配置 | TD Open 当前支持 |
 | --- | --- | --- |
 | 在画布中调用素材搜索、数据库查询、自建生成服务等外部工具 | TD Open 的「连接 AI 与 MCP → MCP 连接」 | 连接外部 **Streamable HTTP** MCP 服务，发现工具并手动执行 |
-| 在外部 AI 客户端中说话，让 AI 添加节点、连线、改参数 | 外部客户端的 MCP 设置 | 客户端启动 TD Open 的 **stdio** MCP 服务，通过 4 个工具读取和修改已保存作品 |
+| 在外部 AI 客户端中说话，让 AI 添加节点、连线、改参数 | 外部客户端的 MCP 设置 | 客户端启动 TD Open 的 **stdio** MCP 服务，通过 4 个图编辑工具读取和修改已保存作品；另有 4 个本地模型工具 |
 
 ```text
 方向一：从 TD Open 调用外部工具
@@ -252,7 +252,7 @@ cd /storage/homes/hongzj/dell/td_open
 
 客户端不支持 `cwd` 时，可以删除 `cwd`，在 `env` 中加入 `"PYTHONPATH":"/storage/homes/hongzj/dell/td_open"`；另一种办法是在项目虚拟环境中完成 `pip install -e .` 后使用已安装的包。路径包含空格时，JSON 字符串原样保留，不要给 `command` 内再嵌套引号。Windows 原生 Python 路径通常改为 `.venv\\Scripts\\python.exe`；不要把 Linux 路径直接复制到 Windows 客户端本机执行。
 
-保存配置后在客户端重新连接/启用服务，工具列表应恰好出现以下 4 个工具。如果你在终端手动运行 stdio 命令，它等待协议输入且不显示网页是正常现象；交互通常由客户端完成。不要在服务标准输出中添加日志，因为该通道用于 MCP 消息。
+保存配置后在客户端重新连接/启用服务，工具列表应包含以下 4 个图编辑工具，以及文末的 4 个本地模型工具（共 8 个）。如果你在终端手动运行 stdio 命令，它等待协议输入且不显示网页是正常现象；交互通常由客户端完成。不要在服务标准输出中添加日志，因为该通道用于 MCP 消息。
 
 ### 4.3 四个工具的参数和返回值
 
@@ -330,7 +330,7 @@ stdio 工具只允许下面 6 种 `op`：
 
 这段只演示内部编辑，未配置组件输出；需要画面输出时还要添加内部 Out 和外层 Output。`base_comp`、`engine_comp`、`container_comp`、`widget_comp`、`time_comp`、`replicator_comp` 通过 `add_node` 创建时会自动带空内部网络。
 
-`update_node`、`set_playback`、执行 Python、点击生成、执行远端 MCP、导出图片、修改连接凭证等，都不在这 4 个 MCP 工具的能力范围内。后端其他 HTTP 接口即便提供某些功能，也不意味着 stdio 服务已经暴露对应工具。
+`update_node`、`set_playback`、执行 Python、调用云端生成 API、执行远端 MCP、导出图片、修改连接凭证等，都不在这 4 个 MCP 工具的能力范围内。后端其他 HTTP 接口即便提供某些功能，也不意味着 stdio 服务已经暴露对应工具。
 
 ### 4.6 让 AI 通过对话操作
 
@@ -402,7 +402,7 @@ TD Open 的这些项目/连接管理 HTTP 接口没有内置登录鉴权。远�
 | 通过 API 重存连接后突然需要认证 | API 明确发送 `"token":""` 会清除旧值；省略 `token` 或传 `null` 才保留。界面编辑时留空会省略该字段 |
 | stdio 启动报 `No module named backend` | 使用仓库根目录 `cwd`，或配置正确 `PYTHONPATH`/安装本项目；确认 `command` 指向项目虚拟环境 |
 | stdio 启动报 `No module named mcp` | 项目依赖未安装到这个 Python 环境；从仓库根目录运行 `.venv/bin/python -m pip install -e .` |
-| 发现 4 个工具，但调用时 `Cannot reach TD Open` | stdio 握手本身不要求后端在线；启动后端，再核对 `TD_OPEN_APP_URL` 和远程地址含义 |
+| 发现 8 个工具，但调用时 `Cannot reach TD Open` | stdio 握手本身不要求后端在线；启动后端，再核对 `TD_OPEN_APP_URL` 和远程地址含义 |
 | 图命令报未知算子/端口或循环依赖 | 先读取 `list_operators` 和完整项目，使用准确的类型与端口 ID，检查 scope；失败批次不会保存 |
 | AI 说改好了，浏览器没变化 | 查看返回是否 `applied: true`、项目 ID 是否正确；保存浏览器的本地更改，等待同步或重新打开作品 |
 | 同一组添加命令第二次执行报 ID 已存在 | 第一次可能已经 `apply: true` 保存；先读项目确认，不要重复添加相同 ID |
@@ -414,7 +414,7 @@ TD Open 的这些项目/连接管理 HTTP 接口没有内置登录鉴权。远�
 | 文件 | 内容 |
 | --- | --- |
 | [backend/integrations.py](../backend/integrations.py) | `MCPConfig`、凭证保存/脱敏、外部服务初始化、分页发现、允许列表和调用 |
-| [backend/mcp_server.py](../backend/mcp_server.py) | 提供给外部 AI 客户端的 4 个 stdio 工具 |
+| [backend/mcp_server.py](../backend/mcp_server.py) | 提供给外部 AI 客户端的 8 个 stdio 工具 |
 | [backend/graph.py](../backend/graph.py) | 图命令、组件 scope、原子校验 |
 | [frontend/src/Settings.tsx](../frontend/src/Settings.tsx) | 连接中心表单和工具发现 |
 | [frontend/src/App.tsx](../frontend/src/App.tsx) | 手动运行工具、结果写回、外部更改同步 |
@@ -423,3 +423,12 @@ TD Open 的这些项目/连接管理 HTTP 接口没有内置登录鉴权。远�
 协议概念已核对官方文档；本项目锁定的 SDK 版本是 `1.30.0`，接入能力以本页和本地实现为准，不能从某个较新协议的完整能力列表推断本项目已经支持。当前只集成工具发现和调用，没有 MCP 资源订阅、提示词浏览、采样、OAuth 登录、远程任务恢复或内部聊天自动调用外部工具。
 
 本教程的最小 FastMCP 服务已在本机实际启动，发现、调用 `echo` 和结构化结果均已验证；stdio 配置也已通过真实子进程连接隔离的 TD Open 后端，完成 4 个工具调用、预览不落盘、应用保存和嵌套 scope 修改验证。示例不要求供应商账号。任何外部业务工具能否成功，仍取决于该服务的输入定义、认证和实际运行状态。
+
+
+## 本地生成模型的 MCP 工具（0.5）
+
+stdio 服务另外提供四个本地模型工具：`get_local_model_status` 查看显卡、环境、权重与实测记录；`run_local_model` 在用户明确要求生成时提交真实 GPU 任务；`get_local_model_job` 查询进度与全部资源 URL；`cancel_local_model_job` 取消指定任务。它们调用运行中的 TD Open 后端，不需要云端生成 API Key。
+
+例如让 AI 依次执行：检查 `flux-klein-4b` 是否安装 → 调用 `run_local_model(profile_id="flux-klein-4b", parameters={"prompt":"A small ceramic robot","steps":4})` → 用返回的 32 位 job ID 查询结果 → 按用户要求通过图编辑工具把 `result_url` 写入本地生成节点并保存。查询任务时无需重复提交生成。八工具发现、本地 GPU 生成、结果下载与取消第二条排队任务已通过真实 stdio 会话验证，记录保存在 `data/artifacts/local-ai-mcp-live.json`。
+
+运行工具不会自动覆盖工程；在编辑器存在未保存修改时，先保存作品再让外部 AI 更新。图片、遮罩或音频先由 `/api/upload` 上传，随后将工作台返回的 URL 放入 `inputs.image`、`inputs.mask` 或 `inputs.audio`。模型安装步骤见 [本地模型与 ComfyUI](LOCAL_AI.md)，全部接口见 [本地模型 API](LOCAL_AI.md#http-api-与二次开发)。

@@ -1,0 +1,214 @@
+{
+  "date": "2026-10-14",
+  "hardware": "NVIDIA L40, one GPU, enforced 24 GiB budget",
+  "platform": "Linux x86_64 / Python 3.11 / PyTorch 2.8.0 cu128",
+  "execution": "Real TD Open browser button → managed ComfyUI → pinned official weights",
+  "comfy_revision": "7bf5df9e38763dbdd94a0f9c939273019025c2bc",
+  "budget_gib": 24,
+  "physical_consumer_gpu_tested": false,
+  "runs": [
+    {
+      "profile_id": "flux-klein-4b",
+      "elapsed_seconds": 17.27,
+      "peak_vram_mib": 4734,
+      "cuda_metrics": {
+        "cuda": true,
+        "peak_allocated_mib": 4651.7138671875,
+        "peak_reserved_mib": 4806,
+        "allocated_mib": 4100.96337890625
+      },
+      "passed": true,
+      "outputs": [
+        {
+          "kind": "image",
+          "bytes": 214104,
+          "width": 512,
+          "height": 512,
+          "std": 43.763290752854736
+        }
+      ]
+    },
+    {
+      "profile_id": "z-image-turbo",
+      "elapsed_seconds": 15.07,
+      "peak_vram_mib": 7102,
+      "cuda_metrics": {
+        "cuda": true,
+        "peak_allocated_mib": 6661.419921875,
+        "peak_reserved_mib": 7238,
+        "allocated_mib": 6111.294921875
+      },
+      "passed": true,
+      "outputs": [
+        {
+          "kind": "image",
+          "bytes": 198465,
+          "width": 512,
+          "height": 512,
+          "std": 34.09824618476232
+        }
+      ]
+    },
+    {
+      "profile_id": "ace-step-15",
+      "elapsed_seconds": 15.57,
+      "peak_vram_mib": 6772,
+      "cuda_metrics": {
+        "cuda": true,
+        "peak_allocated_mib": 6104.2421875,
+        "peak_reserved_mib": 6260,
+        "allocated_mib": 4980.38671875
+      },
+      "passed": true,
+      "outputs": [
+        {
+          "kind": "audio",
+          "bytes": 1920044,
+          "sample_rate": 48000,
+          "channels": 2,
+          "duration": 10.0,
+          "rms": 0.03653044653000981,
+          "peak": 0.6044921875
+        }
+      ]
+    },
+    {
+      "profile_id": "melband-roformer",
+      "elapsed_seconds": 4.48,
+      "peak_vram_mib": 2766,
+      "cuda_metrics": {
+        "cuda": true,
+        "peak_allocated_mib": 1732.58056640625,
+        "peak_reserved_mib": 2248,
+        "allocated_mib": 8.125
+      },
+      "passed": true,
+      "outputs": [
+        {
+          "kind": "audio",
+          "bytes": 1764044,
+          "sample_rate": 44100,
+          "channels": 2,
+          "duration": 10.0,
+          "rms": 4.854803131114175e-05,
+          "peak": 0.001861572265625
+        },
+        {
+          "kind": "audio",
+          "bytes": 1764044,
+          "sample_rate": 44100,
+          "channels": 2,
+          "duration": 10.0,
+          "rms": 0.036545045892423064,
+          "peak": 0.60491943359375
+        }
+      ]
+    },
+    {
+      "profile_id": "demucs-4",
+      "elapsed_seconds": 6.55,
+      "peak_vram_mib": 1072,
+      "cuda_metrics": {
+        "cuda": true,
+        "peak_allocated_mib": 551.2119140625,
+        "peak_reserved_mib": 874,
+        "allocated_mib": 8.125
+      },
+      "passed": true,
+      "outputs": [
+        {
+          "kind": "audio",
+          "bytes": 1764044,
+          "sample_rate": 44100,
+          "channels": 2,
+          "duration": 10.0,
+          "rms": 0.00040988347985891047,
+          "peak": 0.0025634765625
+        },
+        {
+          "kind": "audio",
+          "bytes": 1764044,
+          "sample_rate": 44100,
+          "channels": 2,
+          "duration": 10.0,
+          "rms": 0.019018362269944813,
+          "peak": 0.38250732421875
+        },
+        {
+          "kind": "audio",
+          "bytes": 1764044,
+          "sample_rate": 44100,
+          "channels": 2,
+          "duration": 10.0,
+          "rms": 0.0004900491115267621,
+          "peak": 0.00201416015625
+        },
+        {
+          "kind": "audio",
+          "bytes": 1764044,
+          "sample_rate": 44100,
+          "channels": 2,
+          "duration": 10.0,
+          "rms": 0.030749213100611048,
+          "peak": 0.266204833984375
+        }
+      ]
+    },
+    {
+      "profile_id": "hunyuan3d-21",
+      "elapsed_seconds": 36.7,
+      "peak_vram_mib": 7532,
+      "cuda_metrics": {
+        "cuda": true,
+        "peak_allocated_mib": 6717.4326171875,
+        "peak_reserved_mib": 7024,
+        "allocated_mib": 8.125
+      },
+      "passed": true,
+      "outputs": [
+        {
+          "kind": "3d",
+          "bytes": 267128,
+          "vertices": 7518,
+          "faces": 14496,
+          "bounds": [
+            [
+              -0.338002473115921,
+              -0.4035734534263611,
+              -0.20605327188968658
+            ],
+            [
+              0.35453298687934875,
+              0.42401736974716187,
+              0.21902288496494293
+            ]
+          ],
+          "components": 1
+        }
+      ]
+    },
+    {
+      "profile_id": "wan22-5b",
+      "elapsed_seconds": 33.98,
+      "peak_vram_mib": 12994,
+      "cuda_metrics": {
+        "cuda": true,
+        "peak_allocated_mib": 11066.51513671875,
+        "peak_reserved_mib": 12440,
+        "allocated_mib": 8.125
+      },
+      "passed": true,
+      "outputs": [
+        {
+          "kind": "video",
+          "bytes": 109449,
+          "frames": 17,
+          "fps": 16.0,
+          "width": 512,
+          "height": 320,
+          "motion": 36.069968668619794
+        }
+      ]
+    }
+  ]
+}

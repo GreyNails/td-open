@@ -59,3 +59,21 @@ Lucide 的附带 LICENSE 还说明部分图标来源于 Cole Bemis 的 Feather�
 TouchDesigner / Derivative 仅用于描述参照领域；本仓库不因功能对照而取得或授予其商标、程序或素材的权利。
 
 内置三维文字使用 Three.js 示例 Helvetiker 字体，保留 [字体声明](frontend/public/licenses/helvetiker.txt)。cannon-es、react-markdown 和 remark-gfm 声明随前端分发保存在 [public/licenses](frontend/public/licenses/)。这些许可也随 Vite 构建复制。
+
+## 可选本地模型运行环境
+
+本地模型使用独立进程与独立 Python 环境；环境源码、权重和运行缓存不包含在公开 Git 仓库中。安装器克隆固定 revision，保留第三方仓库自己的 LICENSE；模型文件及许可链接列在 [模型清单](backend/local_ai/manifest.json)。这些项目的许可不被 TD Open 的 MIT 许可覆盖。
+
+| 项目 | 许可 / 来源 | 用途 |
+| --- | --- | --- |
+| [ComfyUI](https://github.com/Comfy-Org/ComfyUI) | GPL-3.0；安装的源码仓库保留完整许可 | 原生工作流执行引擎 |
+| [ComfyUI-MelBandRoFormer](https://github.com/kijai/ComfyUI-MelBandRoFormer) | 插件 MIT；权重许可另见原发布页 | 双轨音乐分离 |
+| [Demucs](https://github.com/facebookresearch/demucs) | MIT | 四轨音乐分离 |
+| [PyTorch](https://github.com/pytorch/pytorch) | BSD-3-Clause；CUDA 组件保留 NVIDIA 条款 | 推理运行环境 |
+| [FLUX.2 Klein 4B](https://github.com/black-forest-labs/flux2) | Apache-2.0（4B）；不代表其他 FLUX 型号相同 | 图像生成与编辑 |
+| [Z-Image](https://github.com/Tongyi-MAI/Z-Image) | Apache-2.0 | 图像生成与重绘 |
+| [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) | MIT / Apache-2.0，按对应权重仓库许可 | 音乐生成 |
+| [Hunyuan3D 2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1) | Hunyuan 社区许可，含使用条件和地域条款 | 三维几何生成 |
+| [Wan 2.2](https://github.com/Wan-Video/Wan2.2) | Apache-2.0 | 视频生成 |
+
+复现依赖版本见 [本地环境约束](backend/local_ai/requirements.lock)；完整实际安装清单生成在 `data/local-ai/envs/comfy/requirements.installed.txt`。分发预装环境或权重时需要另行遵守相应许可，不能只附 TD Open 的 MIT 文件。

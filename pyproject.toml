@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "td-open"
-version = "0.4.1"
+version = "0.5.0"
 description = "Local-first open-source visual programming with AI and MCP integrations"
 requires-python = ">=3.11"
 license = {file = "LICENSE"}
@@ -25,7 +25,7 @@ dev = ["pytest==9.1.1"]
 include = ["backend*"]
 
 [tool.setuptools.package-data]
-backend = ["operator_catalog.json"]
+backend = ["operator_catalog.json", "local_ai/manifest.json", "local_ai/requirements.lock", "local_ai/validation.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

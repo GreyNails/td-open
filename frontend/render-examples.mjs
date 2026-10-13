@@ -88,7 +88,7 @@ try {
       const mean = sum / (480 * 270),
         variance = square / (480 * 270) - mean * mean;
       const template = templates.find((t) => t.id === id);
-      if (template.requires === "ai" || template.requires === "mcp") {
+      if (template.requires === "ai" || template.requires === "mcp" || template.requires === "local") {
         // Explicit instruction card: no fabricated AI result is presented as a generated asset.
         ctx.fillStyle = "#171320";
         ctx.fillRect(0, 0, 480, 270);
@@ -105,7 +105,7 @@ try {
         ctx.font = "14px sans-serif";
         ctx.fillStyle = "#c6abdf";
         ctx.textAlign = "center";
-        ["API", "NODES", "OUTPUT"].forEach((t, i) =>
+        [template.requires === "local" ? "LOCAL" : "API", "NODES", "OUTPUT"].forEach((t, i) =>
           ctx.fillText(t, 115 + i * 126, 128),
         );
         ctx.font = "16px sans-serif";
@@ -113,7 +113,7 @@ try {
         ctx.fillText(
           template.requires === "mcp"
             ? "连接 MCP 后手动运行"
-            : "配置 AI 服务后手动运行",
+            : template.requires === "local" ? "安装本地模型后手动运行" : "配置 AI 服务后手动运行",
           240,
           197,
         );

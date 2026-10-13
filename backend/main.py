@@ -1,6 +1,7 @@
 """HTTP entry point. Run from the repository root: python -m backend.main."""
 
 import mimetypes
+from contextlib import asynccontextmanager
 import os
 from pathlib import Path
 import re
@@ -34,9 +35,21 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
     temporary_dir.mkdir(parents=True, exist_ok=True)
     tempfile.tempdir = str(temporary_dir)
     os.environ["TMPDIR"] = str(temporary_dir)
-    app = FastAPI(title="TD Open API", version="0.4.1", description="Local-first visual programming workspace")
+    @asynccontextmanager
+    async def lifespan(application):
+        try:
+            yield
+        finally:
+            application.state.local_ai.shutdown()
+    app = FastAPI(title="TD Open API", version="0.5.0", description="Local-first visual programming workspace", lifespan=lifespan)
     store = ProjectStore(data_dir)
     app.state.store = store
+    from backend.local_ai.manager import LocalAIManager
+    from backend.local_ai.router import create_local_ai_router
+    local_ai_root = os.environ.get('TD_LOCAL_AI_DIR')
+    local_ai = LocalAIManager(store.data_dir, (ROOT / local_ai_root).resolve() if local_ai_root else None)
+    app.state.local_ai = local_ai
+    app.include_router(create_local_ai_router(local_ai))
     from backend.io_runtime import create_io_router
     app.include_router(create_io_router(store.data_dir))
     from backend.script_runtime import create_script_router
@@ -76,7 +89,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "version": "0.4.1", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
+        return {"status": "ok", "version": "0.5.0", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
 
     @app.get("/api/catalog")
     def catalog():

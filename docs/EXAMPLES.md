@@ -1,6 +1,6 @@
 # 案例索引
 
-82 个可编辑案例，加 1 份空白作品。点击编辑器的“示例作品”可以搜索、分类、筛选并打开；也可以下载下列 JSON 后导入。缩略图来自内置引擎的实际输出；AI / MCP 案例使用明确标注的连接说明卡片。
+94 个可编辑案例，加 1 份空白作品。点击编辑器的“示例作品”可以搜索、分类、筛选并打开；也可以下载下列 JSON 后导入。缩略图来自内置引擎的实际输出；AI / MCP 案例使用明确标注的连接说明卡片。
 
 ![部分实际输出](images/example-showcase.png)
 
@@ -91,6 +91,23 @@
 | --- | ---: | --- | --- |
 | [把效果封装为组件](../examples/nested-image-component.tdopen.json) | 3 | 双击 Base 进入内部网络；In/Out 节点将父级图像传入并把效果传回。 | 无需外部服务 |
 | [流光实验](../examples/flow.tdopen.json) | 5 | 修改噪声尺度，再比较柔光前后的输出。 | 无需外部服务 |
+
+## 本地 AI
+
+| 案例 | 节点数 | 练习方向 | 运行条件 |
+| --- | ---: | --- | --- |
+| [本地 · FLUX.2 图片](../examples/local-flux.tdopen.json) | 3 | 安装 FLUX.2 Klein；选中生成节点点击运行，比较不同种子。 | 安装本地模型，手动生成 |
+| [本地 · Z-Image 中文海报](../examples/local-z-image.tdopen.json) | 2 | 安装 Z-Image Turbo；先用 512×512、9 步、CFG 1 手动生成。 | 安装本地模型，手动生成 |
+| [本地 · 参考图编辑](../examples/local-edit.tdopen.json) | 3 | 在素材节点填写或导入图片；提示词描述修改，运行编辑节点。 | 安装本地模型，手动生成 |
+| [本地 · 图生图](../examples/local-img2img.tdopen.json) | 3 | 安装 Z-Image；运行图生图节点，比较 denoise 0.3 和 0.7。 | 安装本地模型，手动生成 |
+| [本地 · 局部重绘](../examples/local-inpaint.tdopen.json) | 4 | 导入图片和白色需重绘、黑色保留的遮罩；两者连线后手动运行。 | 安装本地模型，手动生成 |
+| [本地 · 音乐与声音可视化](../examples/local-music.tdopen.json) | 4 | 运行音乐节点；点击读取完整音频为 PCM，再观察声音控制画面。 | 安装本地模型，手动生成 |
+| [本地 · 图片变成三维](../examples/local-3d.tdopen.json) | 4 | 导入单物体参考图片，运行三维节点；此预设生成几何，不包含 PBR 纹理。 | 安装本地模型，手动生成 |
+| [本地 · 四轨音乐拆分](../examples/local-demucs.tdopen.json) | 4 | 在分轨节点导入音频；运行后分别下载四条 WAV，可选择某轨进入分析。 | 安装本地模型，手动生成 |
+| [本地 · 人声与伴奏](../examples/local-melband.tdopen.json) | 4 | 安装 MelBand；导入音频手动运行，试听两条结果并选为输出。 | 安装本地模型，手动生成 |
+| [本地 · 文生视频](../examples/local-video.tdopen.json) | 2 | 先从 512×320、17 帧开始；视频采样期间可以编辑其他面板。 | 安装本地模型，手动生成 |
+| [本地 · 图生视频](../examples/local-image-video.tdopen.json) | 3 | 导入图片，连到视频节点；修改运动提示词后运行。 | 安装本地模型，手动生成 |
+| [Comfy · 完整 Z-Image 采样网络](../examples/local-comfy-z.tdopen.json) | 11 | 安装 Z-Image 后选中 Comfy 保存图片节点运行；可以替换模型、添加 LoRA 或修改采样参数。 | 安装本地模型，手动生成 |
 
 ## 图案生成
 
