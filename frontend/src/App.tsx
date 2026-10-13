@@ -8,6 +8,8 @@ import {
   useMemo,
   useRef,
   useState,
+  lazy,
+  Suspense,
 } from "react";
 import {
   ReactFlow,
@@ -91,10 +93,13 @@ import { mediaCatalog } from "./nodes/mediaCatalog";
 import { RuntimeInspector } from "./RuntimeInspector";
 import { StudioEngine } from "./engine";
 import Settings from "./Settings";
+import { guideFromHash } from "./guideRoute";
+import type { GuidePage } from "./guideRoute";
 import Workbench from "./Workbench";
 import NodeSearch from "./NodeSearch";
 import type { WorkspaceLayout } from "./workspaceLayout";
 
+const DocsCenter = lazy(() => import("./DocsCenter"));
 const EngineContext =
   createContext<React.MutableRefObject<StudioEngine | null> | null>(null);
 type FlowNode = Node<{ node: GraphNode }, "studio">;
@@ -303,6 +308,30 @@ function Studio() {
     [historyVersion, setHistoryVersion] = useState(0),
     [mediaSDP, setMediaSDP] = useState("");
   const [networkPath, setNetworkPath] = useState<string[]>([]);
+  const [docsPage, setDocsPage] = useState<GuidePage | null>(() =>
+    guideFromHash(),
+  );
+  const previousGuideHash = useRef(guideFromHash() ? "" : window.location.hash);
+  const openDocs = useCallback((page: GuidePage) => {
+    if (!guideFromHash()) previousGuideHash.current = window.location.hash;
+    window.history.replaceState(null, "", `#guide/${page}`);
+    setDocsPage(page);
+  }, []);
+  const closeDocs = useCallback(() => {
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname +
+        window.location.search +
+        previousGuideHash.current,
+    );
+    setDocsPage(null);
+  }, []);
+  useEffect(() => {
+    const syncGuide = () => setDocsPage(guideFromHash());
+    window.addEventListener("hashchange", syncGuide);
+    return () => window.removeEventListener("hashchange", syncGuide);
+  }, []);
   let project: Project;
   try {
     project = graphAt(rootProject, networkPath);
@@ -753,6 +782,7 @@ function Studio() {
   };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
+      if (document.querySelector(".docs-center")) return;
       const el = e.target as HTMLElement;
       if (
         ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName) ||
@@ -2516,6 +2546,7 @@ function Studio() {
               void fetchProviders();
             }}
             notify={notify}
+            openGuide={openDocs}
           />
         )}
         {["templates", "projects", "help"].includes(modal) && (
@@ -2694,19 +2725,38 @@ function Studio() {
                       管线尚未实现。完整范围请查看项目 docs/FEATURE_MATRIX.md。
                     </p>
                   </div>
-                  <button
-                    className="button primary"
-                    onClick={() => {
-                      setModal("templates");
-                    }}
-                  >
-                    打开示例作品
-                    <ArrowRight size={16} />
-                  </button>
+                  <div className="help-actions">
+                    <button
+                      className="button"
+                      onClick={() => openDocs("start")}
+                    >
+                      <BookOpen size={16} /> API 接入文档
+                    </button>
+                    <button
+                      className="button primary"
+                      onClick={() => {
+                        setModal("templates");
+                      }}
+                    >
+                      打开示例作品
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
                 </>
               )}
             </section>
           </div>
+        )}
+        {docsPage && (
+          <Suspense
+            fallback={
+              <div className="modal-backdrop" role="status">
+                正在载入 API 接入文档…
+              </div>
+            }
+          >
+            <DocsCenter page={docsPage} navigate={openDocs} close={closeDocs} />
+          </Suspense>
         )}
       </div>
     </EngineContext.Provider>

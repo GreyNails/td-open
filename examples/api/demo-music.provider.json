@@ -1,0 +1,14 @@
+{
+  "id": "demo-music",
+  "name": "本地演练 · 测试音",
+  "kind": "http",
+  "base_url": "http://127.0.0.1:9010",
+  "model": "demo-fixture",
+  "capability": "music",
+  "path": "/generate/music",
+  "body_template": {
+    "model": "{{model}}",
+    "prompt": "{{prompt}}",
+    "options": "{{parameters}}"
+  }
+}

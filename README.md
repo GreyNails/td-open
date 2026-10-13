@@ -109,6 +109,20 @@ npx playwright install chromium
 
 ## AI / MCP
 
+软件内点击 **“学习 → API 接入文档”**，或在 **“连接 → 接入指南”** 查看完整教程。文档支持全文搜索、章节目录、复制代码与下载原文，构建后可离线阅读。也可直接打开 [应用内接入总览](http://127.0.0.1:8765/#guide/start)。
+
+![应用内 API 接入文档：搜索、配置步骤、代码与章节目录](docs/images/api-guide.png)
+
+| 文档 | 包含内容 |
+| --- | --- |
+| [接入总览](docs/API_GUIDE.md) | 选择接入方式、区分三种服务地址、第一次连接与配置保存位置 |
+| [AI 生成服务](docs/AI_API.md) | 语言、图片、音乐、3D；每个字段怎么填、HTTP 模板、返回格式与错误排查 |
+| [MCP 与 AI 对话](docs/MCP_GUIDE.md) | 连接外部 MCP 工具、工具权限、让外部 AI 操作 TD Open、预览与应用图修改 |
+| [项目 HTTP API](docs/HTTP_API.md) | Python / curl 创建作品、连接节点、运行、上传素材、导出与脚本调用 |
+| [设备与实时协议](docs/IO_GUIDE.md) | OSC、UDP/TCP、WebSocket、MQTT、Art-Net、MIDI、串口、文件与共享内存 |
+
+第一次接 API 可以先运行 [无需密钥的本地演练](examples/api/README.md)。附带四份可直接保存的连接配置，返回文字、PNG、WAV 和 GLB 测试素材，帮助检查请求与节点流程；演练服务不是 AI 模型，不调用外部接口。
+
 点击“连接”添加服务。API 密钥只写入后端的私密配置文件，不写入作品 JSON。重新编辑服务时，密钥留空保留已有值。连接真实付费服务后，生成请求按服务商规则计费；本项目不内置密钥。
 
 音乐与 3D 没有统一 API，因此此版本提供可配置的 HTTP 请求体模板。同步返回的资源地址会进入节点；异步服务会返回任务信息，**尚未实现通用自动轮询、回调或所有供应商专用适配器**。
@@ -128,7 +142,7 @@ MCP 客户端示例配置（请把路径替换为自己的安装目录）：
 }
 ```
 
-先启动 Python 应用。支持的图工具、接口、供应商模板和安全边界见 [AI 与 MCP 接入指南](docs/AI_API.md)。
+先启动 Python 应用。不同客户端的工作目录、SSH 配置、四个工具及完整对话步骤见 [MCP 接入指南](docs/MCP_GUIDE.md)。
 
 ## 所有文件放在哪里
 
@@ -143,6 +157,8 @@ MCP 客户端示例配置（请把路径替换为自己的安装目录）：
 | `data/exports` | PNG、WebM、WAV、JSON 导出文件 |
 | `data/artifacts` | 验证报告与界面截图 |
 | `examples` | 82 个案例 + 1 个空白项目 JSON |
+| `examples/api` | API 演练服务、四份连接配置与 MCP 客户端配置模板 |
+| `docs/*API*.md`、`docs/MCP_GUIDE.md`、`docs/IO_GUIDE.md` | 应用内文档中心共用的接入教程源码 |
 | `frontend/public/examples` | 实际渲染的案例缩略图；AI 卡片明确显示连接说明 |
 | `docs/images` | README 展示截图与渲染总览 |
 | `.tools`、`.venv`、`.cache` | 本项目工具、虚拟环境、依赖缓存和隔离测试数据 |
@@ -177,5 +193,7 @@ TD_CHROMIUM=/path/to/chromium node frontend/render-examples.mjs
 ```
 
 GitHub Actions 会运行 Python 测试、前端测试、构建及目录/示例同步检查。浏览器端到端脚本为 `frontend/browser-e2e.mjs`，需要先启动隔离测试服务和 Chromium；通过 `TD_CHROMIUM` 指定浏览器可执行文件。脚本会创建测试作品及本地伪造的 API 服务配置，因此**不要针对私人生产数据运行**。测试不调用付费接口。
+
+文档中心的独立浏览器检查：`node frontend/browser-api-guide-check.mjs`。它自行启动前端、在浏览器中拦截全部 API 请求，验证搜索、链接、复制、下载、移动布局以及 MCP 配置，不修改真实作品或密钥。
 
 本项目源代码采用 [MIT License](LICENSE)。第三方依赖仍遵循各自许可证，见 [第三方依赖说明](THIRD_PARTY_NOTICES.md)。

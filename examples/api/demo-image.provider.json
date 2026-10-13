@@ -1,0 +1,8 @@
+{
+  "id": "demo-image",
+  "name": "本地演练 · 图片",
+  "kind": "openai",
+  "base_url": "http://127.0.0.1:9010/v1",
+  "model": "demo-fixture",
+  "capability": "image"
+}

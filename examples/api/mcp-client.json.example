@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "td-open": {
+      "command": "/storage/homes/hongzj/dell/td_open/.venv/bin/python",
+      "args": ["-m", "backend.mcp_server"],
+      "cwd": "/storage/homes/hongzj/dell/td_open",
+      "env": {
+        "TD_OPEN_APP_URL": "http://127.0.0.1:8765"
+      }
+    }
+  }
+}

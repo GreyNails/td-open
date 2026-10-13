@@ -29,6 +29,8 @@ Python 安装包的许可原文保存在其 `*.dist-info/licenses/` 或 `*.dist-
 | [lucide-react](https://github.com/lucide-icons/lucide) | 0.468.0 | ISC |
 | [React](https://github.com/react/react) | 19.3.0 | MIT |
 | [React DOM](https://github.com/react/react) | 19.3.0 | MIT |
+| [react-markdown](https://github.com/remarkjs/react-markdown) | 10.1.0 | MIT |
+| [remark-gfm](https://github.com/remarkjs/remark-gfm) | 4.0.1 | MIT |
 | [cannon-es](https://github.com/pmndrs/cannon-es) | 0.20.0 | MIT |
 | [Three.js](https://github.com/mrdoob/three.js) | 0.180.0 | MIT |
 
@@ -56,4 +58,4 @@ Lucide 的附带 LICENSE 还说明部分图标来源于 Cole Bemis 的 Feather�
 
 TouchDesigner / Derivative 仅用于描述参照领域；本仓库不因功能对照而取得或授予其商标、程序或素材的权利。
 
-内置三维文字使用 Three.js 示例 Helvetiker 字体，保留 [字体声明](frontend/public/licenses/helvetiker.txt)。cannon-es 声明随前端分发保存在 [public/licenses](frontend/public/licenses/)。这些许可也随 Vite 构建复制。
+内置三维文字使用 Three.js 示例 Helvetiker 字体，保留 [字体声明](frontend/public/licenses/helvetiker.txt)。cannon-es、react-markdown 和 remark-gfm 声明随前端分发保存在 [public/licenses](frontend/public/licenses/)。这些许可也随 Vite 构建复制。

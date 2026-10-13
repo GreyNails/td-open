@@ -2,6 +2,25 @@
 
 日期：2026-10-14。环境：Linux、Python 3.11、项目内 Node 22.21.1、Chromium 无头浏览器（软件 WebGL）。测试数据、报告、截图、缓存和导出保存在本项目内。没有调用收费 AI 服务；API 测试使用本地模拟服务。硬件测试范围在下文单独注明。
 
+## 0.4.1 接入文档与连接配置更新
+
+增加五篇应用内接入文档、四种能力的本地演练服务与配置；修复 MCP 编辑时的 Token 保留和工具权限设置，并补齐 WAV 导出文件下载路径。2026-10-14 验证：
+
+| 检查 | 结果 | 本地产物 |
+| --- | --- | --- |
+| Python 全量回归，含四份教程配置及 WAV 下载 | **313 项通过** | `data/artifacts/pytest-api-guide.xml` |
+| 四份教程配置的真实 HTTP 请求 | **4/4 通过**：文字回声、PNG 像素、WAV 采样、GLB 结构及资源下载 | `data/artifacts/api-docs-runtime.json` |
+| 前端全量回归 | **359 项通过** | `data/artifacts/frontend-tests-api-guide.json` |
+| TypeScript 与生产构建 | 通过；文档单独延迟加载 | `data/artifacts/frontend-build-api-guide.log` |
+| 文档中心与 MCP 设置真实浏览器检查 | **12 组通过**，包括中文锚点、复制、下载、五篇深链、390px 窄屏及三种工具权限 | `data/artifacts/api-guide-browser.json` |
+| HTTP / I/O 文档与实际接口 | **47 项通过**，含 Chromium、真实回环协议、文件、WAV 与脚本授权令牌 | `.cache/api-guide/verification/result.json` |
+| MCP 双向接入 | 真实 Streamable HTTP 发现和调用；stdio 四个工具、预览不保存、应用修改、嵌套作用域通过 | `.cache/api-docs-mcp/verification.json` |
+| 文档链接、锚点和示例语法 | 55 个相对链接、1 个锚点、48 个 JSON 示例、13 个 Python 和 37 个 Bash 片段通过；5 个配置符合 schema | `.cache/api-guide/verification/cross-check.json` |
+
+复现文档中心检查：`TD_CHROMIUM=/path/to/chromium node frontend/browser-api-guide-check.mjs`。脚本自行启动前端并拦截全部 API 请求，不写入真实用户数据。实际 AI 适配器的教程回归为 `tests/test_api_tutorial.py`；测试素材明确标注非 AI，未使用付费供应商。应用文档与仓库 Markdown 使用同一份源文件。
+
+## 0.4 初始验收
+
 | 检查 | 结果 | 本地产物 |
 | --- | --- | --- |
 | Python 后端、图、脚本、协议、AI/MCP 与全部工程 | **308 项通过** | `data/artifacts/pytest-results.xml` |

@@ -8,16 +8,28 @@ import {
   LoaderCircle,
   ExternalLink,
   Trash2,
+  BookOpen,
+  Pencil,
 } from "lucide-react";
 import { api, uid } from "./types";
 import type { Provider } from "./types";
-type Server = { id: string; name: string; url: string };
+import type { GuidePage } from "./guideRoute";
+import "./settings-guide.css";
+type Server = {
+  id: string;
+  name: string;
+  url: string;
+  allowed_tools?: string[] | null;
+  has_token?: boolean;
+};
 export default function Settings({
   close,
   notify,
+  openGuide,
 }: {
   close: () => void;
   notify: (s: string) => void;
+  openGuide: (page: GuidePage) => void;
 }) {
   const [tab, setTab] = useState("ai"),
     [providers, setProviders] = useState<Provider[]>([]),
@@ -41,6 +53,20 @@ export default function Settings({
     url: "http://127.0.0.1:3000/mcp",
     token: "",
   });
+  const [editingServer, setEditingServer] = useState(false);
+  const [toolPolicy, setToolPolicy] = useState("all");
+  const [allowedTools, setAllowedTools] = useState("");
+  const newServer = () => {
+    setServer({
+      id: uid("mcp"),
+      name: "MCP 服务",
+      url: "http://127.0.0.1:3000/mcp",
+      token: "",
+    });
+    setEditingServer(false);
+    setToolPolicy("all");
+    setAllowedTools("");
+  };
   const refresh = () =>
     Promise.all([
       api<Provider[] | { providers: Provider[] }>("/providers").then((r) =>
@@ -83,9 +109,25 @@ export default function Settings({
   const saveMCP = async () => {
     setBusy(true);
     try {
-      await api("/mcp/servers", server);
+      const names = [
+        ...new Set(
+          allowedTools
+            .split(/[,，\n]/)
+            .map((name) => name.trim())
+            .filter(Boolean),
+        ),
+      ];
+      if (toolPolicy === "selected" && !names.length)
+        throw new Error("请填写至少一个工具名，或选择“禁止全部工具”");
+      await api("/mcp/servers", {
+        ...server,
+        token: server.token || undefined,
+        allowed_tools:
+          toolPolicy === "all" ? null : toolPolicy === "none" ? [] : names,
+      });
       await refresh();
-      setServer((s) => ({ ...s, id: uid("mcp"), token: "" }));
+      setServer((s) => ({ ...s, token: "" }));
+      setEditingServer(true);
       notify("MCP 连接配置已保存");
     } catch (e) {
       notify((e as Error).message);
@@ -129,6 +171,23 @@ export default function Settings({
           </button>
         </div>
         <div className="settings-body">
+          <div className="settings-guide-link">
+            <div>
+              <strong>第一次接入，跟着指南完成配置</strong>
+              <p>
+                {tab === "ai"
+                  ? "API 地址、密钥、模型名称与完整请求示例。"
+                  : "连接外部工具，或让 AI 对话操作 TD Open。"}
+              </p>
+            </div>
+            <button
+              className="button small"
+              onClick={() => openGuide(tab === "ai" ? "ai" : "mcp")}
+            >
+              <BookOpen size={15} />
+              接入指南
+            </button>
+          </div>
           {tab === "ai" ? (
             <>
               <div className="saved-services">
@@ -270,11 +329,42 @@ export default function Settings({
                 {servers.map((s) => (
                   <div key={s.id} className="mcp-item">
                     <div className="service">
-                      <Plug size={18} />
-                      <span>
-                        <strong>{s.name}</strong>
-                        <small>{s.url}</small>
-                      </span>
+                      <button
+                        className="mcp-edit"
+                        aria-label={`编辑 MCP 连接 ${s.name}`}
+                        onClick={() => {
+                          setServer({
+                            id: s.id,
+                            name: s.name,
+                            url: s.url,
+                            token: "",
+                          });
+                          setEditingServer(true);
+                          setToolPolicy(
+                            s.allowed_tools == null
+                              ? "all"
+                              : s.allowed_tools.length
+                                ? "selected"
+                                : "none",
+                          );
+                          setAllowedTools((s.allowed_tools || []).join(", "));
+                        }}
+                      >
+                        <Plug size={18} />
+                        <span>
+                          <strong>{s.name}</strong>
+                          <small>{s.url}</small>
+                          <small>
+                            {s.allowed_tools == null
+                              ? "不限工具"
+                              : s.allowed_tools.length
+                                ? `${s.allowed_tools.length} 个指定工具`
+                                : "禁止全部工具"}
+                            {s.has_token ? " · 已保存 Token" : ""}
+                          </small>
+                        </span>
+                        <Pencil size={13} />
+                      </button>
                       <button
                         className="button small"
                         disabled={busy}
@@ -307,6 +397,15 @@ export default function Settings({
                   </div>
                 ))}
               </div>
+              <div className="mcp-form-head">
+                <strong>
+                  {editingServer ? "编辑已有 MCP 连接" : "添加 MCP 连接"}
+                </strong>
+                <button className="button small" onClick={newServer}>
+                  <Plus size={14} />
+                  新增连接
+                </button>
+              </div>
               <div className="form-grid">
                 <label>
                   服务名称
@@ -321,6 +420,12 @@ export default function Settings({
                   服务 ID
                   <input
                     value={server.id}
+                    readOnly={editingServer}
+                    title={
+                      editingServer
+                        ? "已有连接的服务 ID 不可修改；新连接请点击“新增连接”"
+                        : undefined
+                    }
                     onChange={(e) =>
                       setServer((s) => ({ ...s, id: e.target.value }))
                     }
@@ -336,15 +441,44 @@ export default function Settings({
                   />
                 </label>
                 <label className="span-2">
-                  Bearer Token（可选）
+                  Bearer Token{" "}
+                  <span className="muted">· 留空保留已有 Token</span>
                   <input
                     type="password"
+                    autoComplete="off"
+                    placeholder="填写新 Token 可替换已保存凭证"
                     value={server.token}
                     onChange={(e) =>
                       setServer((s) => ({ ...s, token: e.target.value }))
                     }
                   />
                 </label>
+                <label className="span-2">
+                  工具权限
+                  <select
+                    value={toolPolicy}
+                    onChange={(e) => setToolPolicy(e.target.value)}
+                  >
+                    <option value="all">不限制工具</option>
+                    <option value="none">禁止全部工具</option>
+                    <option value="selected">仅允许指定工具</option>
+                  </select>
+                </label>
+                {toolPolicy === "selected" && (
+                  <label className="span-2">
+                    允许的工具名称
+                    <textarea
+                      value={allowedTools}
+                      onChange={(e) => setAllowedTools(e.target.value)}
+                      rows={3}
+                      placeholder="例如：search, get_weather（逗号或换行分隔）"
+                    />
+                  </label>
+                )}
+                <p className="mcp-permissions-note">
+                  工具名需与 MCP
+                  服务返回的名称完全一致。选择“禁止全部工具”会阻止所有工具调用；保存已有连接时会保留当前权限设置。
+                </p>
               </div>
               <p className="form-tip">
                 工具节点会显示服务和工具名，并由你手动执行。也可通过本项目的

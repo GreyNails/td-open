@@ -165,7 +165,7 @@ def test_unknown_api_never_serves_frontend(client):
     assert client.get("/api/missing").status_code == 404
 
 
-@pytest.mark.parametrize("filename,mime,payload", [("../../作品.png", "image/png", b"png-bytes"), ("movie.webm", "video/webm", b"webm-bytes"), ("project.json", "application/json", b'{"version":1}')])
+@pytest.mark.parametrize("filename,mime,payload", [("../../作品.png", "image/png", b"png-bytes"), ("movie.webm", "video/webm", b"webm-bytes"), ("sound.wav", "audio/wav", b"RIFF-wave-export"), ("project.json", "application/json", b'{"version":1}')])
 def test_artifacts_are_saved_locally_and_downloadable(client, filename, mime, payload):
     response = client.post("/api/artifacts", files={"file": (filename, payload, mime)})
     assert response.status_code == 200

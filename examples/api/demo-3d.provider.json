@@ -1,0 +1,14 @@
+{
+  "id": "demo-3d",
+  "name": "本地演练 · 测试网格",
+  "kind": "http",
+  "base_url": "http://127.0.0.1:9010",
+  "model": "demo-fixture",
+  "capability": "3d",
+  "path": "/generate/3d",
+  "body_template": {
+    "model": "{{model}}",
+    "prompt": "{{prompt}}",
+    "options": "{{parameters}}"
+  }
+}

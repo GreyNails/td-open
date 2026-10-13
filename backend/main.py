@@ -34,7 +34,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
     temporary_dir.mkdir(parents=True, exist_ok=True)
     tempfile.tempdir = str(temporary_dir)
     os.environ["TMPDIR"] = str(temporary_dir)
-    app = FastAPI(title="TD Open API", version="0.4.0", description="Local-first visual programming workspace")
+    app = FastAPI(title="TD Open API", version="0.4.1", description="Local-first visual programming workspace")
     store = ProjectStore(data_dir)
     app.state.store = store
     from backend.io_runtime import create_io_router
@@ -76,7 +76,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "version": "0.4.0", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
+        return {"status": "ok", "version": "0.4.1", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
 
     @app.get("/api/catalog")
     def catalog():
@@ -197,7 +197,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
 
     @app.get("/api/exports/{filename}")
     def exported_artifact(filename: str):
-        if not re.fullmatch(r"[a-f0-9]{32}\.(png|webm|json)", filename):
+        if not re.fullmatch(r"[a-f0-9]{32}\.(png|webm|wav|json)", filename):
             raise HTTPException(status_code=404, detail="导出文件不存在")
         path = store.exports_dir / filename
         if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(store.exports_dir.resolve()):

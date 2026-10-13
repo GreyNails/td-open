@@ -1,0 +1,70 @@
+.settings-guide-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  background: #293225;
+  border: 1px solid #455b37;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.settings-guide-link p {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #aab5a0;
+}
+.settings-guide-link strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.settings-guide-link button {
+  white-space: nowrap;
+}
+.help-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mcp-edit {
+  text-align: left;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.mcp-edit span {
+  min-width: 0;
+}
+.mcp-edit small {
+  overflow-wrap: anywhere;
+}
+.mcp-permissions-note {
+  grid-column: 1/-1;
+  font-size: 11px;
+  line-height: 1.65;
+  color: #9fa9b8;
+  margin: 0;
+}
+.mcp-form-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 14px 0;
+}
+.mcp-form-head strong {
+  font-size: 12px;
+  color: #bcc8af;
+}
+@media (max-width: 700px) {
+  .settings-guide-link {
+    align-items: flex-start;
+  }
+  .settings-guide-link p {
+    font-size: 10px;
+  }
+  .settings-guide-link .button {
+    padding: 8px;
+  }
+}
