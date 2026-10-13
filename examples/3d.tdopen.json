@@ -4,7 +4,7 @@
   "version": 1,
   "nodes": [
     {
-      "id": "geometry_f8ffdf26",
+      "id": "geometry_1",
       "type": "geometry",
       "position": {
         "x": 0,
@@ -19,7 +19,7 @@
       }
     },
     {
-      "id": "render_2f2f96e7",
+      "id": "render_2",
       "type": "render",
       "position": {
         "x": 245,
@@ -35,7 +35,7 @@
       }
     },
     {
-      "id": "blur_5f96174f",
+      "id": "blur_3",
       "type": "blur",
       "position": {
         "x": 490,
@@ -50,7 +50,7 @@
       }
     },
     {
-      "id": "output_d0815e21",
+      "id": "output_4",
       "type": "output",
       "position": {
         "x": 735,
@@ -64,23 +64,23 @@
   ],
   "edges": [
     {
-      "id": "edge_4dee6b1d",
-      "source": "geometry_f8ffdf26",
-      "target": "render_2f2f96e7",
+      "id": "edge_1",
+      "source": "geometry_1",
+      "target": "render_2",
       "sourceHandle": "out",
       "targetHandle": "in"
     },
     {
-      "id": "edge_40b0006f",
-      "source": "render_2f2f96e7",
-      "target": "blur_5f96174f",
+      "id": "edge_2",
+      "source": "render_2",
+      "target": "blur_3",
       "sourceHandle": "out",
       "targetHandle": "in"
     },
     {
-      "id": "edge_8400e39e",
-      "source": "blur_5f96174f",
-      "target": "output_d0815e21",
+      "id": "edge_3",
+      "source": "blur_3",
+      "target": "output_4",
       "sourceHandle": "out",
       "targetHandle": "in"
     }

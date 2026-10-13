@@ -26,7 +26,9 @@ page.on("pageerror", (e) => errors.push(e.message));
 page.on("console", (m) => {
   if (m.type() === "error") errors.push(m.text());
 });
-await page.goto("http://127.0.0.1:8765", { waitUntil: "networkidle" });
+await page.goto(process.env.TD_BASE_URL || "http://127.0.0.1:8765", {
+  waitUntil: "networkidle",
+});
 await page.waitForTimeout(2200);
 await page.screenshot({
   path: path.join(artifacts, "studio-desktop.png"),

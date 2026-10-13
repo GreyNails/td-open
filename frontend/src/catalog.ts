@@ -1,5 +1,7 @@
 import type { GraphNode, NodeSpec, Param, Port, Project } from "./types";
 import { uid } from "./types";
+import { visualCatalog } from "./nodes/visualCatalog";
+import { dataCatalog } from "./nodes/dataCatalog";
 const port = (id: string, kind = "TOP", label = "画面"): Port => ({
   id,
   kind,
@@ -323,6 +325,7 @@ export const catalog: NodeSpec[] = [
     [],
   ),
 ];
+catalog.push(...visualCatalog, ...dataCatalog);
 export const byType = Object.fromEntries(catalog.map((n) => [n.type, n]));
 export const familyColors: Record<string, string> = {
   TOP: "#b29af7",
@@ -403,6 +406,64 @@ export function preset(kind = "flow"): Project {
     const o = add("output", 490, 25);
     link(a, c);
     link(c, o);
+  }
+  if (kind === "kaleidoscope") {
+    name = "万花筒与反馈 · Kaleidoscope trails";
+    const checker = add("checkerboard", 0, 0);
+    const rotate = add("rotate", 240, 0, { speed: 0.03 });
+    const kaleido = add("kaleidoscope", 480, 0);
+    const feedback = add("feedback", 720, 0);
+    const output = add("output", 960, 0);
+    link(checker, rotate);
+    link(rotate, kaleido);
+    link(kaleido, feedback);
+    link(feedback, output);
+  }
+  if (kind === "geometry-lab") {
+    name = "双物体空间 · Geometry lab";
+    const box = add("box", 0, 0);
+    const boxTransform = add("transform_sop", 240, 0, {
+      x: -1,
+      sx: 0.65,
+      sy: 0.65,
+      sz: 0.65,
+      rz: 20,
+    });
+    const sphere = add("sphere", 0, 240);
+    const sphereTransform = add("transform_sop", 240, 240, {
+      x: 1,
+      sx: 0.7,
+      sy: 0.7,
+      sz: 0.7,
+    });
+    const merge = add("merge_sop", 480, 120);
+    const render = add("render", 720, 120, { speed: 0.15 });
+    const output = add("output", 960, 120);
+    link(box, boxTransform);
+    link(sphere, sphereTransform);
+    link(boxTransform, merge);
+    link(sphereTransform, merge, "in2");
+    link(merge, render);
+    link(render, output);
+  }
+  if (kind === "data-driven") {
+    name = "数据变成画面 · CSV to motion";
+    const table = add("table_dat", 0, 220, {
+      csv: "name,value\nangle,0.6",
+      mode: "cell",
+      row: 1,
+      column: 1,
+    });
+    const number = add("dat_to_chop", 240, 220);
+    const range = add("range", 480, 220, { out_max: 2 });
+    const grid = add("grid", 240, 0);
+    const rotate = add("rotate", 720, 0, { speed: 0 });
+    const output = add("output", 960, 0);
+    link(table, number);
+    link(number, range);
+    link(grid, rotate);
+    link(range, rotate, "mod");
+    link(rotate, output);
   }
   if (kind === "empty") {
     name = "未命名作品";

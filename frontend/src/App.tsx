@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -84,6 +85,9 @@ import {
 } from "./catalog";
 import { StudioEngine } from "./engine";
 import Settings from "./Settings";
+import Workbench from "./Workbench";
+import NodeSearch from "./NodeSearch";
+import type { WorkspaceLayout } from "./workspaceLayout";
 
 const EngineContext =
   createContext<React.MutableRefObject<StudioEngine | null> | null>(null);
@@ -120,7 +124,7 @@ function NodeThumbnail({ id, type }: { id: string; type: string }) {
             ctx.fillText(
               typeof value === "string"
                 ? value.slice(0, 22) || "等待运行"
-                : type === "geometry"
+                : byType[type]?.outputs.some((port) => port.kind === "SOP")
                   ? "◇  3D GEOMETRY"
                   : "✦  AI GENERATION",
               96,
@@ -195,7 +199,8 @@ const iconFor = (type: string) =>
       ? AudioLines
       : type === "particles"
         ? Sparkles
-        : type === "geometry" || type === "render"
+        : byType[type]?.outputs.some((port) => port.kind === "SOP") ||
+            type === "render"
           ? Box
           : type.startsWith("ai_")
             ? Sparkles
@@ -222,6 +227,11 @@ function download(blob: Blob, name: string) {
 }
 
 function Studio() {
+  const [quickAdd, setQuickAdd] = useState<{
+    position?: { x: number; y: number };
+  } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [panMode, setPanMode] = useState(true);
   const [project, setProject] = useState<Project>(() => preset()),
     [ready, setReady] = useState(false),
     [selected, setSelected] = useState(""),
@@ -317,7 +327,18 @@ function Studio() {
       setHistoryVersion((v) => v + 1);
     }
   };
-  const active = project.nodes.find((n) => n.id === selected),
+  useEffect(() => {
+    setSelectedIds((previous) => {
+      const valid = new Set(
+        [...previous].filter((id) => project.nodes.some((n) => n.id === id)),
+      );
+      return valid.size === previous.size ? previous : valid;
+    });
+  }, [project.nodes]);
+  const active = project.nodes.find(
+      (n) =>
+        n.id === (selectedIds.has(selected) ? selected : [...selectedIds][0]),
+    ),
     spec = active ? byType[active.type] : undefined;
   const fetchProviders = () =>
     api<Provider[] | { providers: Provider[] }>("/providers")
@@ -343,9 +364,19 @@ function Studio() {
             lastPersisted.current = JSON.stringify(p);
             setProject(p);
             setSelected(p.nodes[0]?.id || "");
+            setSelectedIds(new Set(p.nodes[0] ? [p.nodes[0].id] : []));
           }
         }
-        if (!list.length) setSelected(projectRef.current.nodes[0]?.id || "");
+        if (!list.length) {
+          setSelected(projectRef.current.nodes[0]?.id || "");
+          setSelectedIds(
+            new Set(
+              projectRef.current.nodes[0]
+                ? [projectRef.current.nodes[0].id]
+                : [],
+            ),
+          );
+        }
         setSaveState("已连接");
       })
       .catch(() => {
@@ -482,15 +513,81 @@ function Studio() {
       setSaveState("保存失败");
     }
   };
-  const addNode = (type: string) => {
-    const n = makeNode(
-      type,
-      120 + Math.random() * 160,
-      120 + Math.random() * 100,
-    );
-    replace({ ...projectRef.current, nodes: [...projectRef.current.nodes, n] });
+  const addNode = (type: string, connect = false) => {
+    const canvas = document
+      .querySelector(".flow-container")
+      ?.getBoundingClientRect();
+    const position =
+      quickAdd?.position ||
+      flow.screenToFlowPosition({
+        x: canvas ? canvas.left + canvas.width / 2 : 500,
+        y: canvas ? canvas.top + canvas.height / 2 : 400,
+      });
+    const current = projectRef.current;
+    const source = current.nodes.find((n) => n.id === active?.id);
+    const n = makeNode(type, position.x - 96, position.y - 70);
+    const compatible =
+      connect && source
+        ? byType[source.type].outputs.flatMap((out) =>
+            byType[type].inputs
+              .filter((port) => port.kind === out.kind)
+              .map((port) => ({ out, port })),
+          )[0]
+        : undefined;
+    if (compatible && source) {
+      n.position = { x: source.position.x + 260, y: source.position.y };
+    }
+    while (
+      current.nodes.some(
+        (other) =>
+          Math.abs(other.position.x - n.position.x) < 205 &&
+          Math.abs(other.position.y - n.position.y) < 145,
+      )
+    ) {
+      n.position.x += 48;
+      n.position.y += 48;
+    }
+    replace({
+      ...current,
+      nodes: [...current.nodes, n],
+      edges:
+        compatible && source
+          ? [
+              ...current.edges,
+              {
+                id: uid("edge"),
+                source: source.id,
+                target: n.id,
+                sourceHandle: compatible.out.id,
+                targetHandle: compatible.port.id,
+              },
+            ]
+          : current.edges,
+    });
     setSelected(n.id);
-    notify(`已添加「${n.data.label}」，拖动圆点连接节点`);
+    setSelectedIds(new Set([n.id]));
+    setQuickAdd(null);
+    if (canvas) {
+      const screen = flow.flowToScreenPosition({
+        x: n.position.x + 96,
+        y: n.position.y + 70,
+      });
+      if (
+        screen.x < canvas.left ||
+        screen.x > canvas.right ||
+        screen.y < canvas.top ||
+        screen.y > canvas.bottom
+      )
+        window.setTimeout(
+          () =>
+            flow.setCenter(n.position.x + 96, n.position.y + 70, {
+              zoom: flow.getZoom(),
+              duration: 250,
+            }),
+          20,
+        );
+    }
+    notify(`已添加「${n.data.label}」${compatible ? "并连接到选中节点" : ""}`);
   };
   const updateParam = (
     key: string,
@@ -512,35 +609,54 @@ function Studio() {
     }));
   };
   const removeNode = () => {
-    if (!selected) return;
+    if (!active) return;
+    const targetId = active.id;
     replace({
       ...projectRef.current,
-      nodes: projectRef.current.nodes.filter((n) => n.id !== selected),
+      nodes: projectRef.current.nodes.filter((n) => n.id !== targetId),
       edges: projectRef.current.edges.filter(
-        (e) => e.source !== selected && e.target !== selected,
+        (e) => e.source !== targetId && e.target !== targetId,
       ),
     });
     setSelected("");
+    setSelectedIds(new Set());
     setPreviewId("");
   };
   const duplicate = () => {
-    if (!active) return;
-    const n = {
-      ...structuredClone(active),
-      id: uid(active.type),
-      position: { x: active.position.x + 36, y: active.position.y + 180 },
-      data: {
-        ...structuredClone(active.data),
-        label: active.data.label + " 副本",
-      },
-    };
-    replace({ ...projectRef.current, nodes: [...projectRef.current.nodes, n] });
-    setSelected(n.id);
+    const current = projectRef.current;
+    const originals = current.nodes.filter((n) => selectedIds.has(n.id));
+    if (!originals.length) return;
+    const mapping = new Map(originals.map((n) => [n.id, uid(n.type)]));
+    const copies = originals.map((n) => ({
+      ...structuredClone(n),
+      id: mapping.get(n.id)!,
+      position: { x: n.position.x + 48, y: n.position.y + 180 },
+      data: { ...structuredClone(n.data), label: n.data.label + " 副本" },
+    }));
+    const copiedEdges = current.edges
+      .filter((e) => mapping.has(e.source) && mapping.has(e.target))
+      .map((e) => ({
+        ...e,
+        id: uid("edge"),
+        source: mapping.get(e.source)!,
+        target: mapping.get(e.target)!,
+      }));
+    replace({
+      ...current,
+      nodes: [...current.nodes, ...copies],
+      edges: [...current.edges, ...copiedEdges],
+    });
+    setSelected(copies[0].id);
+    setSelectedIds(new Set(copies.map((n) => n.id)));
+    notify(
+      `已复制 ${copies.length} 个节点${copiedEdges.length ? "及内部连线" : ""}`,
+    );
   };
   const usePreset = (kind: string) => {
     const p = preset(kind);
     replace(p);
     setSelected(p.nodes[0]?.id || "");
+    setSelectedIds(new Set(p.nodes[0] ? [p.nodes[0].id] : []));
     setPreviewId("");
     timeRef.current = 0;
     setModal("");
@@ -568,29 +684,40 @@ function Studio() {
         e.preventDefault();
         duplicate();
       }
-      if (e.code === "Space") {
+      const inCanvas =
+        el === document.body || Boolean(el.closest(".flow-container"));
+      if (e.code === "Space" && inCanvas) {
         e.preventDefault();
         setPlaying((p) => !p);
       }
-      if (e.key === "Tab") {
+      if (
+        (e.key === "Tab" && inCanvas) ||
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k")
+      ) {
         e.preventDefault();
-        document.getElementById("node-search")?.focus();
+        setQuickAdd({});
       }
       if (e.key === "Escape") {
+        setQuickAdd(null);
         setModal("");
         setPreviewId("");
       }
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [active, selected]);
-  const nodes: FlowNode[] = project.nodes.map((n) => ({
-    id: n.id,
-    type: "studio",
-    position: n.position,
-    data: { node: n },
-    selected: n.id === selected,
-  }));
+  }, [active, selected, selectedIds]);
+  const nodes: FlowNode[] = useMemo(
+    () =>
+      project.nodes.map((n) => ({
+        id: n.id,
+        type: "studio",
+        position: n.position,
+        data: { node: n },
+        selected: selectedIds.has(n.id),
+        measured: flow.getInternalNode(n.id)?.measured,
+      })),
+    [project.nodes, selectedIds, flow],
+  );
   const edges: Edge[] = project.edges.map((e) => ({
     ...e,
     animated: playing,
@@ -606,8 +733,24 @@ function Studio() {
     },
   }));
   const onNodesChange = (changes: NodeChange<FlowNode>[]) => {
-    for (const c of changes)
-      if (c.type === "select" && c.selected) setSelected(c.id);
+    const selections = changes.filter((c) => c.type === "select");
+    if (selections.length) {
+      setSelectedIds((previous) => {
+        const next = new Set(previous);
+        for (const c of selections) {
+          if (c.type === "select") {
+            if (c.selected) next.add(c.id);
+            else next.delete(c.id);
+          }
+        }
+        return next;
+      });
+      const last = selections
+        .filter((c) => c.type === "select" && c.selected)
+        .at(-1);
+      if (last) setSelected(last.id);
+    }
+
     const changed = changes.filter(
       (c) => c.type === "position" || c.type === "remove",
     );
@@ -803,6 +946,7 @@ function Studio() {
           nodes: [...projectRef.current.nodes, n],
         });
         setSelected(n.id);
+        setSelectedIds(new Set([n.id]));
         setPreviewId(n.id);
         notify("素材已导入，连接输出节点即可加入作品");
       }
@@ -836,6 +980,7 @@ function Studio() {
       p.id = uid("project");
       replace(p);
       setSelected("");
+      setSelectedIds(new Set());
       setPreviewId("");
       setTimeout(() => flow.fitView({ padding: 0.25 }), 100);
       notify("作品已导入并创建独立副本");
@@ -902,6 +1047,26 @@ function Studio() {
       notify(friendly(e));
     }
   };
+  const favorites = Array.isArray(project.settings?.favoriteNodes)
+    ? project.settings.favoriteNodes.filter(
+        (v): v is string => typeof v === "string",
+      )
+    : [];
+  const toggleFavorite = (type: string) =>
+    setProject((p) => {
+      const list = Array.isArray(p.settings?.favoriteNodes)
+        ? p.settings.favoriteNodes
+        : [];
+      return {
+        ...p,
+        settings: {
+          ...p.settings,
+          favoriteNodes: list.includes(type)
+            ? list.filter((n) => n !== type)
+            : [...list, type],
+        },
+      };
+    });
   const filtered = catalog.filter(
     (s) =>
       (category === "全部" ||
@@ -918,13 +1083,933 @@ function Studio() {
           ].includes(s.type)) ||
         (category === "图像" && s.family === "TOP") ||
         (category === "信号" && s.family === "CHOP") ||
-        (category === "3D" && ["geometry", "render"].includes(s.type)) ||
+        (category === "3D" && (s.family === "SOP" || s.type === "render")) ||
+        (category === "数据" && s.family === "DAT") ||
+        (category === "收藏" && favorites.includes(s.type)) ||
         (category === "AI" && s.family === "AI")) &&
       `${s.label} ${s.english} ${s.type}`
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
   const ptime = new Date(time * 1000).toISOString().slice(14, 22);
+  const workbenchPanels = {
+    library: (
+      <aside className="library">
+        <div className="panel-heading">
+          <h2>节点资源</h2>
+          <span>{catalog.length}</span>
+        </div>
+        <div className="search-box">
+          <Search size={15} />
+          <input
+            id="node-search"
+            placeholder="搜索节点…"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              if (e.target.value) setCategory("全部");
+            }}
+          />
+          <kbd>Tab</kbd>
+        </div>
+        <div className="categories">
+          {["推荐", "图像", "信号", "3D", "数据", "AI", "收藏", "全部"].map(
+            (c) => (
+              <button
+                key={c}
+                className={category === c ? "active" : ""}
+                onClick={() => setCategory(c)}
+              >
+                {c}
+              </button>
+            ),
+          )}
+        </div>
+        <div className="library-section-label">
+          {category === "推荐" ? "从这些节点开始" : category + "节点"}
+          <span>点击添加</span>
+        </div>
+        <div className="node-list">
+          {filtered.map((s) => {
+            const Icon = iconFor(s.type);
+            return (
+              <button
+                key={s.type}
+                className="library-node"
+                title={s.description}
+                onClick={() => addNode(s.type)}
+                draggable
+                onDragStart={(e) =>
+                  e.dataTransfer.setData("application/td-node", s.type)
+                }
+              >
+                <span
+                  className="library-icon"
+                  style={{
+                    color: familyColors[s.family],
+                    background: familyColors[s.family] + "14",
+                  }}
+                >
+                  <Icon size={18} />
+                </span>
+                <span className="library-node-text">
+                  <strong>{s.label}</strong>
+                  <small>{s.english}</small>
+                </span>
+                <Plus size={14} className="add-icon" />
+              </button>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="empty-note">没有找到节点，试试英文名称。</div>
+          )}
+        </div>
+        <button
+          className="import-asset"
+          onClick={() => fileInput.current?.click()}
+        >
+          <Upload size={17} />
+          <span>
+            导入素材<small>图片、视频或音频</small>
+          </span>
+          <Plus size={14} />
+        </button>
+        <div className="library-tip">
+          <div>
+            <Zap size={14} />
+            小连接，大创意
+          </div>
+          <p>把一个节点的输出拖到另一个节点的输入，看看会发生什么。</p>
+          <button onClick={() => setModal("help")}>
+            认识节点与连线 <ArrowRight size={13} />
+          </button>
+        </div>
+        <div className="library-bottom">
+          <span className="dot" />
+          本地优先 · 开源创作
+        </div>
+      </aside>
+    ),
+    preview: (
+      <section className="preview-panel" ref={previewWrap}>
+        <div className="preview-toolbar">
+          <div className="preview-title">
+            <span className="live-dot" />
+            实时预览
+            <span className="mini-divider" />{" "}
+            <span className="muted">
+              {previewId
+                ? project.nodes.find((n) => n.id === previewId)?.data.label ||
+                  "选中节点"
+                : "最终输出"}
+            </span>
+          </div>
+          <div className="preview-actions">
+            <span className="resolution">640 × 360</span>
+            <button
+              className={`icon-button ${mic ? "on" : ""}`}
+              aria-label={mic ? "关闭音频" : "启用麦克风"}
+              title={mic ? "关闭音频" : "启用麦克风"}
+              onClick={async () => {
+                if (mic) {
+                  engine.current?.stopAudio();
+                  setMic(false);
+                } else
+                  try {
+                    await engine.current?.microphone();
+                    setMic(true);
+                    notify("麦克风已启用，可添加音频节点驱动画面");
+                  } catch (e) {
+                    notify("无法启用麦克风：" + friendly(e));
+                  }
+              }}
+            >
+              <Mic size={15} />
+            </button>
+            <button
+              className="icon-button"
+              title="导出 PNG"
+              onClick={screenshot}
+            >
+              <ArrowDownToLine size={15} />
+            </button>
+            <button
+              className={`icon-button ${recording ? "recording" : ""}`}
+              title={recording ? "停止录制" : "录制画面 WebM"}
+              onClick={record}
+            >
+              <Film size={15} />
+            </button>
+            <button
+              className="icon-button"
+              title="全屏预览"
+              onClick={() =>
+                previewWrap.current
+                  ?.requestFullscreen()
+                  .catch((e) => notify(friendly(e)))
+              }
+            >
+              <Maximize2 size={15} />
+            </button>
+          </div>
+        </div>
+        <div className="preview-stage">
+          <canvas
+            ref={preview}
+            width={640}
+            height={360}
+            aria-label="节点实时渲染画面"
+          />
+          <div className="preview-badge">
+            <span className="dot" />
+            {playing ? "LIVE" : "PAUSED"}
+            <span>/{previewId || "output"}</span>
+          </div>
+          {previewId && (
+            <button className="back-output" onClick={() => setPreviewId("")}>
+              返回最终输出 <ArrowRight size={13} />
+            </button>
+          )}
+        </div>
+        <div className="transport">
+          <button
+            className="play-button"
+            onClick={() => setPlaying((p) => !p)}
+            title={playing ? "暂停（空格）" : "播放（空格）"}
+          >
+            {playing ? (
+              <Pause size={15} fill="currentColor" />
+            ) : (
+              <Play size={15} fill="currentColor" />
+            )}
+          </button>
+          <button
+            className="icon-button"
+            title="回到起点"
+            onClick={() => {
+              timeRef.current = 0;
+              setTime(0);
+              renderDirty.current = true;
+            }}
+          >
+            <RotateCcw size={14} />
+          </button>
+          <span className="timecode">{ptime}</span>
+          <div className="timeline-ruler">
+            <div
+              className="timeline-playhead"
+              style={{ left: `${((time % 60) / 60) * 100}%` }}
+            />
+            {[0, 10, 20, 30, 40, 50, 60].map((n) => (
+              <span key={n}>{String(n).padStart(2, "0")}</span>
+            ))}
+          </div>
+          <span className="fps">
+            <i /> {fps} FPS
+          </span>
+        </div>
+      </section>
+    ),
+    graph: (
+      <section className="graph-panel">
+        <div className="graph-toolbar">
+          <div className="graph-title">
+            <Network size={15} />
+            <strong>节点工作区</strong>
+            <span className="graph-breadcrumb">
+              project <ChevronRight size={12} /> main
+            </span>
+          </div>
+          <div className="graph-actions">
+            <button
+              className={`icon-button ${!panMode ? "on" : ""}`}
+              title={panMode ? "切换到框选模式" : "切换到平移模式"}
+              onClick={() => setPanMode((v) => !v)}
+            >
+              <MousePointer2 size={14} />
+            </button>
+            <button
+              className="icon-button"
+              title="在画布添加节点 Tab"
+              onClick={() => setQuickAdd({})}
+            >
+              <Plus size={15} />
+            </button>
+            <button
+              className="icon-button"
+              disabled={!history.current.length}
+              onClick={undo}
+              title="撤销 Ctrl+Z"
+            >
+              <Undo2 size={15} />
+            </button>
+            <button
+              className="icon-button"
+              disabled={!future.current.length}
+              onClick={redo}
+              title="重做 Ctrl+Shift+Z"
+            >
+              <Redo2 size={15} />
+            </button>
+            <span className="mini-divider" />
+            <button
+              className="button small subtle"
+              onClick={() => {
+                checkpoint();
+                setProject((p) => ({
+                  ...p,
+                  nodes: p.nodes.map((n, i) => ({
+                    ...n,
+                    position: {
+                      x: (i % 4) * 245,
+                      y: Math.floor(i / 4) * 215,
+                    },
+                  })),
+                }));
+                setTimeout(
+                  () => flow.fitView({ padding: 0.2, duration: 350 }),
+                  80,
+                );
+              }}
+            >
+              <Grid2X2 size={13} />
+              整理
+            </button>
+            <button
+              className="icon-button"
+              title="适应全部节点"
+              onClick={() => flow.fitView({ padding: 0.2, duration: 400 })}
+            >
+              <Expand size={15} />
+            </button>
+          </div>
+        </div>
+        <div
+          className="flow-container"
+          tabIndex={0}
+          aria-label="无限节点画布操作区"
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "copy";
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            const type = e.dataTransfer.getData("application/td-node");
+            if (!byType[type]) return;
+            const n = makeNode(type);
+            n.position = flow.screenToFlowPosition({
+              x: e.clientX,
+              y: e.clientY,
+            });
+            replace({
+              ...projectRef.current,
+              nodes: [...projectRef.current.nodes, n],
+            });
+            setSelected(n.id);
+            setSelectedIds(new Set([n.id]));
+          }}
+        >
+          <ReactFlow<FlowNode>
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onNodeDragStart={checkpoint}
+            onNodeClick={(event, n) => {
+              setSelected(n.id);
+              if (!event.ctrlKey && !event.metaKey)
+                setSelectedIds(new Set([n.id]));
+            }}
+            onNodeDoubleClick={(_, n) => setPreviewId(n.id)}
+            onPaneClick={(e) => {
+              setSelected("");
+              setSelectedIds(new Set());
+              if (e.detail === 2)
+                setQuickAdd({
+                  position: flow.screenToFlowPosition({
+                    x: e.clientX,
+                    y: e.clientY,
+                  }),
+                });
+            }}
+            onPaneContextMenu={(e) => {
+              e.preventDefault();
+              setQuickAdd({
+                position: flow.screenToFlowPosition({
+                  x: e.clientX,
+                  y: e.clientY,
+                }),
+              });
+            }}
+            panOnDrag={panMode ? [0, 1] : [1]}
+            selectionOnDrag={!panMode}
+            zoomOnDoubleClick={false}
+            selectionKeyCode="Shift"
+            multiSelectionKeyCode={["Control", "Meta"]}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            minZoom={0.08}
+            maxZoom={3}
+            deleteKeyCode={["Backspace", "Delete"]}
+            colorMode="dark"
+            defaultEdgeOptions={{ type: "default" }}
+          >
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={18}
+              size={1}
+              color="#32343c"
+            />
+            <Controls showInteractive={false} />
+            <MiniMap
+              nodeColor={(n) =>
+                familyColors[
+                  byType[(n.data as FlowNode["data"]).node.type]?.family
+                ]
+              }
+              maskColor="#15161bbe"
+              pannable
+              zoomable
+            />
+          </ReactFlow>
+          <div className="graph-hint">
+            <MousePointer2 size={12} />
+            滚轮缩放 · Shift 多选 · 右键添加 · 双击节点预览
+          </div>
+        </div>
+      </section>
+    ),
+    inspector: (
+      <aside className="inspector">
+        <div className="inspector-tabs">
+          <button
+            className={tab === "params" ? "active" : ""}
+            onClick={() => setTab("params")}
+          >
+            <SlidersHorizontal size={15} />
+            参数
+          </button>
+          <button
+            className={tab === "info" ? "active" : ""}
+            onClick={() => setTab("info")}
+          >
+            <BookOpen size={15} />
+            节点说明
+          </button>
+        </div>
+        <div className="inspector-content">
+          {active && spec ? (
+            <>
+              <div className="inspector-node">
+                <span
+                  className="family-tag"
+                  style={{
+                    color: familyColors[spec.family],
+                    background: familyColors[spec.family] + "15",
+                  }}
+                >
+                  {spec.family}
+                </span>
+                <div>
+                  <h3>{active.data.label}</h3>
+                  <small>
+                    {spec.english} / {active.id.split("_").pop()}
+                  </small>
+                </div>
+                <button
+                  className="icon-button"
+                  title="预览选中节点"
+                  onClick={() => setPreviewId(active.id)}
+                >
+                  <Expand size={15} />
+                </button>
+              </div>
+              {tab === "info" ? (
+                <div className="node-info">
+                  <p>{spec.description}</p>
+                  <h4>输入接口</h4>
+                  {spec.inputs.length ? (
+                    spec.inputs.map((p) => (
+                      <p key={p.id}>
+                        {p.label}{" "}
+                        <code>
+                          {p.kind} / {p.id}
+                        </code>
+                      </p>
+                    ))
+                  ) : (
+                    <p>这是源节点，不需要输入。</p>
+                  )}
+                  <h4>输出接口</h4>
+                  {spec.outputs.map((p) => (
+                    <p key={p.id}>
+                      {p.label} <code>{p.kind}</code>
+                    </p>
+                  ))}
+                  <p className="muted">
+                    双击节点可以单独预览。更改参数后无需重新运行视觉节点。
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="param-description">{spec.description}</p>
+                  <div className="param-section-label">
+                    基础参数
+                    <button
+                      className="reset-params"
+                      title="重置参数"
+                      onClick={() => {
+                        checkpoint();
+                        setProject((p) => ({
+                          ...p,
+                          nodes: p.nodes.map((n) =>
+                            n.id === active.id
+                              ? {
+                                  ...n,
+                                  data: {
+                                    ...n.data,
+                                    params: Object.fromEntries(
+                                      spec.params.map((x) => [
+                                        x.key,
+                                        x.default,
+                                      ]),
+                                    ),
+                                  },
+                                }
+                              : n,
+                          ),
+                        }));
+                      }}
+                    >
+                      <RotateCcw size={11} />
+                      重置
+                    </button>
+                  </div>
+                  {spec.params
+                    .filter(
+                      (p) => !["result_url", "result_text"].includes(p.key),
+                    )
+                    .map((p) => (
+                      <div className="param" key={active.id + p.key}>
+                        {p.type === "number" ? (
+                          <>
+                            <label htmlFor={"param-" + p.key}>
+                              {p.label}
+                              <input
+                                aria-label={p.label + "数值"}
+                                type="number"
+                                min={p.min}
+                                max={p.max}
+                                step={p.step || 0.01}
+                                value={Number(
+                                  active.data.params[p.key] ?? p.default,
+                                )}
+                                onFocus={checkpoint}
+                                onChange={(e) => {
+                                  if (e.target.value !== "")
+                                    updateParam(
+                                      p.key,
+                                      Math.min(
+                                        p.max ?? Infinity,
+                                        Math.max(
+                                          p.min ?? -Infinity,
+                                          Number(e.target.value),
+                                        ),
+                                      ),
+                                    );
+                                }}
+                              />
+                            </label>
+                            <input
+                              id={"param-" + p.key}
+                              className="slider"
+                              type="range"
+                              min={p.min}
+                              max={p.max}
+                              step={p.step || 0.01}
+                              value={Number(
+                                active.data.params[p.key] ?? p.default,
+                              )}
+                              onPointerDown={checkpoint}
+                              onChange={(e) =>
+                                updateParam(p.key, Number(e.target.value))
+                              }
+                            />
+                            <div className="range-labels">
+                              <span>{p.min}</span>
+                              <span>{p.max}</span>
+                            </div>
+                          </>
+                        ) : p.type === "color" ? (
+                          <label>
+                            {p.label}
+                            <div className="color-control">
+                              <input
+                                type="color"
+                                value={String(
+                                  active.data.params[p.key] ?? p.default,
+                                )}
+                                onFocus={checkpoint}
+                                onChange={(e) =>
+                                  updateParam(p.key, e.target.value)
+                                }
+                              />
+                              <span>
+                                {String(
+                                  active.data.params[p.key] ?? p.default,
+                                ).toUpperCase()}
+                              </span>
+                            </div>
+                          </label>
+                        ) : p.type === "boolean" ? (
+                          <label>
+                            {p.label}
+                            <input
+                              className="toggle"
+                              type="checkbox"
+                              checked={Boolean(
+                                active.data.params[p.key] ?? p.default,
+                              )}
+                              onChange={(e) =>
+                                updateParam(p.key, e.target.checked, true)
+                              }
+                            />
+                          </label>
+                        ) : p.type === "select" ? (
+                          <label className="stacked">
+                            {p.label}
+                            <select
+                              value={String(
+                                active.data.params[p.key] ?? p.default,
+                              )}
+                              onChange={(e) =>
+                                updateParam(p.key, e.target.value, true)
+                              }
+                            >
+                              {p.options?.map((v) => (
+                                <option key={v}>{v}</option>
+                              ))}
+                            </select>
+                          </label>
+                        ) : p.key === "provider_id" ? (
+                          <label className="stacked">
+                            AI 服务
+                            <select
+                              aria-label="节点 AI 服务"
+                              value={String(active.data.params[p.key] || "")}
+                              onChange={(e) =>
+                                updateParam(p.key, e.target.value, true)
+                              }
+                            >
+                              <option value="">选择已连接的服务</option>
+                              {providers
+                                .filter(
+                                  (v) =>
+                                    v.capability ===
+                                    active.type.replace("ai_", ""),
+                                )
+                                .map((v) => (
+                                  <option key={v.id} value={v.id}>
+                                    {v.name}
+                                  </option>
+                                ))}
+                            </select>
+                            <button
+                              className="text-button"
+                              onClick={() => setModal("settings")}
+                            >
+                              <Plus size={12} />
+                              添加 AI 服务
+                            </button>
+                          </label>
+                        ) : (
+                          <label className="stacked">
+                            {p.label}
+                            {[
+                              "prompt",
+                              "text",
+                              "text2",
+                              "arguments",
+                              "csv",
+                            ].includes(p.key) ||
+                            String(
+                              active.data.params[p.key] ?? p.default,
+                            ).includes("\n") ? (
+                              <textarea
+                                rows={3}
+                                aria-label={p.label}
+                                value={String(
+                                  active.data.params[p.key] ?? p.default,
+                                )}
+                                onFocus={checkpoint}
+                                onChange={(e) =>
+                                  updateParam(p.key, e.target.value)
+                                }
+                              />
+                            ) : (
+                              <input
+                                aria-label={p.label}
+                                value={String(
+                                  active.data.params[p.key] ?? p.default,
+                                )}
+                                onFocus={checkpoint}
+                                onChange={(e) =>
+                                  updateParam(p.key, e.target.value)
+                                }
+                              />
+                            )}
+                          </label>
+                        )}
+                      </div>
+                    ))}
+                  {spec.family === "AI" && (
+                    <>
+                      <button
+                        className="button primary full"
+                        disabled={!!busy}
+                        onClick={runNode}
+                      >
+                        {busy === active.id ? (
+                          <LoaderCircle className="spin" size={14} />
+                        ) : (
+                          <Play size={14} />
+                        )}
+                        运行{active.type === "mcp_tool" ? "工具" : "生成"}
+                        {active.type !== "mcp_tool" && (
+                          <small>按服务商计费</small>
+                        )}
+                      </button>
+                      {(active.data.params.result_url ||
+                        active.data.params.result_text) && (
+                        <div className="generation-result">
+                          <strong>运行结果</strong>
+                          {active.data.params.result_url && (
+                            <>
+                              <a
+                                href={String(active.data.params.result_url)}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                打开资源 ↗
+                              </a>
+                              {active.type === "ai_music" && (
+                                <button
+                                  className="button small"
+                                  onClick={() =>
+                                    engine.current
+                                      ?.playAudio(
+                                        String(active.data.params.result_url),
+                                      )
+                                      .then(() => {
+                                        setMic(true);
+                                        notify("生成音频正在播放");
+                                      })
+                                      .catch((e) => notify(friendly(e)))
+                                  }
+                                >
+                                  <Play size={12} />
+                                  播放并驱动画面
+                                </button>
+                              )}
+                            </>
+                          )}
+                          {active.data.params.result_text && (
+                            <pre>{String(active.data.params.result_text)}</pre>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {active.type === "audio" && active.data.params.url && (
+                    <button
+                      className="button full"
+                      onClick={() =>
+                        engine.current
+                          ?.playAudio(String(active.data.params.url))
+                          .then(() => {
+                            setMic(true);
+                            notify("音频开始播放");
+                          })
+                          .catch((e) => notify(friendly(e)))
+                      }
+                    >
+                      <Play size={14} />
+                      播放已导入音频
+                    </button>
+                  )}
+                  {active.type === "media" && (
+                    <button
+                      className="button full"
+                      onClick={() => fileInput.current?.click()}
+                    >
+                      <Upload size={14} />
+                      导入素材
+                    </button>
+                  )}
+                  {spec.params.length === 0 && (
+                    <div className="output-info">
+                      <Check size={20} />
+                      <strong>你的作品出口</strong>
+                      <p>
+                        连接一个画面节点到左侧输入。通过预览工具栏导出 PNG
+                        或录制视频。
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+              <div className="node-actions">
+                <button onClick={duplicate}>
+                  <Copy size={13} />
+                  复制节点
+                </button>
+                <button onClick={removeNode}>
+                  <Trash2 size={13} />
+                  删除
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="inspector-empty">
+              <MousePointer2 size={28} />
+              <h3>选中一个节点</h3>
+              <p>
+                点击工作区中的节点，
+                <br />
+                在这里探索它的参数。
+              </p>
+              <button
+                className="button small"
+                onClick={() => {
+                  setSelected(project.nodes[0]?.id || "");
+                  setSelectedIds(
+                    new Set(project.nodes[0] ? [project.nodes[0].id] : []),
+                  );
+                }}
+              >
+                选择第一个节点
+                <ArrowRight size={12} />
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+    ),
+    assistant: (
+      <section className="assistant-panel">
+        <div className="assistant-heading">
+          <div>
+            <Sparkles size={16} />
+            <strong>创作助手</strong>
+          </div>
+          <span className="assistant-mode">
+            {chatProvider ? "AI 已连接" : "本地指令"}
+          </span>
+        </div>
+        <div className="chat-messages">
+          {chats.length === 0 ? (
+            <div className="chat-welcome">
+              <div className="assistant-orb">
+                <Sparkles size={22} />
+              </div>
+              <h3>从一个想法开始。</h3>
+              <p>
+                用一句话添加节点、调整参数。
+                <br />
+                连接语言模型，探索更多可能。
+              </p>
+              <button
+                className="prompt-chip"
+                onClick={() => send("添加粒子节点")}
+              >
+                ✧ 添加一组流动粒子 <ArrowRight size={12} />
+              </button>
+              <button
+                className="prompt-chip"
+                onClick={() => send("速度调为 0.5")}
+              >
+                ↝ 把画面的速度调慢 <ArrowRight size={12} />
+              </button>
+            </div>
+          ) : (
+            chats.map((m, i) => (
+              <div key={i} className={"chat-message " + m.role}>
+                <span>
+                  {m.role === "assistant" ? <Sparkles size={13} /> : null}
+                </span>
+                <p>{m.text}</p>
+                {!!m.commands?.length && (
+                  <div className="command-preview">
+                    <details>
+                      <summary>{m.commands.length} 项修改</summary>
+                      <pre>{JSON.stringify(m.commands, null, 2)}</pre>
+                    </details>
+                    <button
+                      className="button primary small"
+                      disabled={m.applied}
+                      onClick={() => applyChat(i)}
+                    >
+                      {m.applied ? <Check size={12} /> : <Play size={12} />}{" "}
+                      {m.applied ? "已应用" : "应用修改"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+          {busy === "chat" && (
+            <div className="thinking">
+              <LoaderCircle size={13} className="spin" />
+              正在理解你的想法…
+            </div>
+          )}
+          <div ref={chatBottom} />
+        </div>
+        <div className="chat-compose">
+          <textarea
+            aria-label="对话指令"
+            placeholder="描述你想创作的画面…"
+            rows={2}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send();
+              }
+            }}
+          />
+          <div>
+            <select
+              aria-label="对话模型"
+              value={chatProvider}
+              onChange={(e) => setChatProvider(e.target.value)}
+            >
+              <option value="">⌘ 本地指令模式</option>
+              {providers
+                .filter((p) => p.capability === "text")
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+            </select>
+            <button
+              className="send-button"
+              disabled={!prompt.trim() || !!busy}
+              onClick={() => send()}
+              aria-label="发送对话"
+            >
+              <ArrowRight size={17} />
+            </button>
+          </div>
+        </div>
+        <div className="assistant-footnote">修改前可预览 · 支持撤销</div>
+      </section>
+    ),
+  };
   return (
     <EngineContext.Provider value={engine}>
       <div className="app-shell">
@@ -936,7 +2021,7 @@ function Studio() {
             <strong>
               TD<span>Open</span>
             </strong>
-            <span className="alpha">ALPHA 0.1</span>
+            <span className="alpha">ALPHA 0.2</span>
           </div>
           <span className="header-divider" />
           <div className="project-title">
@@ -979,7 +2064,7 @@ function Studio() {
             </button>
           </div>
         </header>
-        <div className="body-layout">
+        <div className="body-layout free-body">
           <nav className="rail" aria-label="主导航">
             <button
               className="rail-button active"
@@ -1023,908 +2108,19 @@ function Studio() {
             </button>
             <div className="avatar">YOU</div>
           </nav>
-          <aside className="library">
-            <div className="panel-heading">
-              <h2>节点资源</h2>
-              <span>{catalog.length}</span>
-            </div>
-            <div className="search-box">
-              <Search size={15} />
-              <input
-                id="node-search"
-                placeholder="搜索节点…"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  if (e.target.value) setCategory("全部");
-                }}
-              />
-              <kbd>Tab</kbd>
-            </div>
-            <div className="categories">
-              {["推荐", "图像", "信号", "3D", "AI", "全部"].map((c) => (
-                <button
-                  key={c}
-                  className={category === c ? "active" : ""}
-                  onClick={() => setCategory(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-            <div className="library-section-label">
-              {category === "推荐" ? "从这些节点开始" : category + "节点"}
-              <span>点击添加</span>
-            </div>
-            <div className="node-list">
-              {filtered.map((s) => {
-                const Icon = iconFor(s.type);
-                return (
-                  <button
-                    key={s.type}
-                    className="library-node"
-                    title={s.description}
-                    onClick={() => addNode(s.type)}
-                    draggable
-                    onDragStart={(e) =>
-                      e.dataTransfer.setData("application/td-node", s.type)
-                    }
-                  >
-                    <span
-                      className="library-icon"
-                      style={{
-                        color: familyColors[s.family],
-                        background: familyColors[s.family] + "14",
-                      }}
-                    >
-                      <Icon size={18} />
-                    </span>
-                    <span className="library-node-text">
-                      <strong>{s.label}</strong>
-                      <small>{s.english}</small>
-                    </span>
-                    <Plus size={14} className="add-icon" />
-                  </button>
-                );
-              })}
-              {filtered.length === 0 && (
-                <div className="empty-note">没有找到节点，试试英文名称。</div>
-              )}
-            </div>
-            <button
-              className="import-asset"
-              onClick={() => fileInput.current?.click()}
-            >
-              <Upload size={17} />
-              <span>
-                导入素材<small>图片、视频或音频</small>
-              </span>
-              <Plus size={14} />
-            </button>
-            <div className="library-tip">
-              <div>
-                <Zap size={14} />
-                小连接，大创意
-              </div>
-              <p>把一个节点的输出拖到另一个节点的输入，看看会发生什么。</p>
-              <button onClick={() => setModal("help")}>
-                认识节点与连线 <ArrowRight size={13} />
-              </button>
-            </div>
-            <div className="library-bottom">
-              <span className="dot" />
-              本地优先 · 开源创作
-            </div>
-          </aside>
-          <main className="workspace">
-            <div className="workspace-heading">
-              <div>
-                <span className="eyebrow">YOUR CREATIVE PLAYGROUND</span>
-                <h1>
-                  让想法，流动起来<span>✳</span>
-                </h1>
-              </div>
-              <button
-                className="button subtle small"
-                onClick={() => setModal("help")}
-              >
-                <BookOpen size={14} />
-                新手指南
-                <ArrowRight size={13} />
-              </button>
-            </div>
-            <section className="preview-panel" ref={previewWrap}>
-              <div className="preview-toolbar">
-                <div className="preview-title">
-                  <span className="live-dot" />
-                  实时预览
-                  <span className="mini-divider" />{" "}
-                  <span className="muted">
-                    {previewId
-                      ? project.nodes.find((n) => n.id === previewId)?.data
-                          .label || "选中节点"
-                      : "最终输出"}
-                  </span>
-                </div>
-                <div className="preview-actions">
-                  <span className="resolution">640 × 360</span>
-                  <button
-                    className={`icon-button ${mic ? "on" : ""}`}
-                    aria-label={mic ? "关闭音频" : "启用麦克风"}
-                    title={mic ? "关闭音频" : "启用麦克风"}
-                    onClick={async () => {
-                      if (mic) {
-                        engine.current?.stopAudio();
-                        setMic(false);
-                      } else
-                        try {
-                          await engine.current?.microphone();
-                          setMic(true);
-                          notify("麦克风已启用，可添加音频节点驱动画面");
-                        } catch (e) {
-                          notify("无法启用麦克风：" + friendly(e));
-                        }
-                    }}
-                  >
-                    <Mic size={15} />
-                  </button>
-                  <button
-                    className="icon-button"
-                    title="导出 PNG"
-                    onClick={screenshot}
-                  >
-                    <ArrowDownToLine size={15} />
-                  </button>
-                  <button
-                    className={`icon-button ${recording ? "recording" : ""}`}
-                    title={recording ? "停止录制" : "录制画面 WebM"}
-                    onClick={record}
-                  >
-                    <Film size={15} />
-                  </button>
-                  <button
-                    className="icon-button"
-                    title="全屏预览"
-                    onClick={() =>
-                      previewWrap.current
-                        ?.requestFullscreen()
-                        .catch((e) => notify(friendly(e)))
-                    }
-                  >
-                    <Maximize2 size={15} />
-                  </button>
-                </div>
-              </div>
-              <div className="preview-stage">
-                <canvas
-                  ref={preview}
-                  width={640}
-                  height={360}
-                  aria-label="节点实时渲染画面"
-                />
-                <div className="preview-badge">
-                  <span className="dot" />
-                  {playing ? "LIVE" : "PAUSED"}
-                  <span>/{previewId || "output"}</span>
-                </div>
-                {previewId && (
-                  <button
-                    className="back-output"
-                    onClick={() => setPreviewId("")}
-                  >
-                    返回最终输出 <ArrowRight size={13} />
-                  </button>
-                )}
-              </div>
-              <div className="transport">
-                <button
-                  className="play-button"
-                  onClick={() => setPlaying((p) => !p)}
-                  title={playing ? "暂停（空格）" : "播放（空格）"}
-                >
-                  {playing ? (
-                    <Pause size={15} fill="currentColor" />
-                  ) : (
-                    <Play size={15} fill="currentColor" />
-                  )}
-                </button>
-                <button
-                  className="icon-button"
-                  title="回到起点"
-                  onClick={() => {
-                    timeRef.current = 0;
-                    setTime(0);
-                    renderDirty.current = true;
-                  }}
-                >
-                  <RotateCcw size={14} />
-                </button>
-                <span className="timecode">{ptime}</span>
-                <div className="timeline-ruler">
-                  <div
-                    className="timeline-playhead"
-                    style={{ left: `${((time % 60) / 60) * 100}%` }}
-                  />
-                  {[0, 10, 20, 30, 40, 50, 60].map((n) => (
-                    <span key={n}>{String(n).padStart(2, "0")}</span>
-                  ))}
-                </div>
-                <span className="fps">
-                  <i /> {fps} FPS
-                </span>
-              </div>
-            </section>
-            {guide && (
-              <div className="guide-strip">
-                <span className="guide-number">01</span>
-                <p>
-                  <strong>试着改变一点点</strong>
-                  点击下方节点，拖动右侧参数，画面会立刻响应。
-                </p>
-                <button
-                  onClick={() => {
-                    setSelected(project.nodes[0]?.id || "");
-                    setGuide(false);
-                  }}
-                >
-                  试试看 <ArrowRight size={13} />
-                </button>
-                <button
-                  className="icon-button"
-                  onClick={() => setGuide(false)}
-                  aria-label="关闭提示"
-                >
-                  <X size={13} />
-                </button>
-              </div>
-            )}
-            <section className="graph-panel">
-              <div className="graph-toolbar">
-                <div className="graph-title">
-                  <Network size={15} />
-                  <strong>节点工作区</strong>
-                  <span className="graph-breadcrumb">
-                    project <ChevronRight size={12} /> main
-                  </span>
-                </div>
-                <div className="graph-actions">
-                  <button
-                    className="icon-button"
-                    disabled={!history.current.length}
-                    onClick={undo}
-                    title="撤销 Ctrl+Z"
-                  >
-                    <Undo2 size={15} />
-                  </button>
-                  <button
-                    className="icon-button"
-                    disabled={!future.current.length}
-                    onClick={redo}
-                    title="重做 Ctrl+Shift+Z"
-                  >
-                    <Redo2 size={15} />
-                  </button>
-                  <span className="mini-divider" />
-                  <button
-                    className="button small subtle"
-                    onClick={() => {
-                      checkpoint();
-                      setProject((p) => ({
-                        ...p,
-                        nodes: p.nodes.map((n, i) => ({
-                          ...n,
-                          position: {
-                            x: (i % 4) * 245,
-                            y: Math.floor(i / 4) * 215,
-                          },
-                        })),
-                      }));
-                      setTimeout(
-                        () => flow.fitView({ padding: 0.2, duration: 350 }),
-                        80,
-                      );
-                    }}
-                  >
-                    <Grid2X2 size={13} />
-                    整理
-                  </button>
-                  <button
-                    className="icon-button"
-                    title="适应全部节点"
-                    onClick={() =>
-                      flow.fitView({ padding: 0.2, duration: 400 })
-                    }
-                  >
-                    <Expand size={15} />
-                  </button>
-                </div>
-              </div>
-              <div
-                className="flow-container"
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = "copy";
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const type = e.dataTransfer.getData("application/td-node");
-                  if (!byType[type]) return;
-                  const n = makeNode(type);
-                  n.position = flow.screenToFlowPosition({
-                    x: e.clientX,
-                    y: e.clientY,
-                  });
-                  replace({
-                    ...projectRef.current,
-                    nodes: [...projectRef.current.nodes, n],
-                  });
-                  setSelected(n.id);
-                }}
-              >
-                <ReactFlow<FlowNode>
-                  nodes={nodes}
-                  edges={edges}
-                  nodeTypes={nodeTypes}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onConnect={onConnect}
-                  onNodeDragStart={checkpoint}
-                  onNodeClick={(_, n) => setSelected(n.id)}
-                  onNodeDoubleClick={(_, n) => setPreviewId(n.id)}
-                  onPaneClick={() => setSelected("")}
-                  fitView
-                  fitViewOptions={{ padding: 0.3 }}
-                  minZoom={0.25}
-                  maxZoom={1.75}
-                  deleteKeyCode={["Backspace", "Delete"]}
-                  colorMode="dark"
-                  defaultEdgeOptions={{ type: "default" }}
-                >
-                  <Background
-                    variant={BackgroundVariant.Dots}
-                    gap={18}
-                    size={1}
-                    color="#32343c"
-                  />
-                  <Controls showInteractive={false} />
-                  <MiniMap
-                    nodeColor={(n) =>
-                      familyColors[
-                        byType[(n.data as FlowNode["data"]).node.type]?.family
-                      ]
-                    }
-                    maskColor="#15161bbe"
-                    pannable
-                    zoomable
-                  />
-                </ReactFlow>
-                <div className="graph-hint">
-                  <MousePointer2 size={12} />
-                  拖动连接 · 滚轮缩放 · 双击预览
-                </div>
-              </div>
-            </section>
-          </main>
-          <aside className="inspector">
-            <div className="inspector-tabs">
-              <button
-                className={tab === "params" ? "active" : ""}
-                onClick={() => setTab("params")}
-              >
-                <SlidersHorizontal size={15} />
-                参数
-              </button>
-              <button
-                className={tab === "info" ? "active" : ""}
-                onClick={() => setTab("info")}
-              >
-                <BookOpen size={15} />
-                节点说明
-              </button>
-            </div>
-            <div className="inspector-content">
-              {active && spec ? (
-                <>
-                  <div className="inspector-node">
-                    <span
-                      className="family-tag"
-                      style={{
-                        color: familyColors[spec.family],
-                        background: familyColors[spec.family] + "15",
-                      }}
-                    >
-                      {spec.family}
-                    </span>
-                    <div>
-                      <h3>{active.data.label}</h3>
-                      <small>
-                        {spec.english} / {active.id.split("_").pop()}
-                      </small>
-                    </div>
-                    <button
-                      className="icon-button"
-                      title="预览选中节点"
-                      onClick={() => setPreviewId(active.id)}
-                    >
-                      <Expand size={15} />
-                    </button>
-                  </div>
-                  {tab === "info" ? (
-                    <div className="node-info">
-                      <p>{spec.description}</p>
-                      <h4>输入接口</h4>
-                      {spec.inputs.length ? (
-                        spec.inputs.map((p) => (
-                          <p key={p.id}>
-                            {p.label}{" "}
-                            <code>
-                              {p.kind} / {p.id}
-                            </code>
-                          </p>
-                        ))
-                      ) : (
-                        <p>这是源节点，不需要输入。</p>
-                      )}
-                      <h4>输出接口</h4>
-                      {spec.outputs.map((p) => (
-                        <p key={p.id}>
-                          {p.label} <code>{p.kind}</code>
-                        </p>
-                      ))}
-                      <p className="muted">
-                        双击节点可以单独预览。更改参数后无需重新运行视觉节点。
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="param-description">{spec.description}</p>
-                      <div className="param-section-label">
-                        基础参数
-                        <button
-                          className="reset-params"
-                          title="重置参数"
-                          onClick={() => {
-                            checkpoint();
-                            setProject((p) => ({
-                              ...p,
-                              nodes: p.nodes.map((n) =>
-                                n.id === active.id
-                                  ? {
-                                      ...n,
-                                      data: {
-                                        ...n.data,
-                                        params: Object.fromEntries(
-                                          spec.params.map((x) => [
-                                            x.key,
-                                            x.default,
-                                          ]),
-                                        ),
-                                      },
-                                    }
-                                  : n,
-                              ),
-                            }));
-                          }}
-                        >
-                          <RotateCcw size={11} />
-                          重置
-                        </button>
-                      </div>
-                      {spec.params
-                        .filter(
-                          (p) => !["result_url", "result_text"].includes(p.key),
-                        )
-                        .map((p) => (
-                          <div className="param" key={active.id + p.key}>
-                            {p.type === "number" ? (
-                              <>
-                                <label htmlFor={"param-" + p.key}>
-                                  {p.label}
-                                  <input
-                                    aria-label={p.label + "数值"}
-                                    type="number"
-                                    min={p.min}
-                                    max={p.max}
-                                    step={p.step || 0.01}
-                                    value={Number(
-                                      active.data.params[p.key] ?? p.default,
-                                    )}
-                                    onFocus={checkpoint}
-                                    onChange={(e) => {
-                                      if (e.target.value !== "")
-                                        updateParam(
-                                          p.key,
-                                          Math.min(
-                                            p.max ?? Infinity,
-                                            Math.max(
-                                              p.min ?? -Infinity,
-                                              Number(e.target.value),
-                                            ),
-                                          ),
-                                        );
-                                    }}
-                                  />
-                                </label>
-                                <input
-                                  id={"param-" + p.key}
-                                  className="slider"
-                                  type="range"
-                                  min={p.min}
-                                  max={p.max}
-                                  step={p.step || 0.01}
-                                  value={Number(
-                                    active.data.params[p.key] ?? p.default,
-                                  )}
-                                  onPointerDown={checkpoint}
-                                  onChange={(e) =>
-                                    updateParam(p.key, Number(e.target.value))
-                                  }
-                                />
-                                <div className="range-labels">
-                                  <span>{p.min}</span>
-                                  <span>{p.max}</span>
-                                </div>
-                              </>
-                            ) : p.type === "color" ? (
-                              <label>
-                                {p.label}
-                                <div className="color-control">
-                                  <input
-                                    type="color"
-                                    value={String(
-                                      active.data.params[p.key] ?? p.default,
-                                    )}
-                                    onFocus={checkpoint}
-                                    onChange={(e) =>
-                                      updateParam(p.key, e.target.value)
-                                    }
-                                  />
-                                  <span>
-                                    {String(
-                                      active.data.params[p.key] ?? p.default,
-                                    ).toUpperCase()}
-                                  </span>
-                                </div>
-                              </label>
-                            ) : p.type === "boolean" ? (
-                              <label>
-                                {p.label}
-                                <input
-                                  className="toggle"
-                                  type="checkbox"
-                                  checked={Boolean(
-                                    active.data.params[p.key] ?? p.default,
-                                  )}
-                                  onChange={(e) =>
-                                    updateParam(p.key, e.target.checked, true)
-                                  }
-                                />
-                              </label>
-                            ) : p.type === "select" ? (
-                              <label className="stacked">
-                                {p.label}
-                                <select
-                                  value={String(
-                                    active.data.params[p.key] ?? p.default,
-                                  )}
-                                  onChange={(e) =>
-                                    updateParam(p.key, e.target.value, true)
-                                  }
-                                >
-                                  {p.options?.map((v) => (
-                                    <option key={v}>{v}</option>
-                                  ))}
-                                </select>
-                              </label>
-                            ) : p.key === "provider_id" ? (
-                              <label className="stacked">
-                                AI 服务
-                                <select
-                                  aria-label="节点 AI 服务"
-                                  value={String(
-                                    active.data.params[p.key] || "",
-                                  )}
-                                  onChange={(e) =>
-                                    updateParam(p.key, e.target.value, true)
-                                  }
-                                >
-                                  <option value="">选择已连接的服务</option>
-                                  {providers
-                                    .filter(
-                                      (v) =>
-                                        v.capability ===
-                                        active.type.replace("ai_", ""),
-                                    )
-                                    .map((v) => (
-                                      <option key={v.id} value={v.id}>
-                                        {v.name}
-                                      </option>
-                                    ))}
-                                </select>
-                                <button
-                                  className="text-button"
-                                  onClick={() => setModal("settings")}
-                                >
-                                  <Plus size={12} />
-                                  添加 AI 服务
-                                </button>
-                              </label>
-                            ) : (
-                              <label className="stacked">
-                                {p.label}
-                                {["prompt", "text", "arguments"].includes(
-                                  p.key,
-                                ) ? (
-                                  <textarea
-                                    rows={3}
-                                    value={String(
-                                      active.data.params[p.key] ?? p.default,
-                                    )}
-                                    onFocus={checkpoint}
-                                    onChange={(e) =>
-                                      updateParam(p.key, e.target.value)
-                                    }
-                                  />
-                                ) : (
-                                  <input
-                                    value={String(
-                                      active.data.params[p.key] ?? p.default,
-                                    )}
-                                    onFocus={checkpoint}
-                                    onChange={(e) =>
-                                      updateParam(p.key, e.target.value)
-                                    }
-                                  />
-                                )}
-                              </label>
-                            )}
-                          </div>
-                        ))}
-                      {spec.family === "AI" && (
-                        <>
-                          <button
-                            className="button primary full"
-                            disabled={!!busy}
-                            onClick={runNode}
-                          >
-                            {busy === active.id ? (
-                              <LoaderCircle className="spin" size={14} />
-                            ) : (
-                              <Play size={14} />
-                            )}
-                            运行{active.type === "mcp_tool" ? "工具" : "生成"}
-                            {active.type !== "mcp_tool" && (
-                              <small>按服务商计费</small>
-                            )}
-                          </button>
-                          {(active.data.params.result_url ||
-                            active.data.params.result_text) && (
-                            <div className="generation-result">
-                              <strong>运行结果</strong>
-                              {active.data.params.result_url && (
-                                <>
-                                  <a
-                                    href={String(active.data.params.result_url)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    打开资源 ↗
-                                  </a>
-                                  {active.type === "ai_music" && (
-                                    <button
-                                      className="button small"
-                                      onClick={() =>
-                                        engine.current
-                                          ?.playAudio(
-                                            String(
-                                              active.data.params.result_url,
-                                            ),
-                                          )
-                                          .then(() => {
-                                            setMic(true);
-                                            notify("生成音频正在播放");
-                                          })
-                                          .catch((e) => notify(friendly(e)))
-                                      }
-                                    >
-                                      <Play size={12} />
-                                      播放并驱动画面
-                                    </button>
-                                  )}
-                                </>
-                              )}
-                              {active.data.params.result_text && (
-                                <pre>
-                                  {String(active.data.params.result_text)}
-                                </pre>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
-                      {active.type === "audio" && active.data.params.url && (
-                        <button
-                          className="button full"
-                          onClick={() =>
-                            engine.current
-                              ?.playAudio(String(active.data.params.url))
-                              .then(() => {
-                                setMic(true);
-                                notify("音频开始播放");
-                              })
-                              .catch((e) => notify(friendly(e)))
-                          }
-                        >
-                          <Play size={14} />
-                          播放已导入音频
-                        </button>
-                      )}
-                      {active.type === "media" && (
-                        <button
-                          className="button full"
-                          onClick={() => fileInput.current?.click()}
-                        >
-                          <Upload size={14} />
-                          导入素材
-                        </button>
-                      )}
-                      {spec.params.length === 0 && (
-                        <div className="output-info">
-                          <Check size={20} />
-                          <strong>你的作品出口</strong>
-                          <p>
-                            连接一个画面节点到左侧输入。通过预览工具栏导出 PNG
-                            或录制视频。
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  <div className="node-actions">
-                    <button onClick={duplicate}>
-                      <Copy size={13} />
-                      复制节点
-                    </button>
-                    <button onClick={removeNode}>
-                      <Trash2 size={13} />
-                      删除
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="inspector-empty">
-                  <MousePointer2 size={28} />
-                  <h3>选中一个节点</h3>
-                  <p>
-                    点击工作区中的节点，
-                    <br />
-                    在这里探索它的参数。
-                  </p>
-                  <button
-                    className="button small"
-                    onClick={() => setSelected(project.nodes[0]?.id || "")}
-                  >
-                    选择第一个节点
-                    <ArrowRight size={12} />
-                  </button>
-                </div>
-              )}
-            </div>
-            <section className="assistant-panel">
-              <div className="assistant-heading">
-                <div>
-                  <Sparkles size={16} />
-                  <strong>创作助手</strong>
-                </div>
-                <span className="assistant-mode">
-                  {chatProvider ? "AI 已连接" : "本地指令"}
-                </span>
-              </div>
-              <div className="chat-messages">
-                {chats.length === 0 ? (
-                  <div className="chat-welcome">
-                    <div className="assistant-orb">
-                      <Sparkles size={22} />
-                    </div>
-                    <h3>从一个想法开始。</h3>
-                    <p>
-                      用一句话添加节点、调整参数。
-                      <br />
-                      连接语言模型，探索更多可能。
-                    </p>
-                    <button
-                      className="prompt-chip"
-                      onClick={() => send("添加粒子节点")}
-                    >
-                      ✧ 添加一组流动粒子 <ArrowRight size={12} />
-                    </button>
-                    <button
-                      className="prompt-chip"
-                      onClick={() => send("速度调为 0.5")}
-                    >
-                      ↝ 把画面的速度调慢 <ArrowRight size={12} />
-                    </button>
-                  </div>
-                ) : (
-                  chats.map((m, i) => (
-                    <div key={i} className={"chat-message " + m.role}>
-                      <span>
-                        {m.role === "assistant" ? <Sparkles size={13} /> : null}
-                      </span>
-                      <p>{m.text}</p>
-                      {!!m.commands?.length && (
-                        <div className="command-preview">
-                          <details>
-                            <summary>{m.commands.length} 项修改</summary>
-                            <pre>{JSON.stringify(m.commands, null, 2)}</pre>
-                          </details>
-                          <button
-                            className="button primary small"
-                            disabled={m.applied}
-                            onClick={() => applyChat(i)}
-                          >
-                            {m.applied ? (
-                              <Check size={12} />
-                            ) : (
-                              <Play size={12} />
-                            )}{" "}
-                            {m.applied ? "已应用" : "应用修改"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-                {busy === "chat" && (
-                  <div className="thinking">
-                    <LoaderCircle size={13} className="spin" />
-                    正在理解你的想法…
-                  </div>
-                )}
-                <div ref={chatBottom} />
-              </div>
-              <div className="chat-compose">
-                <textarea
-                  aria-label="对话指令"
-                  placeholder="描述你想创作的画面…"
-                  rows={2}
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      void send();
-                    }
-                  }}
-                />
-                <div>
-                  <select
-                    aria-label="对话模型"
-                    value={chatProvider}
-                    onChange={(e) => setChatProvider(e.target.value)}
-                  >
-                    <option value="">⌘ 本地指令模式</option>
-                    {providers
-                      .filter((p) => p.capability === "text")
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                  </select>
-                  <button
-                    className="send-button"
-                    disabled={!prompt.trim() || !!busy}
-                    onClick={() => send()}
-                    aria-label="发送对话"
-                  >
-                    <ArrowRight size={17} />
-                  </button>
-                </div>
-              </div>
-              <div className="assistant-footnote">修改前可预览 · 支持撤销</div>
-            </section>
-          </aside>
+          <Workbench
+            key={project.id}
+            saved={project.settings?.workspace}
+            nodeCount={catalog.length}
+            onAdd={() => setQuickAdd({})}
+            onChange={(layout: WorkspaceLayout) =>
+              setProject((p) => ({
+                ...p,
+                settings: { ...p.settings, workspace: layout },
+              }))
+            }
+            panels={workbenchPanels}
+          />
         </div>
         <footer className="statusbar">
           <div>
@@ -1982,6 +2178,15 @@ function Studio() {
               <X size={14} />
             </button>
           </div>
+        )}
+        {quickAdd && (
+          <NodeSearch
+            close={() => setQuickAdd(null)}
+            add={addNode}
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+            canConnect={Boolean(active && byType[active.type]?.outputs.length)}
+          />
         )}
         {modal === "settings" && (
           <Settings
@@ -2062,6 +2267,24 @@ function Studio() {
                         name: "空间练习",
                         sub: "三维几何 · 线框 · 渲染",
                         tag: "真正的 WebGL 3D",
+                      },
+                      {
+                        id: "kaleidoscope",
+                        name: "万花筒与反馈",
+                        sub: "图案 · 镜像 · 反馈拖影",
+                        tag: "探索新增图像节点",
+                      },
+                      {
+                        id: "geometry-lab",
+                        name: "双物体空间",
+                        sub: "几何 · 变换 · 组合",
+                        tag: "搭建多个三维物体",
+                      },
+                      {
+                        id: "data-driven",
+                        name: "数据变成画面",
+                        sub: "CSV · 数值转换 · 视觉调制",
+                        tag: "让数据参与创作",
                       },
                       {
                         id: "ai",
@@ -2155,6 +2378,7 @@ function Studio() {
                             replace(result);
                             setModal("");
                             setSelected("");
+                            setSelectedIds(new Set());
                             setPreviewId("");
                             setTimeout(
                               () => flow.fitView({ padding: 0.2 }),

@@ -1,0 +1,120 @@
+{
+  "id": "example_kaleidoscope",
+  "name": "万花筒与反馈 · Kaleidoscope trails",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "checkerboard_1",
+      "type": "checkerboard",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "棋盘格",
+        "params": {
+          "columns": 12,
+          "rows": 7,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "rotate_2",
+      "type": "rotate",
+      "position": {
+        "x": 240,
+        "y": 0
+      },
+      "data": {
+        "label": "连续旋转",
+        "params": {
+          "angle": 0,
+          "speed": 0.03,
+          "scale": 1,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "kaleidoscope_3",
+      "type": "kaleidoscope",
+      "position": {
+        "x": 480,
+        "y": 0
+      },
+      "data": {
+        "label": "万花筒",
+        "params": {
+          "segments": 8,
+          "angle": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "id": "feedback_4",
+      "type": "feedback",
+      "position": {
+        "x": 720,
+        "y": 0
+      },
+      "data": {
+        "label": "反馈拖影",
+        "params": {
+          "decay": 0.92,
+          "zoom": 1.005,
+          "angle": 0.25,
+          "input_gain": 0.3
+        }
+      }
+    },
+    {
+      "id": "output_5",
+      "type": "output",
+      "position": {
+        "x": 960,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "checkerboard_1",
+      "target": "rotate_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "rotate_2",
+      "target": "kaleidoscope_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "kaleidoscope_3",
+      "target": "feedback_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "feedback_4",
+      "target": "output_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "kaleidoscope"
+  }
+}

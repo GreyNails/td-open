@@ -4,7 +4,7 @@
   "version": 1,
   "nodes": [
     {
-      "id": "ai_image_e7b0d030",
+      "id": "ai_image_1",
       "type": "ai_image",
       "position": {
         "x": 0,
@@ -21,7 +21,7 @@
       }
     },
     {
-      "id": "color_7e571678",
+      "id": "color_2",
       "type": "color",
       "position": {
         "x": 245,
@@ -37,7 +37,7 @@
       }
     },
     {
-      "id": "output_c8c8d8e6",
+      "id": "output_3",
       "type": "output",
       "position": {
         "x": 490,
@@ -51,16 +51,16 @@
   ],
   "edges": [
     {
-      "id": "edge_9460ab2e",
-      "source": "ai_image_e7b0d030",
-      "target": "color_7e571678",
+      "id": "edge_1",
+      "source": "ai_image_1",
+      "target": "color_2",
       "sourceHandle": "out",
       "targetHandle": "in"
     },
     {
-      "id": "edge_d3bdd9ef",
-      "source": "color_7e571678",
-      "target": "output_c8c8d8e6",
+      "id": "edge_2",
+      "source": "color_2",
+      "target": "output_3",
       "sourceHandle": "out",
       "targetHandle": "in"
     }

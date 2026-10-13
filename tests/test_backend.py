@@ -235,18 +235,9 @@ def test_frontend_and_backend_operator_contracts_match():
     node_command = str(bundled_node) if bundled_node.is_file() else shutil.which("node")
     if not node_command or not (ROOT / "frontend/node_modules/typescript/lib/typescript.js").is_file():
         pytest.skip("Install frontend dependencies to verify the shared operator contract")
-    script = """
-import fs from 'node:fs';
-import vm from 'node:vm';
-import ts from './frontend/node_modules/typescript/lib/typescript.js';
-const compiled = ts.transpileModule(fs.readFileSync('frontend/src/catalog.ts', 'utf8'),
-  {compilerOptions: {module: ts.ModuleKind.CommonJS}}).outputText;
-const sandbox = {exports: {}, require: () => ({uid: () => ''})};
-vm.runInNewContext(compiled, sandbox);
-console.log(JSON.stringify(sandbox.exports.catalog));
-"""
-    output = subprocess.run([node_command, "--input-type=module", "-e", script], cwd=ROOT,
-                            capture_output=True, text=True, check=True, timeout=10)
+    output = subprocess.run([node_command, "scripts/sync-catalog.mjs", "--stdout"], cwd=ROOT,
+                            capture_output=True, text=True, check=True, timeout=20)
+    assert (ROOT / "backend/operator_catalog.json").read_text() == output.stdout
     frontend = json.loads(output.stdout)
     parameter_fields = ("key", "type", "default", "min", "max", "step", "options")
     for spec in frontend:

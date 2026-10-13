@@ -28,11 +28,16 @@ flowchart LR
 | 路径 | 职责 |
 | --- | --- |
 | `frontend/src/types.ts` | TypeScript 项目、节点、端口和 API 类型 |
+| `frontend/src/Workbench.tsx`、`workspaceLayout.ts` | 自由工作区、面板缩放/移动/布局归一化；保存在项目 `settings.workspace` |
+| `frontend/src/NodeSearch.tsx` | 快捷节点搜索、分类和收藏；收藏保存在 `settings.favoriteNodes` |
 | `frontend/src/catalog.ts` | 前端节点目录、默认参数、示例图和连接规则 |
+| `frontend/src/nodes/` | 按图像、信号、数据与几何拆分的节点目录和执行模块 |
 | `frontend/src/engine.ts` | Canvas/WebGL/Three.js 渲染、音频分析、素材加载与资源释放 |
 | `backend/main.py` | FastAPI 入口、项目/资源接口、前端静态文件 |
 | `backend/models.py` | Pydantic 项目模型和输入限制 |
 | `backend/catalog.py` | 服务端算子注册与本地 Python 插件扫描 |
+| `backend/operator_catalog.json` | 从前端目录生成并随源码提交的内置节点合同 |
+| `scripts/sync-catalog.mjs` | 生成或检查共享目录，避免前后端重复维护参数定义 |
 | `backend/graph.py` | 端口校验、拓扑检查、图命令事务 |
 | `backend/runtime.py` | 确定性的标量/文本服务端求值；不渲染像素或 3D |
 | `backend/storage.py` | 项目目录边界与原子 JSON 写入 |
@@ -108,7 +113,13 @@ flowchart LR
 
 PNG 和 WebM 从预览画布导出，经 API 保存到项目的 `data/exports/`。WebM 是浏览器实时录制，不含音轨，也不保证实际达到请求的帧率；它不等同于离线逐帧渲染。长期运行的资源预算、逐节点 profiler 和跨帧脏标记缓存仍在路线图中。
 
-Python 的 `POST /api/evaluate` 用于标量、文本与 Python evaluator，不用于代替浏览器渲染。返回 `values`、`errors`、`skipped` 和 `time`；`skipped` 表示该类型未在 Python 运行时求值，不是远程渲染失败。新 Python 节点不会因此自动进入浏览器每帧循环。
+Python 的 `POST /api/evaluate` 用于无状态标量、文本与 Python evaluator，不用于代替浏览器渲染。返回 `values`、`errors`、`skipped`、`skip_reasons` 和 `time`。滞后、积分、计数器、触发包络、微分和采样保持依赖连续帧历史，只在浏览器运行；服务端明确跳过并说明原因，不用单帧假值冒充状态计算。上游跳过会传播到下游；独立分支仍然计算。新 Python 节点不会因此自动进入浏览器每帧循环。
+
+## 共享节点目录
+
+内置节点定义只在 `frontend/src/catalog.ts` 与其导入的 `frontend/src/nodes/*Catalog.ts` 中维护。`node scripts/sync-catalog.mjs` 将目录写入 `backend/operator_catalog.json`，Python 启动时直接读取这个文件，无需安装 Node。前端构建会同步清单；`node scripts/sync-catalog.mjs --check` 只检查清单是否过期，`--stdout` 供跨语言合同测试读取。新增节点时实现浏览器运行分支和必要的服务端无状态分支，再重新生成清单。所有新目录模块均使用相对 TypeScript 导入。
+
+生成清单随源代码一起提交。不要手工修改 JSON 中的端口或参数：下次构建会按前端定义覆盖。`backend/plugins/` 仍允许注册额外的 Python 节点，不会被清单生成器覆盖。完整内置列表与使用示例见 [节点手册](NODES.md)。
 
 ## Python 扩展示例
 

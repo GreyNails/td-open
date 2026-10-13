@@ -1,0 +1,170 @@
+{
+  "id": "example_geometry-lab",
+  "name": "双物体空间 · Geometry lab",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "box_1",
+      "type": "box",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "立方体",
+        "params": {
+          "width": 1.6,
+          "height": 1.6,
+          "depth": 1.6,
+          "detail": 1
+        }
+      }
+    },
+    {
+      "id": "transform_sop_2",
+      "type": "transform_sop",
+      "position": {
+        "x": 240,
+        "y": 0
+      },
+      "data": {
+        "label": "几何变换",
+        "params": {
+          "x": -1,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 20,
+          "sx": 0.65,
+          "sy": 0.65,
+          "sz": 0.65
+        }
+      }
+    },
+    {
+      "id": "sphere_3",
+      "type": "sphere",
+      "position": {
+        "x": 0,
+        "y": 240
+      },
+      "data": {
+        "label": "球体",
+        "params": {
+          "radius": 1.2,
+          "detail": 32
+        }
+      }
+    },
+    {
+      "id": "transform_sop_4",
+      "type": "transform_sop",
+      "position": {
+        "x": 240,
+        "y": 240
+      },
+      "data": {
+        "label": "几何变换",
+        "params": {
+          "x": 1,
+          "y": 0,
+          "z": 0,
+          "rx": 0,
+          "ry": 0,
+          "rz": 0,
+          "sx": 0.7,
+          "sy": 0.7,
+          "sz": 0.7
+        }
+      }
+    },
+    {
+      "id": "merge_sop_5",
+      "type": "merge_sop",
+      "position": {
+        "x": 480,
+        "y": 120
+      },
+      "data": {
+        "label": "合并几何体",
+        "params": {}
+      }
+    },
+    {
+      "id": "render_6",
+      "type": "render",
+      "position": {
+        "x": 720,
+        "y": 120
+      },
+      "data": {
+        "label": "3D 渲染",
+        "params": {
+          "color": "#a888ff",
+          "wireframe": true,
+          "speed": 0.15
+        }
+      }
+    },
+    {
+      "id": "output_7",
+      "type": "output",
+      "position": {
+        "x": 960,
+        "y": 120
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "box_1",
+      "target": "transform_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "sphere_3",
+      "target": "transform_sop_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "transform_sop_2",
+      "target": "merge_sop_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "transform_sop_4",
+      "target": "merge_sop_5",
+      "sourceHandle": "out",
+      "targetHandle": "in2"
+    },
+    {
+      "id": "edge_5",
+      "source": "merge_sop_5",
+      "target": "render_6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_6",
+      "source": "render_6",
+      "target": "output_7",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "geometry-lab"
+  }
+}

@@ -3,7 +3,10 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { GraphNode, Project } from "./types";
 import { byType } from "./catalog";
 
-type Geo = { shape: string; detail: number; url?: string };
+import { cookVisualNode } from "./nodes/visual";
+import { cookDataNode } from "./nodes/dataRuntime";
+import { buildGeometryObject, type GeometrySpec } from "./nodes/geometry";
+type Geo = GeometrySpec;
 type Value = HTMLCanvasElement | number | string | Geo;
 const W = 640,
   H = 360,
@@ -38,6 +41,16 @@ export class StudioEngine {
   gpu = "Canvas 2D";
   audioLevel = 0;
   frequencies = new Uint8Array(128);
+  private operatorStates = new Map<string, Map<string, unknown>>();
+  private lastTime = 0;
+  private state(id: string) {
+    let state = this.operatorStates.get(id);
+    if (!state) {
+      state = new Map();
+      this.operatorStates.set(id, state);
+    }
+    return state;
+  }
   private renderer?: THREE.WebGLRenderer;
   private noiseScene?: THREE.Scene;
   private noiseMaterial?: THREE.ShaderMaterial;
@@ -111,6 +124,20 @@ export class StudioEngine {
     const switched = previous.id !== project.id;
     this.project = project;
     const ids = new Set(project.nodes.map((n) => n.id));
+    for (const id of this.operatorStates.keys()) {
+      const current = project.nodes.find((n) => n.id === id),
+        old = previous.nodes.find((n) => n.id === id);
+      if (
+        switched ||
+        !current ||
+        current.type !== old?.type ||
+        JSON.stringify(current.data.params) !==
+          JSON.stringify(old?.data.params) ||
+        JSON.stringify(project.edges.filter((e) => e.target === id)) !==
+          JSON.stringify(previous.edges.filter((e) => e.target === id))
+      )
+        this.operatorStates.delete(id);
+    }
     const imageUrls = new Set(
       project.nodes
         .filter((n) => n.type === "media" || n.type === "ai_image")
@@ -345,6 +372,8 @@ export class StudioEngine {
         });
   }
   render(time: number, previewId?: string): HTMLCanvasElement {
+    if (time < this.lastTime) this.operatorStates.clear();
+    this.lastTime = time;
     this.values.clear();
     if (this.playing && this.analyser) {
       this.analyser.getByteFrequencyData(
@@ -426,6 +455,8 @@ export class StudioEngine {
     const v = (key: string, def = 0) => Number(p[key] ?? def);
     const s = (key: string, def = "") => String(p[key] ?? def);
     const type = n.type;
+    const dataResult = cookDataNode(n, time, inp, this.state(n.id));
+    if (dataResult.handled) return dataResult.value;
     if (type === "lfo")
       return (
         Math.sin(time * v("frequency", 0.3) * Math.PI * 2) * v("amplitude", 1) +
@@ -459,6 +490,22 @@ export class StudioEngine {
       const src = inp();
       const source = isCanvas(src) ? src : undefined;
       const mod = Number(inp("mod") ?? 0);
+      const second = inp("in2");
+      if (
+        cookVisualNode({
+          node: n,
+          ctx,
+          canvas: c,
+          input: source,
+          input2: isCanvas(second) ? second : undefined,
+          time,
+          mod,
+          width: W,
+          height: H,
+          state: this.state(n.id),
+        })
+      )
+        return c;
       if (type === "noise") {
         if (this.renderer && this.noiseMaterial && this.noiseScene) {
           this.setGPUSize(NOISE_W, NOISE_H);
@@ -709,41 +756,30 @@ export class StudioEngine {
     );
   }
   private geometryScene(id: string, g: Geo, color: string, wireframe: boolean) {
-    if (g.shape === "model" && g.url) this.loadModel(g.url);
-    const loaded = Boolean(g.url && this.modelLoads.has(g.url));
-    const key = JSON.stringify([g, color, wireframe, loaded]);
+    const urls: string[] = [];
+    const collect = (spec: Geo) => {
+      if (spec.url) {
+        urls.push(spec.url);
+        this.loadModel(spec.url);
+      }
+      for (const child of spec.children ?? []) collect(child);
+    };
+    collect(g);
+    const key = JSON.stringify([
+      g,
+      color,
+      wireframe,
+      urls.map((url) => this.modelLoads.has(url)),
+    ]);
     const existing = this.scenes.get(id);
     if (existing?.key === key) return existing;
     if (existing?.ownsResources) this.releaseObject(existing.object);
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#0c0c14");
-    let object: THREE.Object3D;
-    let ownsResources = true;
-    // Cached glTF assets own their GPU resources; instances share them but own transforms.
-    if (g.url && loaded) {
-      object = this.modelLoads.get(g.url)!.clone(true);
-      ownsResources = false;
-    } else if (g.shape === "model") object = new THREE.Group();
-    else {
-      const detail = clamp(g.detail, 8, 80);
-      const geo =
-        g.shape === "sphere"
-          ? new THREE.SphereGeometry(1.25, detail, detail)
-          : g.shape === "box"
-            ? new THREE.BoxGeometry(1.6, 1.6, 1.6, 6, 6, 6)
-            : g.shape === "knot"
-              ? new THREE.TorusKnotGeometry(0.85, 0.26, detail * 4, 16)
-              : new THREE.TorusGeometry(1, 0.36, 24, detail * 3);
-      object = new THREE.Mesh(
-        geo,
-        new THREE.MeshStandardMaterial({
-          color,
-          wireframe,
-          metalness: 0.3,
-          roughness: 0.3,
-        }),
-      );
-    }
+    const object = buildGeometryObject(g, color, wireframe, (url) =>
+      this.modelLoads.get(url),
+    );
+    const ownsResources = true;
     scene.add(object);
     scene.add(new THREE.AmbientLight("#d7baff", 2));
     const light = new THREE.DirectionalLight("#c5b4ff", 4);
@@ -772,7 +808,8 @@ export class StudioEngine {
     const geometries = new Set<THREE.BufferGeometry>(),
       materials = new Set<THREE.Material>(),
       textures = new Set<THREE.Texture>();
-    object.traverse((o) => {
+    const visit = (o: THREE.Object3D) => {
+      if (o.userData.tdBorrowedResources) return;
       if (o instanceof THREE.Mesh) {
         geometries.add(o.geometry);
         const mats = Array.isArray(o.material) ? o.material : [o.material];
@@ -782,7 +819,9 @@ export class StudioEngine {
             if (value instanceof THREE.Texture) textures.add(value);
         }
       }
-    });
+      o.children.forEach(visit);
+    };
+    visit(object);
     textures.forEach((texture) => texture.dispose());
     materials.forEach((material) => material.dispose());
     geometries.forEach((geometry) => geometry.dispose());
@@ -808,6 +847,7 @@ export class StudioEngine {
     this.renderer?.forceContextLoss();
     this.frames.clear();
     this.values.clear();
+    this.operatorStates.clear();
     this.errors.clear();
   }
 }

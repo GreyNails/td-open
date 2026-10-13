@@ -4,7 +4,7 @@
   "version": 1,
   "nodes": [
     {
-      "id": "particles_5e53e99b",
+      "id": "particles_1",
       "type": "particles",
       "position": {
         "x": 245,
@@ -22,7 +22,7 @@
       }
     },
     {
-      "id": "audio_bfadd50d",
+      "id": "audio_2",
       "type": "audio",
       "position": {
         "x": 0,
@@ -37,7 +37,7 @@
       }
     },
     {
-      "id": "blur_b718a740",
+      "id": "blur_3",
       "type": "blur",
       "position": {
         "x": 490,
@@ -52,7 +52,7 @@
       }
     },
     {
-      "id": "output_6d831c71",
+      "id": "output_4",
       "type": "output",
       "position": {
         "x": 735,
@@ -66,23 +66,23 @@
   ],
   "edges": [
     {
-      "id": "edge_37912267",
-      "source": "audio_bfadd50d",
-      "target": "particles_5e53e99b",
+      "id": "edge_1",
+      "source": "audio_2",
+      "target": "particles_1",
       "sourceHandle": "out",
       "targetHandle": "mod"
     },
     {
-      "id": "edge_bde27d52",
-      "source": "particles_5e53e99b",
-      "target": "blur_b718a740",
+      "id": "edge_2",
+      "source": "particles_1",
+      "target": "blur_3",
       "sourceHandle": "out",
       "targetHandle": "in"
     },
     {
-      "id": "edge_e79c3310",
-      "source": "blur_b718a740",
-      "target": "output_6d831c71",
+      "id": "edge_3",
+      "source": "blur_3",
+      "target": "output_4",
       "sourceHandle": "out",
       "targetHandle": "in"
     }

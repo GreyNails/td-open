@@ -1,9 +1,33 @@
 import { describe, it, expect } from "vitest";
 import { catalog, byType, preset, makeNode, connectionError } from "./catalog";
+import { cookDataNode } from "./nodes/dataRuntime";
 describe("typed graph contracts", () => {
-  it("all templates have existing, compatible acyclic edges", () => {
-    for (const name of ["flow", "particles", "3d", "ai", "empty"]) {
+  it("all eight templates connect every node to a single output with compatible acyclic edges", () => {
+    for (const name of [
+      "flow",
+      "particles",
+      "3d",
+      "ai",
+      "empty",
+      "kaleidoscope",
+      "geometry-lab",
+      "data-driven",
+    ]) {
       const p = preset(name);
+      expect(p.settings?.preset).toBe(name);
+      const outputs = p.nodes.filter((node) => node.type === "output");
+      expect(outputs).toHaveLength(1);
+      const contributing = new Set([outputs[0].id]);
+      for (let pass = 0; pass < p.nodes.length; pass++) {
+        for (const edge of p.edges) {
+          if (contributing.has(edge.target)) contributing.add(edge.source);
+        }
+      }
+      expect(contributing.size).toBe(p.nodes.length);
+      expect(
+        new Set(p.edges.map((edge) => `${edge.target}:${edge.targetHandle}`))
+          .size,
+      ).toBe(p.edges.length);
       for (const edge of p.edges) {
         const rest = { ...p, edges: p.edges.filter((e) => e.id !== edge.id) };
         expect(
@@ -17,6 +41,34 @@ describe("typed graph contracts", () => {
         ).toBeNull();
       }
     }
+  });
+  it("CSV edits in the data-driven template change its connected visual modulation", () => {
+    const p = preset("data-driven");
+    const table = p.nodes.find((node) => node.type === "table_dat")!;
+    const rotation = p.nodes.find((node) => node.type === "rotate")!;
+    const modulation = p.edges.find(
+      (edge) => edge.target === rotation.id && edge.targetHandle === "mod",
+    )!;
+    const calculate = (id: string): unknown => {
+      const node = p.nodes.find((entry) => entry.id === id)!;
+      const result = cookDataNode(
+        node,
+        0,
+        (handle = "in") => {
+          const incoming = p.edges.find(
+            (edge) => edge.target === id && edge.targetHandle === handle,
+          );
+          return incoming ? calculate(incoming.source) : undefined;
+        },
+        new Map(),
+      );
+      expect(result.handled).toBe(true);
+      if (!result.handled) throw new Error(`Missing runtime for ${node.type}`);
+      return result.value;
+    };
+    expect(calculate(modulation.source)).toBeCloseTo(1.2);
+    table.data.params.csv = "name,value\nangle,0.25";
+    expect(calculate(modulation.source)).toBeCloseTo(0.5);
   });
   it("rejects incompatible connections and cycles", () => {
     const p = preset();

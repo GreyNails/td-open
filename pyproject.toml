@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "td-open"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local-first open-source visual programming with AI and MCP integrations"
 requires-python = ">=3.11"
-license = "MIT"
+license = {file = "LICENSE"}
 dependencies = [
     "fastapi==0.143.0",
     "pydantic==2.14.1",
@@ -22,6 +22,9 @@ dev = ["pytest==9.1.1"]
 
 [tool.setuptools.packages.find]
 include = ["backend*"]
+
+[tool.setuptools.package-data]
+backend = ["operator_catalog.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

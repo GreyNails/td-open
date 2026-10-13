@@ -1,0 +1,144 @@
+{
+  "id": "example_data-driven",
+  "name": "数据变成画面 · CSV to motion",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "table_dat_1",
+      "type": "table_dat",
+      "position": {
+        "x": 0,
+        "y": 220
+      },
+      "data": {
+        "label": "CSV 表格",
+        "params": {
+          "csv": "name,value\nangle,0.6",
+          "mode": "cell",
+          "row": 1,
+          "column": 1
+        }
+      }
+    },
+    {
+      "id": "dat_to_chop_2",
+      "type": "dat_to_chop",
+      "position": {
+        "x": 240,
+        "y": 220
+      },
+      "data": {
+        "label": "文本转数值",
+        "params": {
+          "fallback": 0
+        }
+      }
+    },
+    {
+      "id": "range_3",
+      "type": "range",
+      "position": {
+        "x": 480,
+        "y": 220
+      },
+      "data": {
+        "label": "范围映射",
+        "params": {
+          "in_min": 0,
+          "in_max": 1,
+          "out_min": 0,
+          "out_max": 2,
+          "clamp": true
+        }
+      }
+    },
+    {
+      "id": "grid_4",
+      "type": "grid",
+      "position": {
+        "x": 240,
+        "y": 0
+      },
+      "data": {
+        "label": "网格线",
+        "params": {
+          "spacing": 40,
+          "thickness": 1,
+          "angle": 0,
+          "color": "#b99aff",
+          "background": "#11121c"
+        }
+      }
+    },
+    {
+      "id": "rotate_5",
+      "type": "rotate",
+      "position": {
+        "x": 720,
+        "y": 0
+      },
+      "data": {
+        "label": "连续旋转",
+        "params": {
+          "angle": 0,
+          "speed": 0,
+          "scale": 1,
+          "x": 0.5,
+          "y": 0.5
+        }
+      }
+    },
+    {
+      "id": "output_6",
+      "type": "output",
+      "position": {
+        "x": 960,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "table_dat_1",
+      "target": "dat_to_chop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "dat_to_chop_2",
+      "target": "range_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "grid_4",
+      "target": "rotate_5",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_4",
+      "source": "range_3",
+      "target": "rotate_5",
+      "sourceHandle": "out",
+      "targetHandle": "mod"
+    },
+    {
+      "id": "edge_5",
+      "source": "rotate_5",
+      "target": "output_6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "data-driven"
+  }
+}

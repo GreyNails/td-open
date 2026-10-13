@@ -5,6 +5,7 @@ import math
 from typing import Any
 
 from backend.catalog import NODE_EVALUATORS, NODE_TYPES
+from backend.data_runtime import STATELESS_TYPES, evaluate_data
 from backend.graph import require_valid, resolve_port, topological_order
 from backend.models import Project
 
@@ -21,7 +22,7 @@ def _number(value, default=0):
 def evaluate(project: Project, time: float = 0) -> dict[str, Any]:
     project = require_valid(project)
     nodes = {n.id: n for n in project.nodes}
-    values, errors, skipped = {}, {}, []
+    values, errors, skipped, skip_reasons = {}, {}, [], {}
     for node_id in topological_order(project):
         node = nodes[node_id]
         spec = NODE_TYPES[node.type]
@@ -34,6 +35,7 @@ def evaluate(project: Project, time: float = 0) -> dict[str, Any]:
             continue
         if any(edge.source in skipped for edge in incoming):
             skipped.append(node_id)
+            skip_reasons[node_id] = "上游节点需要浏览器实时运行环境"
             continue
         for edge in incoming:
             if edge.source in values:
@@ -42,6 +44,8 @@ def evaluate(project: Project, time: float = 0) -> dict[str, Any]:
         try:
             if node.type in NODE_EVALUATORS:
                 result = NODE_EVALUATORS[node.type](params, inputs, time)
+            elif node.type in STATELESS_TYPES:
+                result = evaluate_data(node.type, params, inputs, time)
             elif node.type == "constant":
                 result = _number(params.get("value"))
             elif node.type == "lfo":
@@ -65,6 +69,12 @@ def evaluate(project: Project, time: float = 0) -> dict[str, Any]:
                 result = str(inputs.get("in", params.get("result_text") or params.get("text", "")))
             else:
                 skipped.append(node_id)
+                if node.type in {"lag", "speed", "counter", "trigger", "derivative", "hold"}:
+                    skip_reasons[node_id] = "有状态信号节点需要浏览器连续帧上下文"
+                elif spec.get("runtime") == "provider":
+                    skip_reasons[node_id] = "AI 与 MCP 节点需要通过专用接口手动执行"
+                else:
+                    skip_reasons[node_id] = "图像、音频设备与几何节点在浏览器运行"
                 continue
             if isinstance(result, float) and not math.isfinite(result):
                 raise ValueError("运算结果不是有限数值")
@@ -74,4 +84,4 @@ def evaluate(project: Project, time: float = 0) -> dict[str, Any]:
             values[node_id] = result
         except Exception as exc:
             errors[node_id] = str(exc)
-    return {"values": values, "errors": errors, "skipped": skipped, "time": time}
+    return {"values": values, "errors": errors, "skipped": skipped, "skip_reasons": skip_reasons, "time": time}

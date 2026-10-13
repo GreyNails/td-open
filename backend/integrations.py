@@ -499,8 +499,8 @@ def local_chat(request: ChatRequest) -> dict[str, Any]:
     nodes = request.project.get("nodes", [])
     selected = next((node for node in nodes if node.get("id") == request.selected_node), None)
     commands: list[dict[str, Any]] = []
-    reply = "本地指令模式：支持「添加噪声」「添加粒子」「改成蓝色」「速度调为 0.5」「删除所选节点」。自由对话请在连接中心配置语言模型。"
-    additions = [(r"噪声|noise", "noise", "噪声"), (r"粒子|particle", "particles", "粒子"), (r"渐变|ramp|gradient", "ramp", "渐变"), (r"模糊|blur", "blur", "模糊"), (r"几何|geometry|立方体|cube", "geometry", "几何体"), (r"文字|文本|text", "text", "文字"), (r"振荡|lfo", "lfo", "振荡器")]
+    reply = "本地指令模式：可用节点中文名称、英文名称或类型 ID 添加节点，例如「添加随机信号」「add JSON Select」；也支持「改成蓝色」「速度调为 0.5」「删除所选节点」。自由对话请在连接中心配置语言模型。"
+    additions = [(r"噪声|(?<![a-z0-9_])noise(?![a-z0-9_])", "noise", "噪声"), (r"粒子|(?<![a-z0-9_])particles?(?![a-z0-9_])", "particles", "粒子"), (r"渐变|(?<![a-z0-9_])(?:ramp|gradient)(?![a-z0-9_])", "ramp", "渐变"), (r"模糊|(?<![a-z0-9_])blur(?![a-z0-9_])", "blur", "模糊"), (r"几何|立方体|(?<![a-z0-9_])(?:geometry|cube)(?![a-z0-9_])", "geometry", "几何体"), (r"文字|文本|(?<![a-z0-9_])text(?![a-z0-9_])", "text", "文字"), (r"振荡|(?<![a-z0-9_])lfo(?![a-z0-9_])", "lfo", "振荡器")]
     if re.search(r"删除|移除|delete|remove", message):
         if selected:
             commands = [{"op": "remove_node", "id": selected["id"]}]
@@ -508,11 +508,27 @@ def local_chat(request: ChatRequest) -> dict[str, Any]:
         else:
             reply = "请先选择要删除的节点。"
     elif re.search(r"添加|创建|新建|add|create", message):
-        for pattern, node_type, label in additions:
-            if re.search(pattern, message):
-                commands = [{"op": "add_node", "id": f"{node_type}_{uuid.uuid4().hex[:8]}", "type": node_type, "label": label, "position": {"x": 120 + (len(nodes) % 4) * 240, "y": 120 + (len(nodes) // 4) * 150}}]
-                reply = f"已准备添加{label}节点。可在应用后连接到输出。"
-                break
+        # Prefer the most specific registered name: "Noise CHOP" must not be
+        # swallowed by "Noise", and IDs must not match inside another ID.
+        candidates = []
+        for node_type, spec in NODE_TYPES.items():
+            for name in (node_type, spec["label"], spec.get("english", "")):
+                name = name.lower().strip()
+                if not name:
+                    continue
+                pattern = re.escape(name)
+                if name.isascii():
+                    pattern = r"(?<![a-z0-9_])" + pattern + r"(?![a-z0-9_])"
+                if re.search(pattern, message):
+                    candidates.append((len(name), node_type, spec["label"]))
+        if candidates:
+            _, node_type, label = max(candidates, key=lambda item: item[0])
+        else:
+            match = next(((node_type, label) for pattern, node_type, label in additions if re.search(pattern, message)), None)
+            node_type, label = match if match else (None, None)
+        if node_type:
+            commands = [{"op": "add_node", "id": f"{node_type}_{uuid.uuid4().hex[:8]}", "type": node_type, "label": label, "position": {"x": 120 + (len(nodes) % 4) * 240, "y": 120 + (len(nodes) // 4) * 150}}]
+            reply = f"已准备添加{label}节点。可在应用后连接到兼容端口。"
     elif re.search(r"速度|speed", message):
         match = re.search(r"(?:速度|speed)[^\d+.-]*([-+]?(?:\d*\.\d+|\d+))", message)
         supported = {"noise", "particles", "lfo", "render"}

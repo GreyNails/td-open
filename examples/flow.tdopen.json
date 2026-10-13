@@ -4,7 +4,7 @@
   "version": 1,
   "nodes": [
     {
-      "id": "noise_6af54ed8",
+      "id": "noise_1",
       "type": "noise",
       "position": {
         "x": 0,
@@ -21,7 +21,7 @@
       }
     },
     {
-      "id": "color_34038082",
+      "id": "color_2",
       "type": "color",
       "position": {
         "x": 245,
@@ -37,7 +37,7 @@
       }
     },
     {
-      "id": "blur_76c93667",
+      "id": "blur_3",
       "type": "blur",
       "position": {
         "x": 490,
@@ -52,7 +52,7 @@
       }
     },
     {
-      "id": "output_dad890a8",
+      "id": "output_4",
       "type": "output",
       "position": {
         "x": 735,
@@ -64,7 +64,7 @@
       }
     },
     {
-      "id": "lfo_f4fed9a6",
+      "id": "lfo_5",
       "type": "lfo",
       "position": {
         "x": 0,
@@ -82,30 +82,30 @@
   ],
   "edges": [
     {
-      "id": "edge_cf9690f3",
-      "source": "noise_6af54ed8",
-      "target": "color_34038082",
+      "id": "edge_1",
+      "source": "noise_1",
+      "target": "color_2",
       "sourceHandle": "out",
       "targetHandle": "in"
     },
     {
-      "id": "edge_016b9f1b",
-      "source": "color_34038082",
-      "target": "blur_76c93667",
+      "id": "edge_2",
+      "source": "color_2",
+      "target": "blur_3",
       "sourceHandle": "out",
       "targetHandle": "in"
     },
     {
-      "id": "edge_1507f336",
-      "source": "blur_76c93667",
-      "target": "output_dad890a8",
+      "id": "edge_3",
+      "source": "blur_3",
+      "target": "output_4",
       "sourceHandle": "out",
       "targetHandle": "in"
     },
     {
-      "id": "edge_af1cb12a",
-      "source": "lfo_f4fed9a6",
-      "target": "noise_6af54ed8",
+      "id": "edge_4",
+      "source": "lfo_5",
+      "target": "noise_1",
       "sourceHandle": "out",
       "targetHandle": "mod"
     }

@@ -31,7 +31,7 @@ const context = await browser.newContext({
 const page = await context.newPage();
 page.setDefaultTimeout(20000);
 page.on("pageerror", (e) => errors.push(e.message));
-const base = "http://127.0.0.1:8765";
+const base = process.env.TD_BASE_URL || "http://127.0.0.1:8765";
 let mock;
 try {
   await page.goto(base, { waitUntil: "networkidle" });
@@ -194,7 +194,18 @@ try {
   await page.locator('input[type=file][accept=".json,.tdopen"]').setInputFiles({
     name: "minimal-project.json",
     mimeType: "application/json",
-    buffer: Buffer.from(JSON.stringify({id:"minimal-import",name:"Minimal imported graph",version:1,nodes:[{id:"noise",type:"noise"},{id:"output",type:"output"}],edges:[{id:"e1",source:"noise",target:"output"}]})),
+    buffer: Buffer.from(
+      JSON.stringify({
+        id: "minimal-import",
+        name: "Minimal imported graph",
+        version: 1,
+        nodes: [
+          { id: "noise", type: "noise" },
+          { id: "output", type: "output" },
+        ],
+        edges: [{ id: "e1", source: "noise", target: "output" }],
+      }),
+    ),
   });
   await expect(page.locator(".studio-node")).toHaveCount(2);
   await expect(page.locator(".save-state")).toHaveText("已自动保存");
