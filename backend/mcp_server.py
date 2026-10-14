@@ -98,8 +98,10 @@ async def apply_graph_commands(project_id: str, commands: list[dict[str, Any]], 
     add_node(type,id?,params?,position?), set_param(id,key,value),
     remove_node(id), connect(source,target,sourceHandle?,targetHandle?),
     disconnect(id), rename_project(name). Defaults to preview, with no writes.
-    Pass apply=true to save changes to the project. Reload it in the editor
-    to see changes. This never executes generated code or remote MCP tools.
+    Pass apply=true to save changes to the project. Editing an example creates
+    a new project; use the returned project ID for subsequent edits. Open that
+    project in the editor to see changes. This never executes generated code
+    or remote MCP tools.
     """
     if len(commands) > 100:
         raise ValueError("At most 100 commands may be applied together")
@@ -109,7 +111,7 @@ async def apply_graph_commands(project_id: str, commands: list[dict[str, Any]], 
     current = Project.model_validate(await get_project(project_id))
     changed = edit_graph(current, commands).model_dump(mode="json")
     if apply:
-        await app_request("POST", "/api/projects", changed)
+        changed = await app_request("POST", "/api/projects", changed)
     return {"applied": apply, "project": changed, "message": "Project saved. Reload it in the editor." if apply else "Preview only. No changes saved."}
 
 

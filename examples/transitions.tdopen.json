@@ -26,7 +26,7 @@
       "type": "checkerboard",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "棋盘格",
@@ -43,7 +43,7 @@
       "type": "lfo",
       "position": {
         "x": 0,
-        "y": 410
+        "y": 420
       },
       "data": {
         "label": "波形信号",

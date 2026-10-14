@@ -2,6 +2,18 @@
 
 日期：2026-10-14。环境：Linux、Python 3.11、项目内 Node 22.21.1、Chromium 无头浏览器（软件 WebGL）。测试数据、报告、截图、缓存和导出保存在本项目内。没有调用收费 AI 服务；API 测试使用本地模拟服务。硬件测试范围在下文单独注明。
 
+## 案例保护、框选与端口修复
+
+Python **351 项**、前端 **374 项**通过；TypeScript 与生产构建通过。HTTP / MCP 直接保存案例会返回新的项目 ID，原件不能被覆盖或删除；MCP 返回实际保存后的项目，后续操作可继续使用该 ID。
+
+`frontend/browser-editor-fixes.mjs` 使用隔离数据目录和两个独立浏览器会话，通过 10 项实际操作检查：仅查看案例不创建项目；两位编辑者首次修改生成不同副本；后续修改与刷新继续同一副本；空白处左键框选；成组拖动；多选复制、删除和撤销；五输入节点所有端口位于卡片内；实际拖线到第五个输入后自动保存；18 条 SVG 连线的两端与实际端口贴合；整理后卡片无重叠、端点继续正确。原件 API 返回内容保持不变。
+
+本机已有 9 个演示案例保存为只读原件，2 份此前的编辑保留为独立项目；旧工程文件的字节哈希保持不变。迁移记录：`data/artifacts/example-protection-migration.json`。浏览器报告：`data/artifacts/editor-fixes-browser-report.json`，截图：`editor-box-selection.png`、`editor-fixes-studio.png`。
+
+受保护的真实“潮汐之像”案例另通过 8 项音乐回归：普通播放输出非零 PCM、静音为零、暂停与恢复、浏览器声音恢复、原始 WAV 试听、音量修改与四声部同步、带声音录像。播放本身不保存案例；修改音量创建项目副本，案例原件保持不变。报告：`data/artifacts/music-controls-browser-report.json`。
+
+复现编辑检查使用隔离服务：`TD_BASE_URL=http://127.0.0.1:8780 TD_CHROMIUM=/path/to/chromium node frontend/browser-editor-fixes.mjs`。音乐检查使用 `frontend/browser-performance-audio.mjs`，需在隔离数据目录的 `examples/tidal_muse_ready.json` 放入已生成的案例，并将其中全部素材复制到该目录的 `assets/`，包括 JSON 字符串里记录的四声部 URL。不要对真实用户目录运行会编辑或保存工程的验收脚本。
+
 ## 0.5.1 四轨点云作品
 
 自动测试：Python 348 项、前端 371 项通过；TypeScript 与生产构建通过。

@@ -203,8 +203,9 @@ register_operator(
 | --- | --- |
 | `GET /api/health` | 版本、注册算子数量与数据目录 |
 | `GET /api/catalog` | 服务端节点定义 |
-| `GET /api/projects` | 项目列表 |
-| `POST /api/projects` | 校验并保存项目 |
+| `GET /api/examples`、`GET /api/examples/{id}` | 只读案例与原件 |
+| `GET /api/projects` | 用户项目与本机已生成案例列表 |
+| `POST /api/projects` | 校验并保存项目；案例 ID 自动生成独立项目副本 |
 | `GET /api/projects/{id}` | 读取项目 |
 | `DELETE /api/projects/{id}` | 删除项目文件 |
 | `POST /api/validate` | 校验项目结构与图 |
@@ -263,6 +264,8 @@ MCP 规范和 SDK 参考：[标准 transport](https://modelcontextprotocol.io/sp
 ## 存储与本地运行边界
 
 项目采用临时文件加 `os.replace` 的原子替换方式保存。资源上传使用生成的文件名，用户原文件名不作为磁盘路径。API 密钥和 MCP token 保存在 `data/config/`，配置目录权限设为 `0700`，配置文件为 `0600`；它们是本机权限保护的明文文件，不是加密保险箱。配置列表接口会隐藏密钥值。
+
+内置案例原件来自 `examples/*.tdopen.json`，本机已生成案例原件来自所选数据目录的 `examples/*.json`。编辑器预览原件时先分配独立草稿 ID，首次修改再保存到 `projects/`，异步生成任务始终使用同一个草稿 ID。保存接口也会保护原件；直接提交案例 ID 会另建项目，HTTP / MCP 客户端必须使用响应中的新 ID 继续编辑。后端不接受删除案例原件。
 
 数据目录默认为项目下的 `data/`，可通过 `TD_DATA_DIR` 切换到项目内部的其他目录，例如 `.cache/demo-data`；项目、资源、导出与连接配置均放在所选目录中。环境变量指向项目目录外时，应用拒绝启动。自行选择的目录应加入 Git 忽略规则，默认 `data/` 与 `.cache/` 已忽略。
 

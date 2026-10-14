@@ -8,7 +8,7 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 
 **当前为可运行的 0.5 Alpha，尚未实现 TouchDesigner 全功能等价。** 这是独立实现的项目，与 Derivative 无隶属关系，不包含其程序、图标或源码，也不兼容 `.toe` / `.tox`。对参考截图的 531 项逐项核对：432 项已有可运行子集、7 项由已有相关节点覆盖、92 项需要外部适配器。详细支持范围和未完成项见 [功能矩阵](docs/FEATURE_MATRIX.md)，可检索的 [逐项清单](docs/REFERENCE_COVERAGE.md) 保留每项限制。
 
-![TD Open 0.4：实时输出、联动分栏与节点编辑](docs/images/studio-docked.png)
+![TD Open：案例自动另存、节点框选与具名端口](docs/images/editor-box-selection.png)
 
 ![新增案例：网格布尔、曲面、刚体、GLSL、信号处理](docs/images/reference-examples.png)
 
@@ -27,7 +27,7 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 ## 现在可以做什么
 
 - **类似 Blender 的联动停靠布局**：节点资源、实时预览、节点画布、参数、创作助手共用边界；拖动分隔线时相邻区域同步增减，支持上下/左右拆分、拖动合并标签、隐藏、最大化和按作品保存。
-- 在无限节点画布上添加、移动、框选、多选复制、删除、连接节点；复制多选节点时保留内部连线，支持撤销、重做和整理布局。
+- 在无限节点画布上添加、移动、框选、多选复制、删除、连接节点；默认左键拖动空白处框选、中键平移，也可在工具栏明确切换“框选 / 平移”。复制多选节点时保留内部连线，支持撤销、重做和整理布局。
 - **749 个节点入口**：TOP 205、CHOP 213、SOP 131、DAT 128、COMP 40、MAT 13、AI 18、OUT 1。包含 **92 个需要外部 SDK/硬件适配器的入口**，其余也按实际实现子集说明；数量不代表商业软件完整兼容。详见 [逐项对照](docs/REFERENCE_COVERAGE.md) 与 [节点手册](docs/NODES.md)。
 - **本地 AI 与原生 ComfyUI**：45 个新增节点入口，支持 FLUX.2 Klein、Z-Image、ACE-Step 1.5、Hunyuan3D 2.1、MelBand、Demucs、Wan 2.2。提供独立环境、可续传权重下载、哈希校验、单卡显存预算、任务队列、取消、结果下载，以及原生 API 工作流导入和实际 Comfy 节点库。七组模型已通过工作界面实跑；[安装文档](docs/LOCAL_AI.md) / [真实运行与显存记录](docs/LOCAL_AI_VALIDATION.md)。
 - **真正可编辑的组件内部网络**：双击进入 Base / Container / Time 等组件，通过 In/Out 与父级连接，使用绝对/相对节点引用；支持独立时钟和 Replicator 模板复制。
@@ -37,6 +37,8 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 - 通过中文/英文快捷搜索添加节点、收藏常用节点，并自动连接选中节点的兼容输出。
 - 使用 LFO、常量和数学节点驱动参数；导入音频或授权麦克风后，让频谱和粒子跟随声音。音频导入后可保存 URL 并手动重新播放。
 - 通过 WebGL / Three.js 渲染几何体、材质与场景，以及可访问的 glTF / GLB / OBJ / FBX 资源。
+- **案例原件保护**：打开案例不会覆盖原件；首次编辑自动创建自己的项目副本，后续编辑继续保存该副本。两个用户编辑同一案例使用独立 ID，HTTP / MCP 保存案例也会另存。
+- **端口与连线**：端口名称直接显示在节点里，卡片随端口数量增高；整理布局会考虑实际高度，连线跟随端口重算。
 - 保存作品、自动保存、导入 JSON；导出 PNG 和 WebM 录像（声景演出支持同步音轨），导出文件保留在本地 `data/exports`。
 - 配置 OpenAI 兼容的文本/图片服务；通过自定义 HTTP 模板连接音乐、3D 和其他生成服务。实际请求仅在手动运行时发送。
 - 在助手中预览并应用图编辑指令。未配置模型时使用明确标注的本地中文/英文指令解析器；连接语言模型后可让模型提出结构化图编辑。
@@ -107,7 +109,7 @@ npx playwright install chromium
 3. 从左侧添加节点，拖动左右两端的圆点连线。图像连接到图像，数值连接到调制端口。
 4. 点击保存。预览栏的下载图标保存 PNG；录像按钮开始/停止保存 WebM。
 
-快捷键：画布内 `Tab` 或 `Ctrl/Cmd+K` 打开节点搜索，`Space` 暂停/播放，`Ctrl/Cmd+S` 保存，`Ctrl/Cmd+Z` 撤销，`Ctrl/Cmd+Shift+Z` 重做，`Ctrl/Cmd+D` 复制选中节点（含内部连线）。按住 `Ctrl/Cmd` 点击多选；按住 `Shift` 拖动框选，或切换画布工具栏的框选模式。
+快捷键：画布内 `Tab` 或 `Ctrl/Cmd+K` 打开节点搜索，`Space` 暂停/播放，`Ctrl/Cmd+S` 保存，`Ctrl/Cmd+Z` 撤销，`Ctrl/Cmd+Shift+Z` 重做，`Ctrl/Cmd+D` 复制选中节点（含内部连线）。按住 `Ctrl/Cmd` 点击多选；默认左键拖动空白处框选，中键平移；工具栏可切换“框选 / 平移”，`Shift` 可临时框选。
 
 面板使用：
 

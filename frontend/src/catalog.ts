@@ -2,6 +2,7 @@ import type { GraphNode, NodeSpec, Param, Port, Project } from "./types";
 import { decorateReferenceProject } from "./referenceTemplates";
 import { mediaCatalog } from "./nodes/mediaCatalog";
 import { localAICatalog, comfyCatalog } from "./nodes/localAICatalog";
+import { nodeCardHeight } from "./nodeLayout";
 import { performanceCatalog } from "./nodes/performanceCatalog";
 import { referenceTopCatalog } from "./nodes/referenceTopCatalog";
 import { compatibilityTopCatalog } from "./nodes/compatibilityTopCatalog";
@@ -488,8 +489,11 @@ export function preset(kind = "flow"): Project {
     recipe.nodes.forEach((item, i) => {
       const [type, params] = typeof item === "string" ? [item, {}] : item;
       const row = rows.get(levels[i]) ?? 0;
-      rows.set(levels[i], row + 1);
-      add(type, levels[i] * 245, row * 205, params);
+      rows.set(
+        levels[i],
+        row + Math.max(205, nodeCardHeight(byType[type]) + 40),
+      );
+      add(type, levels[i] * 245, row, params);
     });
     for (const [from, to, handle, sourceHandle] of recipe.edges)
       link(ns[from], ns[to], handle, sourceHandle);

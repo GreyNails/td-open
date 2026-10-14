@@ -12,14 +12,14 @@
 
 选择输出节点可以查看最终画面。预览窗口可以最大化；输出为 1280 × 720。点击截图会保存 PNG，点击录制会保存包含演出声音的 WebM。舞台参数面板还有 **导出当前点云 PLY**，可用 Blender、CloudCompare 等软件继续处理。
 
-已经生成的工程保存在 `data/projects/tidal_muse_ready.json`，原始 PNG、GLB、音乐和四轨 WAV 在 `data/assets/`；演出 MP4、截图、点云与验收报告在 `data/artifacts/`。这些本机数据不随 Git 仓库发布。
+已经生成的案例原件保存在 `data/examples/tidal_muse_ready.json`，首次编辑会自动另存到 `data/projects/project_*.json`，后续继续保存该项目，不会覆盖案例。此前的编辑也已保留为独立项目；原有 `data/projects/tidal_muse_ready.json` 文件保留在磁盘。原始 PNG、GLB、音乐和四轨 WAV 在 `data/assets/`；演出 MP4、截图、点云与验收报告在 `data/artifacts/`。这些本机数据不随 Git 仓库发布。
 
 ![正式工作台中已保存的可播放作品](images/tidal-muse-studio.png)
 
 ## 从空白案例重新生成
 
 1. 打开“本地模型中心”，安装 **FLUX.2 Klein 4B、Hunyuan3D 2.1、ACE-Step 1.5、Demucs 四轨**。已有模型无需再次下载。完整一键安装与手动安装步骤见 [本地 AI 安装指南](LOCAL_AI.md)。
-2. 打开“示例作品”，搜索 **潮汐之像**，或导入 [公开工作流 JSON](../examples/tidal-muse.tdopen.json)。公开案例包含提示词、参数和连线，其他机器需要自行生成素材。
+2. 打开“示例作品”，搜索 **潮汐之像**，或导入 [公开工作流 JSON](../examples/tidal-muse.tdopen.json)。公开案例包含提示词、参数和连线，其他机器需要自行生成素材；本机已生成时，案例库会优先打开带素材的原件。首次编辑自动新建独立项目，导入 JSON 则直接创建新项目。
 3. 选中“潮汐声景舞台”，点击 **生成整件作品**。系统依照连线依次运行图片、三维、音乐和分轨四个实际任务，并自动把结果接到后续节点。
 4. 等面板提示“四步素材已生成”，点击 **启用音频并演出**。浏览器需要用户手动点击才能启用声音。
 

@@ -25,7 +25,7 @@
       "type": "sphere",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "球体",
@@ -76,7 +76,7 @@
       "type": "pbr_mat",
       "position": {
         "x": 0,
-        "y": 410
+        "y": 420
       },
       "data": {
         "label": "物理材质",

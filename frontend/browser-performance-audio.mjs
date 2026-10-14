@@ -36,12 +36,12 @@ await page.addInitScript(() => {
   };
 });
 try {
+  const originalExample = await fetch(
+    base + "/api/examples/example_tidal-muse",
+  ).then((r) => r.json());
   await page.goto(base, { waitUntil: "networkidle" });
-  await page.getByTitle("我的作品").click();
-  await page
-    .locator(".project-row")
-    .filter({ hasText: "潮汐之像 · 已生成可播放" })
-    .click();
+  await page.getByRole("button", { name: "示例作品", exact: true }).click();
+  await page.locator('[data-example="tidal-muse"]').click();
   const controls = page.getByRole("region", { name: "案例音乐控制" }),
     meter = controls.getByRole("meter", { name: "音乐输出电平" }),
     level = () => meter.evaluate((el) => el.value);
@@ -56,6 +56,7 @@ try {
   await page.getByTitle("播放音乐与画面（空格）").click();
   await expect(controls).toContainText("音乐与点云同步播放");
   await expect.poll(level, { timeout: 15000 }).toBeGreaterThan(0.001);
+  await expect(page.locator(".save-state")).toContainText("案例预览");
   levels.playing = await level();
   await expect(
     page.getByRole("button", { name: "启用麦克风", exact: true }),
@@ -129,6 +130,12 @@ try {
     "The new audio routing still records an actual audible soundtrack",
   );
   await controls.getByRole("slider", { name: "音乐音量" }).fill("0.65");
+  await expect(page.locator(".save-state")).toContainText("已自动保存");
+  expect(
+    await fetch(base + "/api/examples/example_tidal-muse").then((r) =>
+      r.json(),
+    ),
+  ).toEqual(originalExample);
   await page.screenshot({
     path: path.join(artifacts, "music-controls-studio.png"),
   });

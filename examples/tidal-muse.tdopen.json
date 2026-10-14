@@ -76,7 +76,7 @@
       "type": "local_music",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "本地音乐生成",
@@ -105,7 +105,7 @@
       "type": "local_stems",
       "position": {
         "x": 245,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "本地音乐分轨",
@@ -127,7 +127,7 @@
       "type": "stem_track_chop",
       "position": {
         "x": 490,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "读取独立分轨",
@@ -142,7 +142,7 @@
       "type": "stem_track_chop",
       "position": {
         "x": 490,
-        "y": 410
+        "y": 420
       },
       "data": {
         "label": "读取独立分轨",
@@ -157,7 +157,7 @@
       "type": "stem_track_chop",
       "position": {
         "x": 490,
-        "y": 615
+        "y": 630
       },
       "data": {
         "label": "读取独立分轨",
@@ -172,7 +172,7 @@
       "type": "stem_track_chop",
       "position": {
         "x": 490,
-        "y": 820
+        "y": 840
       },
       "data": {
         "label": "读取独立分轨",
@@ -203,7 +203,7 @@
       "type": "audio_envelope_chop",
       "position": {
         "x": 735,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "音乐能量与瞬态",
@@ -219,7 +219,7 @@
       "type": "audio_envelope_chop",
       "position": {
         "x": 735,
-        "y": 410
+        "y": 420
       },
       "data": {
         "label": "音乐能量与瞬态",
@@ -235,7 +235,7 @@
       "type": "audio_envelope_chop",
       "position": {
         "x": 735,
-        "y": 615
+        "y": 630
       },
       "data": {
         "label": "音乐能量与瞬态",

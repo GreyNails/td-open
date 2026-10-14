@@ -53,10 +53,12 @@ TD_PORT=8767 TD_DATA_DIR=.cache/api-guide/server-data ./scripts/start.sh
 |---|---|---|---|
 | `GET /api/health` | 无 | 状态、版本、节点数、数据目录 | 只读 |
 | `GET /api/catalog` | 无 | 节点、参数、端口、运行环境 | 只读 |
-| `GET /api/projects` | 无 | 工程摘要数组 | 只读 |
+| `GET /api/examples` | 无 | 只读案例摘要数组 | 只读 |
+| `GET /api/examples/{id}` | 案例 ID | 案例原件，`settings.is_example=true` | 只读 |
+| `GET /api/projects` | 无 | 工程摘要数组；案例行带 `is_example=true` | 只读 |
 | `GET /api/projects/{id}` | 工程 ID | 完整工程 | 只读 |
-| `POST /api/projects` | **工程本身** | 保存后的完整工程 | 按 ID 新建或覆盖 |
-| `DELETE /api/projects/{id}` | 工程 ID | `{"deleted":"id"}` | 删除该工程 JSON |
+| `POST /api/projects` | **工程本身** | 保存后的完整工程 | 用户项目按 ID 新建或更新；案例 ID 自动另存新项目 |
+| `DELETE /api/projects/{id}` | 工程 ID | `{"deleted":"id"}` | 删除用户工程 JSON；案例原件不能删除 |
 | `POST /api/validate` | **工程本身** | `valid`、`errors`、补全默认值的 `project` | 不保存 |
 | `POST /api/commands` | `{"project":...,"commands":[...]}` | 修改后的 `project`、`applied` | 不保存 |
 | `POST /api/evaluate` | `{"project":...,"time":0}` | `values`、`errors`、`skipped`、`skip_reasons` | 单次后端计算，不保存 |
@@ -71,7 +73,7 @@ TD_PORT=8767 TD_DATA_DIR=.cache/api-guide/server-data ./scripts/start.sh
 | `/api/local-ai/*` | 见 [本地模型接口与安装](LOCAL_AI.md) | 环境、权重、GPU 队列、生成结果、Comfy API 工作流 | 手动启动本地下载或推理 |
 | `/api/providers`、`/api/ai/*`、`/api/chat` | 见 [AI 文档](AI_API.md) | 服务配置、生成结果、对话命令 | 调用外部服务可能计费 |
 
-`POST /api/commands` 返回的是计算得到的修改结果，不会直接改磁盘工程。自动化程序需要再调用 `POST /api/projects` 保存。HTTP 保存同一 ID 会覆盖该工程；没有版本号冲突合并机制，避免两个编辑器同时写同一个工程。
+`POST /api/commands` 返回的是计算得到的修改结果，不会直接改磁盘工程。自动化程序需要再调用 `POST /api/projects` 保存。HTTP 保存同一用户项目 ID 会更新该工程；案例原件 ID 会返回新项目 ID，原件保持不变。后续请求必须使用保存返回的 ID；没有版本号冲突合并机制，避免两个编辑器同时写同一个工程。
 
 ## 3. 创建、校验、保存一个最小工程
 
@@ -356,3 +358,9 @@ AI/MCP 连接中心的秘密配置保存在当前数据目录的 `config/`，文
 | 保存文件后找不到 | 看 `/api/health` 的 `data_dir`，确认是否启动了隔离实例 |
 
 二次开发时可直接阅读 [`backend/main.py`](../backend/main.py)、[`backend/models.py`](../backend/models.py)、[`backend/graph.py`](../backend/graph.py)、[`backend/script_runtime.py`](../backend/script_runtime.py) 和 [`backend/web_runtime.py`](../backend/web_runtime.py)。本页的 API 行为来自这些本地实现；触及第三方服务时，以其自身文档和 [AI API 指南](AI_API.md) 为准。
+
+## 案例原件与编辑副本
+
+内置案例来自 `examples/*.tdopen.json`，本机已生成案例的固定原件在 `data/examples/`。前端打开案例时只做预览，首次编辑后自动保存到 `data/projects/`；两个浏览器会得到不同的项目 ID。新项目通过 `settings.source_example_id` 记录来源，节点与内部引用保持不变。个人项目再次编辑时更新同一个 ID。
+
+直接使用 HTTP / MCP 保存案例 ID 也会自动返回独立的新工程。不要继续重复提交原案例 ID；应保存并使用响应中的新 ID。即使请求删除 `settings.is_example` 标记，服务器也会根据案例存储位置保护原件。案例原件的删除请求返回错误。

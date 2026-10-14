@@ -41,7 +41,7 @@
       "type": "stripes",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "流动条纹",
@@ -60,7 +60,7 @@
       "type": "rings",
       "position": {
         "x": 0,
-        "y": 410
+        "y": 420
       },
       "data": {
         "label": "扩散圆环",

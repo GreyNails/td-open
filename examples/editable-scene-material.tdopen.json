@@ -41,7 +41,7 @@
       "type": "noise",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "流动噪声",
@@ -58,7 +58,7 @@
       "type": "pbr_mat",
       "position": {
         "x": 245,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "物理材质",

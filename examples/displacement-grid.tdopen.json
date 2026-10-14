@@ -26,7 +26,7 @@
       "type": "fbm_noise",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "分形云噪声",

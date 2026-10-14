@@ -77,8 +77,8 @@ export function TemplateGallery({ open }: { open: (id: string) => void }) {
         ))}
       </div>
       <div className="example-summary">
-        <span>{filtered.length} 个案例 · 每个案例都是可编辑的节点网络</span>
-        <span>打开 → 调整参数 → 观察变化</span>
+        <span>{filtered.length} 个案例 · 原件保留，编辑自动另存为你的项目</span>
+        <span>打开 → 编辑 → 自动保存到「我的作品」</span>
       </div>
       <div className="example-scroll">
         <div className="template-grid example-grid">

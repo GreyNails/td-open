@@ -23,7 +23,7 @@
       "type": "comfy_clip",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "Comfy · 加载文本编码器",
@@ -39,7 +39,7 @@
       "type": "comfy_vae_loader",
       "position": {
         "x": 0,
-        "y": 410
+        "y": 420
       },
       "data": {
         "label": "Comfy · 加载 VAE",
@@ -79,7 +79,7 @@
       "type": "comfy_latent",
       "position": {
         "x": 0,
-        "y": 615
+        "y": 630
       },
       "data": {
         "label": "Comfy · 空白潜空间（16通道）",
@@ -95,7 +95,7 @@
       "type": "comfy_flow_sampling",
       "position": {
         "x": 245,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "Comfy · Flow 模型采样配置",

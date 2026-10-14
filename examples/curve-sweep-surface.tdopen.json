@@ -24,7 +24,7 @@
       "type": "rectangle_sop",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "矩形轮廓",

@@ -23,7 +23,7 @@
       "type": "glsl_mat",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "GLSL 材质",

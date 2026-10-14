@@ -1,3 +1,9 @@
+import {
+  exampleDraft,
+  isExampleProject,
+  savedExampleDraft,
+} from "./exampleProjects";
+import { arrangeNodes } from "./nodeLayout";
 import PerformancePanel from "./PerformancePanel";
 import PerformanceAudio from "./PerformanceAudio";
 import { performanceAncestors } from "./nodes/stemPerformance";
@@ -14,6 +20,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useLayoutEffect,
   useRef,
   useState,
   lazy,
@@ -31,6 +38,8 @@ import {
   applyEdgeChanges,
   ReactFlowProvider,
   useReactFlow,
+  useUpdateNodeInternals,
+  SelectionMode,
 } from "@xyflow/react";
 import type {
   Node,
@@ -200,9 +209,20 @@ function NodeThumbnail({ id, type }: { id: string; type: string }) {
 }
 function StudioNode({ data, selected }: NodeProps<FlowNode>) {
   const n = data.node,
-    s = byType[n.type];
+    s = byType[n.type],
+    updateNodeInternals = useUpdateNodeInternals();
+  const portSignature = JSON.stringify([
+    n.type,
+    s?.inputs.map((port) => port.id),
+    s?.outputs.map((port) => port.id),
+  ]);
+  useLayoutEffect(() => {
+    const frame = requestAnimationFrame(() => updateNodeInternals(n.id));
+    return () => cancelAnimationFrame(frame);
+  }, [n.id, portSignature, updateNodeInternals]);
   if (!s) return <div>未知节点 {n.type}</div>;
-  const c = familyColors[s.family];
+  const c = familyColors[s.family],
+    rows = Math.max(s.inputs.length, s.outputs.length);
   return (
     <div
       className={`studio-node ${selected ? "selected" : ""}`}
@@ -214,6 +234,50 @@ function StudioNode({ data, selected }: NodeProps<FlowNode>) {
         <span className="node-family">{s.family}</span>
       </div>
       <NodeThumbnail id={n.id} type={n.type} />
+      <div className="node-ports">
+        {Array.from({ length: rows }, (_, index) => {
+          const input = s.inputs[index],
+            output = s.outputs[index];
+          return (
+            <div className="node-port-row" key={index}>
+              {input && (
+                <>
+                  <Handle
+                    type="target"
+                    position={Position.Left}
+                    id={input.id}
+                    title={`${input.label} · ${input.kind}`}
+                    style={{ background: familyColors[input.kind] || c }}
+                  />
+                  <span
+                    className="node-port-name input"
+                    title={`${input.label} · ${input.kind}`}
+                  >
+                    {input.label}
+                  </span>
+                </>
+              )}
+              {output && (
+                <>
+                  <span
+                    className="node-port-name output"
+                    title={`${output.label} · ${output.kind}`}
+                  >
+                    {output.label}
+                  </span>
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={output.id}
+                    title={`${output.label} · ${output.kind}`}
+                    style={{ background: familyColors[output.kind] || c }}
+                  />
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
       <div className="node-footer">
         <span>{s.english}</span>
         <span className="node-state">
@@ -224,30 +288,6 @@ function StudioNode({ data, selected }: NodeProps<FlowNode>) {
               : "●"}
         </span>
       </div>
-      {s.inputs.map((p, i) => (
-        <Handle
-          key={p.id}
-          type="target"
-          position={Position.Left}
-          id={p.id}
-          title={`${p.label} · ${p.kind}`}
-          style={{ top: 48 + i * 29, background: familyColors[p.kind] || c }}
-        >
-          <span className="port-label">
-            {p.id === "mod" ? "↝" : i === 1 ? "B" : ""}
-          </span>
-        </Handle>
-      ))}
-      {s.outputs.map((p, i) => (
-        <Handle
-          key={p.id}
-          type="source"
-          position={Position.Right}
-          id={p.id}
-          title={`${p.label} · ${p.kind}`}
-          style={{ top: 75 + i * 25, background: familyColors[p.kind] || c }}
-        />
-      ))}
     </div>
   );
 }
@@ -291,7 +331,7 @@ function Studio() {
     position?: { x: number; y: number };
   } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [panMode, setPanMode] = useState(true);
+  const [panMode, setPanMode] = useState(false);
   const [rootProject, setRootProject] = useState<Project>(() => preset()),
     [ready, setReady] = useState(false),
     [selected, setSelected] = useState(""),
@@ -313,7 +353,7 @@ function Studio() {
     [prompt, setPrompt] = useState(""),
     [busy, setBusy] = useState(""),
     [projects, setProjects] = useState<
-      { id: string; name: string; updated_at?: string }[]
+      { id: string; name: string; updated_at?: string; is_example?: boolean }[]
     >([]),
     [guide, setGuide] = useState(true),
     [errors, setErrors] = useState<string[]>([]),
@@ -528,15 +568,29 @@ function Studio() {
     future.current = [];
     setHistoryVersion((v) => v + 1);
   };
+  const caseDraftRef = useRef<{ id: string; baseline: string } | null>(null);
+  const exampleLoadVersion = useRef(0);
   const lastPersisted = useRef("");
   const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
-  const persist = (p: Project) => {
+  const persist = (p: Project, force = false) => {
+    const draft = caseDraftRef.current;
+    if (draft?.id === p.id) {
+      if (!force && draft.baseline === JSON.stringify(p))
+        return Promise.resolve(p);
+      p = savedExampleDraft(p);
+      caseDraftRef.current = null;
+      setRootProject((current) =>
+        current.id === p.id ? { ...current, name: p.name } : current,
+      );
+    }
     const task = saveQueue.current
       .catch(() => {})
       .then(() => api<Project>("/projects", p))
       .then((result) => {
-        if (rootProjectRef.current.id === p.id)
+        if (rootProjectRef.current.id === p.id) {
           lastPersisted.current = JSON.stringify(p);
+          localStorage.setItem("td-open-last-project", p.id);
+        }
         return result;
       });
     saveQueue.current = task;
@@ -549,6 +603,13 @@ function Studio() {
       );
     if (keepHistory) checkpoint();
     setProject(p);
+  };
+  const openExampleDraft = (original: Project) => {
+    const draft = exampleDraft(original);
+    replace(draft);
+    caseDraftRef.current = { id: draft.id, baseline: JSON.stringify(draft) };
+    lastPersisted.current = "";
+    setSaveState("案例预览 · 编辑后自动新建");
   };
   const undo = () => {
     const prev = history.current.pop();
@@ -598,25 +659,29 @@ function Studio() {
         if (cancelled) return;
         const list = r ? (Array.isArray(r) ? r : r.projects) : [];
         if (list.length) {
-          const p = await api<Project>("/projects/" + list[0].id);
+          const remembered = localStorage.getItem("td-open-last-project");
+          const chosen = list.find((item) => item.id === remembered) || list[0];
+          const p = await api<Project>("/projects/" + chosen.id);
           if (!cancelled) {
             lastPersisted.current = JSON.stringify(p);
-            setProject(p);
+            if (isExampleProject(p)) openExampleDraft(p);
+            else setProject(p);
             setSelected(p.nodes[0]?.id || "");
             setSelectedIds(new Set(p.nodes[0] ? [p.nodes[0].id] : []));
           }
         }
         if (!list.length) {
-          setSelected(projectRef.current.nodes[0]?.id || "");
+          const initial = await api<Project>("/examples/example_flow");
+          if (cancelled) return;
+          openExampleDraft(initial);
+          setSelected(initial.nodes[0]?.id || "");
           setSelectedIds(
-            new Set(
-              projectRef.current.nodes[0]
-                ? [projectRef.current.nodes[0].id]
-                : [],
-            ),
+            new Set(initial.nodes[0] ? [initial.nodes[0].id] : []),
           );
         }
-        setSaveState("已连接");
+        setSaveState(
+          caseDraftRef.current ? "案例预览 · 编辑后自动新建" : "已连接",
+        );
       })
       .catch(() => {
         if (!cancelled) {
@@ -634,6 +699,13 @@ function Studio() {
   }, []);
   useEffect(() => {
     if (!ready || !backend) return;
+    if (
+      caseDraftRef.current?.id === rootProject.id &&
+      caseDraftRef.current.baseline === JSON.stringify(rootProject)
+    ) {
+      setSaveState("案例预览 · 编辑后自动新建");
+      return;
+    }
     setSaveState("待保存");
     const timer = window.setTimeout(() => {
       const p = rootProjectRef.current;
@@ -735,7 +807,12 @@ function Studio() {
   }, [ready, backend]);
   useEffect(() => {
     const flush = () => {
-      const current = rootProjectRef.current;
+      let current = rootProjectRef.current;
+      const draft = caseDraftRef.current;
+      if (draft?.id === current.id) {
+        if (draft.baseline === JSON.stringify(current)) return;
+        current = savedExampleDraft(current);
+      }
       const serialized = JSON.stringify(current);
       if (serialized !== lastPersisted.current && serialized.length < 60000)
         navigator.sendBeacon(
@@ -754,7 +831,7 @@ function Studio() {
   }, [chats, busy]);
   const save = async () => {
     try {
-      await persist(rootProjectRef.current);
+      await persist(rootProjectRef.current, true);
       setBackend(true);
       setSaveState("已保存");
       notify("作品已保存到 data/projects");
@@ -902,16 +979,38 @@ function Studio() {
       `已复制 ${copies.length} 个节点${copiedEdges.length ? "及内部连线" : ""}`,
     );
   };
-  const usePreset = (kind: string) => {
-    const p = preset(kind);
-    replace(p);
-    setSelected(p.nodes[0]?.id || "");
-    setSelectedIds(new Set(p.nodes[0] ? [p.nodes[0].id] : []));
+  const usePreset = async (kind: string) => {
+    const version = ++exampleLoadVersion.current;
+    let original: Project;
+    if (kind === "empty") {
+      original = preset(kind);
+      replace(original);
+      caseDraftRef.current = null;
+    } else {
+      try {
+        original = await api<Project>("/examples/example_" + kind);
+      } catch (error) {
+        if (backend) {
+          notify(friendly(error));
+          return;
+        }
+        original = preset(kind);
+        original.id = "example_" + kind;
+      }
+      if (version !== exampleLoadVersion.current) return;
+      openExampleDraft(original);
+    }
+    setSelected(original.nodes[0]?.id || "");
+    setSelectedIds(new Set(original.nodes[0] ? [original.nodes[0].id] : []));
     setPreviewId("");
     timeRef.current = 0;
     setModal("");
     setTimeout(() => flow.fitView({ padding: 0.25, duration: 500 }), 100);
-    notify("示例已载入，修改会保存为独立作品");
+    notify(
+      kind === "empty"
+        ? "新作品已创建"
+        : "案例原件已保护；首次编辑后自动保存为你的项目",
+    );
   };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -971,6 +1070,14 @@ function Studio() {
   );
   const edges: Edge[] = project.edges.map((e) => ({
     ...e,
+    sourceHandle:
+      e.sourceHandle ||
+      byType[project.nodes.find((node) => node.id === e.source)?.type || ""]
+        ?.outputs[0]?.id,
+    targetHandle:
+      e.targetHandle ||
+      byType[project.nodes.find((node) => node.id === e.target)?.type || ""]
+        ?.inputs[0]?.id,
     animated: playing,
     style: {
       stroke:
@@ -1054,7 +1161,13 @@ function Studio() {
               (e.targetHandle || "in") === (c.targetHandle || "in")
             ),
         ),
-        { ...c, id: uid("edge") },
+        {
+          id: uid("edge"),
+          source: c.source,
+          target: c.target,
+          sourceHandle: c.sourceHandle,
+          targetHandle: c.targetHandle,
+        },
       ],
     });
   };
@@ -1539,7 +1652,12 @@ function Studio() {
       }>("/validate", p);
       if (!result.valid) throw new Error(JSON.stringify(result.errors));
       p = result.project || p;
+      const sourceId = p.id;
+      const importedExample = isExampleProject(p);
       p.id = uid("project");
+      p.settings = { ...p.settings };
+      delete p.settings.is_example;
+      if (importedExample) p.settings.source_example_id = sourceId;
       replace(p);
       setSelected("");
       setSelectedIds(new Set());
@@ -1951,11 +2069,22 @@ function Studio() {
           </div>
           <div className="graph-actions">
             <button
-              className={`icon-button ${!panMode ? "on" : ""}`}
-              title={panMode ? "切换到框选模式" : "切换到平移模式"}
-              onClick={() => setPanMode((v) => !v)}
+              className={`button small ${!panMode ? "active" : ""}`}
+              aria-label="框选节点"
+              aria-pressed={!panMode}
+              title="左键拖动空白处框选节点；中键平移画布"
+              onClick={() => setPanMode(false)}
             >
               <MousePointer2 size={14} />
+              框选
+            </button>
+            <button
+              className={`button small ${panMode ? "active" : ""}`}
+              aria-label="平移画布"
+              aria-pressed={panMode}
+              onClick={() => setPanMode(true)}
+            >
+              平移
             </button>
             <button
               className="icon-button"
@@ -1987,13 +2116,11 @@ function Studio() {
                 checkpoint();
                 setProject((p) => ({
                   ...p,
-                  nodes: p.nodes.map((n, i) => ({
-                    ...n,
-                    position: {
-                      x: (i % 4) * 245,
-                      y: Math.floor(i / 4) * 215,
-                    },
-                  })),
+                  nodes: arrangeNodes(
+                    p.nodes,
+                    byType,
+                    (id) => flow.getInternalNode(id)?.measured?.height,
+                  ),
                 }));
                 setTimeout(
                   () => flow.fitView({ padding: 0.2, duration: 350 }),
@@ -2048,7 +2175,7 @@ function Studio() {
             onNodeDragStart={checkpoint}
             onNodeClick={(event, n) => {
               setSelected(n.id);
-              if (!event.ctrlKey && !event.metaKey)
+              if (!event.ctrlKey && !event.metaKey && !event.shiftKey)
                 setSelectedIds(new Set([n.id]));
             }}
             onNodeDoubleClick={(_, n) =>
@@ -2078,6 +2205,8 @@ function Studio() {
             }}
             panOnDrag={panMode ? [0, 1] : [1]}
             selectionOnDrag={!panMode}
+            selectionMode={SelectionMode.Partial}
+            selectNodesOnDrag={false}
             zoomOnDoubleClick={false}
             selectionKeyCode="Shift"
             multiSelectionKeyCode={["Control", "Meta"]}
@@ -2109,7 +2238,7 @@ function Studio() {
           </ReactFlow>
           <div className="graph-hint">
             <MousePointer2 size={12} />
-            滚轮缩放 · Shift 多选 · 右键添加 · 双击节点预览
+            左键拖动框选 · 中键平移 · Shift 临时框选 · Ctrl 多选 · 右键添加
           </div>
         </div>
       </section>
@@ -3154,7 +3283,15 @@ function Studio() {
                             const result = await api<Project>(
                               "/projects/" + p.id,
                             );
-                            replace(result);
+                            if (isExampleProject(result))
+                              openExampleDraft(result);
+                            else {
+                              replace(result);
+                              localStorage.setItem(
+                                "td-open-last-project",
+                                result.id,
+                              );
+                            }
                             setModal("");
                             setSelected("");
                             setSelectedIds(new Set());
@@ -3173,7 +3310,9 @@ function Studio() {
                         </span>
                         <span>
                           <strong>{p.name}</strong>
-                          <small>{p.id}</small>
+                          <small>
+                            {p.is_example ? "案例原件 · 编辑会新建副本" : p.id}
+                          </small>
                         </span>
                         <ArrowRight size={16} />
                       </button>

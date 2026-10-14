@@ -43,7 +43,7 @@
       "type": "ref_top_op_viewer",
       "position": {
         "x": 0,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "OP Viewer",
@@ -58,7 +58,7 @@
       "type": "output",
       "position": {
         "x": 245,
-        "y": 205
+        "y": 210
       },
       "data": {
         "label": "画面输出",

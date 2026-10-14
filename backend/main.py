@@ -99,6 +99,19 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
     def list_projects():
         return store.list()
 
+    @app.get("/api/examples")
+    def list_examples():
+        return store.list_examples()
+
+    @app.get("/api/examples/{example_id}", response_model=Project)
+    def get_example(example_id: str):
+        try:
+            return normalize_project(store.get_example(example_id))
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="案例不存在") from None
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     @app.post("/api/projects", response_model=Project)
     def save_project(project: Project):
         project = require_valid(project)
