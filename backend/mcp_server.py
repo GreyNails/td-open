@@ -22,7 +22,8 @@ mcp = FastMCP("TD Open", instructions="Edit saved TD Open node graphs. Inspect o
 async def app_request(method: str, path: str, payload: Any = None) -> Any:
     try:
         async with httpx.AsyncClient(timeout=30, follow_redirects=False) as client:
-            response = await client.request(method, APP_URL + path, json=payload)
+            headers = {"x-td-desktop-token": os.environ["TD_DESKTOP_TOKEN"]} if os.environ.get("TD_DESKTOP_TOKEN") else {}
+            response = await client.request(method, APP_URL + path, json=payload, headers=headers)
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as exc:

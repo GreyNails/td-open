@@ -6,6 +6,7 @@ data/
 
 # Build outputs and dependencies.
 frontend/node_modules/
+desktop/node_modules/
 frontend/dist/
 frontend/.vite/
 *.tsbuildinfo

@@ -80,6 +80,7 @@ type Status = {
     ram_bytes: number;
     disk_free_bytes: number;
     platform: string;
+    accelerator?: "cuda" | "mps" | "cpu";
   };
   settings: {
     url: string;
@@ -654,7 +655,9 @@ export default function LocalAI({
                           `${g.index}: ${g.name} · ${Math.round(g.total_mib / 1024)} GiB`,
                       )
                       .join(" / ")
-                  : "未检测到 NVIDIA 显卡"}
+                  : status.hardware.accelerator === "mps"
+                    ? "Apple Silicon · MPS（模型兼容性依模型而异）"
+                    : "未检测到受支持的本地 GPU，可连接已有 ComfyUI"}
               </span>
               <span>空闲磁盘 {size(status.hardware.disk_free_bytes)}</span>
               <span className={status.runtime_online ? "local-online" : ""}>
@@ -778,7 +781,7 @@ export default function LocalAI({
                       </div>
                       {profile.validation?.passed && (
                         <small className="local-installed">
-                          界面实测通过 · 峰值{" "}
+                          Linux / NVIDIA 界面实测通过 · 峰值{" "}
                           {(profile.validation.peak_vram_mib / 1024).toFixed(2)}{" "}
                           GiB（L40 / 24 GiB 预算）
                         </small>

@@ -17,6 +17,7 @@ from backend.graph import GraphError, apply_commands, normalize_project, require
 from backend.models import CommandRequest, EvaluateRequest, Project
 from backend.runtime import evaluate
 from backend.storage import ROOT, ProjectStore
+from backend.paths import RESOURCE_ROOT
 
 MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 ALLOWED_ASSETS = {
@@ -42,6 +43,9 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
         finally:
             application.state.local_ai.shutdown()
     app = FastAPI(title="TD Open API", version="0.5.1", description="Local-first visual programming workspace", lifespan=lifespan)
+    if os.environ.get("TD_DESKTOP_TOKEN"):
+        from backend.desktop_access import DesktopAccess
+        app.add_middleware(DesktopAccess, token=os.environ["TD_DESKTOP_TOKEN"])
     store = ProjectStore(data_dir)
     app.state.store = store
     from backend.local_ai.manager import LocalAIManager
@@ -244,7 +248,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
     def unknown_api(path: str):
         raise HTTPException(status_code=404, detail="API 不存在")
 
-    frontend = ROOT / "frontend" / "dist"
+    frontend = RESOURCE_ROOT / "frontend" / "dist"
     # check_dir=False lets the frontend be built after the Python process starts.
     @app.get("/", include_in_schema=False)
     def index():

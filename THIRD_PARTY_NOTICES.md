@@ -54,6 +54,8 @@ Lucide 的附带 LICENSE 还说明部分图标来源于 Cole Bemis 的 Feather�
 
 ## 分发范围
 
+桌面安装包另外包含 Electron 44.7.2（MIT 与 Chromium 第三方许可）、CPython 3.11.14（PSF）、Node.js 24.22.0（MIT 与各组件许可）、Chromium、imageio-ffmpeg 0.6.0（Python 包 BSD-2-Clause；其中 FFmpeg 二进制保留其 LGPL/GPL 许可）、psutil 7.2.2（BSD-3-Clause）与 pyserial 3.5（BSD-3-Clause）。构建器收集前端与桌面依赖的完整 LICENSE / NOTICE 到 `td-runtime/licenses`；Python distribution 元数据、Node LICENSE 与浏览器声明随运行时保留。模型权重不包含在桌面安装包中。
+
 锁文件中的传递依赖、安装用 Node.js、Python、测试浏览器，以及使用者接入的模型与素材各自适用其许可。`.tools/`、`.venv/`、`node_modules/`、测试数据和构建产物默认不纳入源码仓库。若后续分发包含这些内容的安装包或前端构建包，应按实际打包内容收集并保留完整许可与 NOTICE；本索引不替代该步骤。
 
 TouchDesigner / Derivative 仅用于描述参照领域；本仓库不因功能对照而取得或授予其商标、程序或素材的权利。

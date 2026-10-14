@@ -26,7 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from backend.catalog import NODE_TYPES
 from backend.models import Project
 
-ROOT = Path(__file__).resolve().parents[1]
+from backend.paths import WORKSPACE_ROOT as ROOT
 CONFIG_DIR = ROOT / "data" / "config"
 MAX_GENERATED_ASSET_BYTES = 100 * 1024 * 1024
 router = APIRouter(prefix="/api", tags=["AI and MCP"])

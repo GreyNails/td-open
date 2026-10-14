@@ -9,8 +9,9 @@ import tempfile
 from uuid import uuid4
 
 from backend.models import Project
+from backend.paths import RESOURCE_ROOT, WORKSPACE_ROOT
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = WORKSPACE_ROOT
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$")
 
 
@@ -81,7 +82,7 @@ class ProjectStore:
         if local.is_file() and not local.is_symlink():
             return local
         if example_id.startswith("example_"):
-            shipped = ROOT / "examples" / (example_id[len("example_"):] + ".tdopen.json")
+            shipped = RESOURCE_ROOT / "examples" / (example_id[len("example_"):] + ".tdopen.json")
             if shipped.is_file() and not shipped.is_symlink():
                 return shipped
         raise FileNotFoundError("案例不存在")
@@ -100,7 +101,7 @@ class ProjectStore:
 
     def list_examples(self) -> list[dict]:
         ids = {"example_" + path.name.removesuffix(".tdopen.json")
-               for path in (ROOT / "examples").glob("*.tdopen.json") if not path.is_symlink()}
+               for path in (RESOURCE_ROOT / "examples").glob("*.tdopen.json") if not path.is_symlink()}
         ids.update(path.stem for path in self.examples_dir.glob("*.json") if not path.is_symlink())
         rows = []
         for identifier in sorted(ids):

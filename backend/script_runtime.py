@@ -93,10 +93,10 @@ def create_script_router(data_dir: Path) -> APIRouter:
         if source.is_symlink(): raise HTTPException(400, "脚本路径不能是符号链接")
         async with slots:
             source.write_text(request.code, encoding="utf-8")
-            env = {k: v for k, v in os.environ.items() if k in ("PATH", "LANG", "LC_ALL", "SYSTEMROOT")}
+            env = {k: v for k, v in os.environ.items() if k.upper() in ("PATH", "LANG", "LC_ALL", "SYSTEMROOT")}
             env["TMPDIR"] = str(temporary)
             try:
-                code, output, error = await run_bounded_process(sys.executable, "-I", str(worker.resolve()), str(source.resolve()),
+                code, output, error = await run_bounded_process(sys.executable, "-I", "-X", "utf8", str(worker.resolve()), str(source.resolve()),
                     payload=payload, cwd=str(script_dir), env=env, timeout=10)
             except asyncio.TimeoutError: raise HTTPException(408, "Python 脚本执行超过 10 秒")
             except ProcessOutputLimit: raise HTTPException(413, "脚本输出超过大小限制（JSON 8 MB / 进程错误 64 KB）")

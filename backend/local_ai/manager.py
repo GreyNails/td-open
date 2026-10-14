@@ -24,7 +24,7 @@ VALIDATION=json.loads(Path(__file__).with_name('validation.json').read_text())
 
 from .registry import ASSETS, PROFILES, RUNTIME, get_profile, profile_assets
 
-ROOT = Path(__file__).resolve().parents[2]
+from backend.paths import WORKSPACE_ROOT as ROOT
 TERMINAL = {'succeeded', 'failed', 'cancelled', 'interrupted'}
 EXTENSIONS = {'.png':'image','.jpg':'image','.jpeg':'image','.webp':'image','.gif':'image',
               '.wav':'audio','.flac':'audio','.mp3':'audio','.ogg':'audio','.opus':'audio',
@@ -52,9 +52,16 @@ def hardware() -> dict:
     try:
         ram = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
     except (AttributeError, OSError, ValueError): pass
+    if not ram:
+        try:
+            import psutil
+            ram = psutil.virtual_memory().total
+        except ImportError: pass
+    apple = platform.system() == 'Darwin' and platform.machine().lower() in ('arm64', 'aarch64')
     return dict(platform=platform.system(),python=platform.python_version(),gpus=gpus,ram_bytes=ram,
                 disk_free_bytes=shutil.disk_usage(ROOT).free,architecture=platform.machine(),
-                automatic_install_supported=platform.system() in ('Linux','Windows') and bool(gpus))
+                accelerator='cuda' if gpus else 'mps' if apple else 'cpu',
+                automatic_install_supported=(platform.system() in ('Linux','Windows') and bool(gpus)) or apple)
 
 
 class LocalAIManager:
@@ -255,23 +262,18 @@ class LocalAIManager:
             return
         hw = self.hw()
         if not hw['automatic_install_supported']:
-            raise ValueError('一键 CUDA 安装目前支持 Linux/Windows + NVIDIA。其他平台请按文档手动安装 ComfyUI 并连接本地服务')
-        if shutil.which('git') is None: raise ValueError('请先安装 Git，再重试一键安装')
+            raise ValueError('一键模型环境支持 NVIDIA CUDA 或 Apple Silicon MPS；其他设备可连接已配置的本地 ComfyUI')
         self.logs.mkdir(parents=True, exist_ok=True)
-        self.update(job_id,message='安装独立 Python / CUDA 环境',progress=2)
-        if not (self.runtime/'.git').is_dir():
-            self.runtime.parent.mkdir(parents=True, exist_ok=True)
-            self._run_command(job_id,['git','clone',RUNTIME['repository'],str(self.runtime)],self.logs/'install-runtime.log')
-        revision = subprocess.check_output(['git','-C',str(self.runtime),'rev-parse','HEAD'],text=True).strip()
-        if revision != RUNTIME['revision']:
-            self._run_command(job_id,['git','-C',str(self.runtime),'fetch','--depth','1','origin',RUNTIME['revision']],self.logs/'install-runtime.log')
-            self._run_command(job_id,['git','-C',str(self.runtime),'checkout','--detach',RUNTIME['revision']],self.logs/'install-runtime.log')
+        self.update(job_id,message='安装独立 Python / '+hw['accelerator'].upper()+' 环境',progress=2)
+        from .repositories import install_repository
+        install_repository(RUNTIME['repository'],RUNTIME['revision'],self.runtime,lambda:self.cancelled(job_id))
         if not self.python.exists():
             self._run_command(job_id,[sys.executable,'-m','venv',str(self.env_dir)],self.logs/'install-env.log')
         self._run_command(job_id,[str(self.python),'-m','pip','install','--no-cache-dir','--upgrade','pip'],self.logs/'install-env.log')
         command = [str(self.python),'-m','pip','install','--no-cache-dir',
-                   'torch=='+RUNTIME['torch'],'torchvision=='+RUNTIME['torchvision'],'torchaudio=='+RUNTIME['torchaudio'],
-                   '--index-url','https://download.pytorch.org/whl/'+RUNTIME['cuda'],'--extra-index-url','https://pypi.org/simple']
+                   'torch=='+RUNTIME['torch'],'torchvision=='+RUNTIME['torchvision'],'torchaudio=='+RUNTIME['torchaudio']]
+        if hw['accelerator']=='cuda':
+            command += ['--index-url','https://download.pytorch.org/whl/'+RUNTIME['cuda'],'--extra-index-url','https://pypi.org/simple']
         self._run_command(job_id,command,self.logs/'install-torch.log')
         core_requirements=self.env_dir/'requirements.core.txt'
         core_requirements.write_text('\n'.join(line for line in (self.runtime/'requirements.txt').read_text().splitlines()
@@ -284,10 +286,8 @@ class LocalAIManager:
             except RuntimeError:self._run_command(job_id,command+['--index-url','https://pypi.org/simple'],self.logs/'install-comfy.log')
         else:self._run_command(job_id,command+['--index-url','https://pypi.org/simple'],self.logs/'install-comfy.log')
         extension = self.runtime/'custom_nodes/ComfyUI-MelBandRoFormer'
-        if not (extension/'.git').is_dir():
-            self._run_command(job_id,['git','clone','https://github.com/kijai/ComfyUI-MelBandRoFormer.git',str(extension)],self.logs/'install-extension.log')
-        self._run_command(job_id,['git','-C',str(extension),'fetch','--depth','1','origin','92c86854e6654f4aacc97484471af95c98ea16d4'],self.logs/'install-extension.log')
-        self._run_command(job_id,['git','-C',str(extension),'checkout','--detach','92c86854e6654f4aacc97484471af95c98ea16d4'],self.logs/'install-extension.log')
+        install_repository('https://github.com/kijai/ComfyUI-MelBandRoFormer.git',
+                           '92c86854e6654f4aacc97484471af95c98ea16d4',extension,lambda:self.cancelled(job_id))
         plugin = self.runtime/'custom_nodes/td_open_nodes'
         plugin.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(Path(__file__).with_name('comfy_nodes.py'),plugin/'__init__.py')
@@ -366,8 +366,12 @@ class LocalAIManager:
                    'MPLCONFIGDIR':str(self.root/'cache/matplotlib'),
                    'PYTHONDONTWRITEBYTECODE':'1','PYTHONUNBUFFERED':'1','TOKENIZERS_PARALLELISM':'false'}
             gpu = next((g for g in self.hw()['gpus'] if g['index']==settings['gpu']),None)
-            if gpu is None: raise ValueError('未找到所选 NVIDIA GPU')
-            reserve = max(1.5,gpu['total_mib']/1024-settings['vram_limit_gb']+1.5)
+            accelerator = self.hw()['accelerator']
+            if gpu is None and accelerator!='mps': raise ValueError('未找到可用 CUDA / MPS 设备；可连接已配置的本地 ComfyUI')
+            reserve = max(1.5,gpu['total_mib']/1024-settings['vram_limit_gb']+1.5) if gpu else 1.5
+            if accelerator=='mps':
+                env.pop('CUDA_VISIBLE_DEVICES',None)
+                env['PYTORCH_ENABLE_MPS_FALLBACK']='1'
             command=[str(self.python),str(Path(__file__).with_name('comfy_bootstrap.py')),
                      '--listen','127.0.0.1','--port',str(url.port or 8189),'--base-directory',str(self.root),
                      '--models-directory',str(self.models_dir),'--disable-dynamic-vram','--lowvram',
@@ -389,7 +393,12 @@ class LocalAIManager:
         pid_file = self.root/'server.json'
         if not pid_file.exists(): raise ValueError('当前服务不是 TD Open 启动的进程，请在原终端停止')
         pid = json.loads(pid_file.read_text())['pid']
-        if os.name != 'nt':
+        if self.process and self.process.pid==pid:
+            if self.process.poll() is None:
+                self.process.terminate()
+                try: self.process.wait(timeout=15)
+                except subprocess.TimeoutExpired: self.process.kill(); self.process.wait(timeout=5)
+        elif platform.system()=='Linux':
             try:
                 command = Path(f'/proc/{pid}/cmdline').read_bytes()
                 if str(Path(__file__).with_name('comfy_bootstrap.py')).encode() not in command:
@@ -404,7 +413,6 @@ class LocalAIManager:
                     time.sleep(.1)
                 else:raise TimeoutError('停止服务尚未完成，请稍后重试')
             except FileNotFoundError: pass
-        elif self.process and self.process.pid==pid: self.process.terminate()
         else: raise ValueError('请在启动 ComfyUI 的终端停止服务')
         pid_file.unlink(missing_ok=True)
         return dict(stopped=True)
@@ -645,5 +653,10 @@ class LocalAIManager:
 
     def shutdown(self) -> None:
         self.closing=True
+        for event in self.cancel_events.values(): event.set()
+        if self.process and self.process.poll() is None:
+            self.process.terminate()
+            try: self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired: self.process.kill()
         self.worker.shutdown(wait=False,cancel_futures=True)
         self.installer.shutdown(wait=False,cancel_futures=True)

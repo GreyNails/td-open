@@ -163,6 +163,7 @@ class Session:
     fd: int | None = None
     memory: Any = None
     memory_generation: int = 0
+    serial_device: Any = None
 
     def push(self, value: Any, peer: Any = None):
         self.seq += 1
@@ -374,7 +375,20 @@ class IOManager:
             session.push({"topic": topic, "payload": decode_bytes(body[offset:]), "retained": bool(header & 1)})
 
     def open_serial(self, session):
-        if os.name != "posix": raise ValueError("Native serial requires POSIX; use an external adapter on this platform")
+        if os.name == "nt":
+            import serial
+            device = session.config.device
+            if not re.fullmatch(r"COM[1-9][0-9]{0,3}", device, re.IGNORECASE):
+                raise ValueError("Windows serial device must be COM1, COM2, etc.")
+            session.serial_device = serial.Serial(device, session.config.baud, timeout=0, write_timeout=2)
+            session.address = device
+            async def poll_serial():
+                while True:
+                    data = session.serial_device.read(65536)
+                    if data: session.push(decode_bytes(data))
+                    await asyncio.sleep(.01)
+            self.task(session, poll_serial())
+            return
         import termios
         device = Path(session.config.device).resolve()
         if not str(device).startswith(("/dev/tty", "/dev/pts/", "/dev/cu.")):
@@ -393,7 +407,6 @@ class IOManager:
         asyncio.get_running_loop().add_reader(fd, readable)
 
     def open_memory(self, session):
-        if os.name != "posix": raise ValueError("Shared mmap currently requires POSIX flock; use a bridge on this platform")
         if not re.fullmatch(r"[A-Za-z0-9_.-]{1,96}", session.config.channel): raise ValueError("Invalid shared memory channel")
         path = self.path("sharedmem/" + session.config.channel + ".bin"); path.parent.mkdir(parents=True, exist_ok=True)
         fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600); session.fd = fd
@@ -440,19 +453,31 @@ class IOManager:
             if not topic or "+" in topic or "#" in topic: raise ValueError("MQTT publish topic cannot contain wildcard")
             session.writer.write(mqtt_packet(0x31 if options.get("retain") else 0x30, mqtt_string(topic) + data)); await session.writer.drain()
         elif protocol == "serial":
+            if session.serial_device is not None:
+                await asyncio.to_thread(session.serial_device.write, data)
+                return {"sent": len(data), "session": sid}
             offset = 0
             while offset < len(data):
                 try: offset += os.write(session.fd, data[offset:])
                 except BlockingIOError: await asyncio.sleep(0.005)
         elif protocol == "sharedmem":
-            import fcntl
-            fcntl.flock(session.fd, fcntl.LOCK_EX)
+            if os.name == "nt":
+                import msvcrt
+                os.lseek(session.fd, 0, os.SEEK_SET)
+                msvcrt.locking(session.fd, msvcrt.LK_LOCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(session.fd, fcntl.LOCK_EX)
             try:
                 generation = struct.unpack_from("<Q", session.memory, 0)[0]
                 generation = generation + 2 if generation % 2 == 0 else generation + 1
                 struct.pack_into("<QQ", session.memory, 0, generation - 1, len(data)); session.memory[16:16 + len(data)] = data
                 struct.pack_into("<Q", session.memory, 0, generation); session.memory.flush()
-            finally: fcntl.flock(session.fd, fcntl.LOCK_UN)
+            finally:
+                if os.name == "nt":
+                    os.lseek(session.fd, 0, os.SEEK_SET)
+                    msvcrt.locking(session.fd, msvcrt.LK_UNLCK, 1)
+                else: fcntl.flock(session.fd, fcntl.LOCK_UN)
         else: self.bridge_push(cfg.channel, value, "node")
         return {"sent": len(data), "session": sid}
 
@@ -481,6 +506,7 @@ class IOManager:
                     with suppress(Exception): await writer.wait_closed()
         if session.websocket: await session.websocket.close()
         if session.memory: session.memory.close()
+        if session.serial_device: session.serial_device.close()
         if session.fd is not None:
             if session.config.protocol == "serial": asyncio.get_running_loop().remove_reader(session.fd)
             os.close(session.fd)
@@ -511,7 +537,7 @@ def create_io_router(data_dir: Path) -> APIRouter:
         from backend.io_adapters import ADAPTERS
         return {"protocols": PROTOCOLS, "file_root": "data/io", "max_bytes": MAX_BYTES,
                 "lease_seconds": 90, "sessions": len(manager.sessions),
-                "websocket": bool(importlib.util.find_spec("websockets")), "serial": os.name == "posix",
+                "websocket": bool(importlib.util.find_spec("websockets")), "serial": os.name == "posix" or bool(importlib.util.find_spec("serial")),
                 "adapters": [{**item, "connected": any(v.get("connected") and time.time() - v["last_seen"] < 90 for k, v in manager.bridge_status.items() if k == item["id"]), "native_driver": False} for item in ADAPTERS]}
 
     @router.post("/sessions")

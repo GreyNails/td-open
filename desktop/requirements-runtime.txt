@@ -1,0 +1,4 @@
+# Included with the desktop interpreter; no system Python/FFmpeg is required.
+imageio-ffmpeg==0.6.0
+psutil==7.2.2
+pyserial==3.5

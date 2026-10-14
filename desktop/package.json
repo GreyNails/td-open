@@ -1,0 +1,34 @@
+{
+  "name": "td-open-desktop",
+  "version": "0.6.0",
+  "description": "TD Open visual programming desktop studio",
+  "author": "TD Open contributors",
+  "license": "MIT",
+  "homepage": "https://github.com/GreyNails/td-open",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-builder --publish never",
+    "test": "node --test test/*.test.cjs"
+  },
+  "devDependencies": {
+    "electron": "44.7.2",
+    "electron-builder": "26.17.0"
+  },
+  "build": {
+    "appId": "org.tdopen.studio",
+    "productName": "TD Open",
+    "asar": true,
+    "directories": {"output": "../dist/desktop", "buildResources": "assets"},
+    "files": ["main.cjs", "security.cjs", "smoke.cjs", "loading.html", "package.json"],
+    "extraResources": [{"from": "../build/desktop/resources", "to": "td-runtime", "filter": ["**/*"]}],
+    "artifactName": "TD-Open-${version}-${os}-${arch}.${ext}",
+    "win": {"target": [{"target": "nsis", "arch": ["x64"]}], "icon": "assets/icon.ico", "signAndEditExecutable": true},
+    "nsis": {"oneClick": true, "perMachine": false, "createDesktopShortcut": true, "createStartMenuShortcut": true, "deleteAppDataOnUninstall": false},
+    "mac": {"target": ["dmg", "zip"], "category": "public.app-category.graphics-design", "icon": "assets/icon.icns", "identity": "-", "hardenedRuntime": false, "notarize": false,
+      "extendInfo": {"NSMicrophoneUsageDescription": "TD Open uses microphone input for audio-reactive nodes.", "NSCameraUsageDescription": "TD Open uses camera input for video nodes."}},
+    "dmg": {"contents": [{"x": 130, "y": 220}, {"x": 410, "y": 220, "type": "link", "path": "/Applications"}]},
+    "linux": {"target": "dir", "icon": "assets/icon.png", "category": "Graphics"},
+    "publish": null
+  }
+}

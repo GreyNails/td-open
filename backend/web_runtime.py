@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, ConfigDict
 from backend.process_runtime import ProcessOutputLimit, run_bounded_process
 from backend.storage import ROOT
+from backend.paths import RESOURCE_ROOT
 
 
 class WebAction(BaseModel):
@@ -48,15 +49,15 @@ def create_web_router(data_dir: Path):
         if any(action.type != "scroll" and not action.selector for action in request.actions):
             raise HTTPException(422, "click / fill 操作需要 selector")
         node = ROOT / ".tools/node-v22.21.1-linux-x64/bin/node"
-        executable = str(node) if node.exists() else shutil.which("node")
+        executable = os.environ.get("TD_NODE_BINARY") or (str(node) if node.exists() else shutil.which("node"))
         if not executable: raise HTTPException(503, "Web Render 需要 Node.js 和 Playwright Chromium")
         name = uuid4().hex + ".png"; path = exports / name
         payload = request.model_dump(); payload["output"] = str(path)
-        env = {key: value for key, value in os.environ.items() if key in ("PATH", "LANG", "LC_ALL", "SYSTEMROOT", "TD_CHROMIUM", "PLAYWRIGHT_BROWSERS_PATH", "HOME")}
+        env = {key: value for key, value in os.environ.items() if key.upper() in ("PATH", "LANG", "LC_ALL", "SYSTEMROOT", "TD_CHROMIUM", "PLAYWRIGHT_BROWSERS_PATH", "HOME", "TEMP", "TMP")}
         env["TMPDIR"] = str(temporary)
         try:
             async with slots:
-                code, out, error = await run_bounded_process(executable, str(ROOT / "scripts/web-render.mjs"),
+                code, out, error = await run_bounded_process(executable, str(RESOURCE_ROOT / "scripts/web-render.mjs"),
                     payload=json.dumps(payload).encode(), env=env, cwd=str(ROOT), timeout=25,
                     stdout_limit=16384, stderr_limit=65536)
             if code: raise HTTPException(422, "Chromium 网页渲染失败：" + error.decode(errors="replace")[-1600:])

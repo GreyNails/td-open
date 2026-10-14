@@ -53,6 +53,8 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 
 ## 在这台机器启动
 
+Windows 与 macOS 用户可以使用独立桌面安装包，无需先安装 Python 或 Node.js。见 [桌面版下载、安装、数据迁移和平台支持说明](docs/DESKTOP.md)；[安装包发布页](https://github.com/GreyNails/td-open/releases)。桌面版与网页版共享工作台、节点和工程格式；大型模型首次使用仍需下载，Mac 的本地模型兼容范围与 NVIDIA 环境有区别。
+
 环境、依赖和构建产物已放在 `/storage/homes/hongzj/dell/td_open`。
 
 ```bash
