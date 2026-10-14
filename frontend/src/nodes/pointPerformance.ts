@@ -262,7 +262,7 @@ export function pointCloudPLY(spec: PointCloudSpec): string {
       : p,
   );
   return (
-    "ply\nformat ascii 1.0\ncomment TD Open real generated mesh surface samples\nelement vertex " +
+    "ply\nformat ascii 1.0\ncomment TD Open point cloud coordinates\nelement vertex " +
     points.length +
     "\nproperty float x\nproperty float y\nproperty float z\nend_header\n" +
     points.map((p) => p.map((v) => v.toFixed(6)).join(" ")).join("\n") +

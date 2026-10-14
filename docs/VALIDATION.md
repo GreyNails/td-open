@@ -2,6 +2,14 @@
 
 日期：2026-10-14。环境：Linux、Python 3.11、项目内 Node 22.21.1、Chromium 无头浏览器（软件 WebGL）。测试数据、报告、截图、缓存和导出保存在本项目内。自动测试使用本地模拟服务；DeepSeek 与本地模型的真实运行范围在下文注明。
 
+## @节点与五角星像素点云
+
+新增 2 个节点、1 个无模型案例：静态目录 751 个节点、96 个案例（另有空白工程）。`frontend/browser-assistant-mentions.mjs` 使用真实 DeepSeek API，通过 6 项原生浏览器检查：中文 @ 搜索与键盘选择；发送原图运行信息并提出像素处理链路；应用后原图不变且图校验通过；第二次 @ 两个节点读回真实点数、Z 范围及尺寸；撤销 / 重做；内置案例原件不变。两次模型请求没有模拟或拦截。
+
+独立 Chromium 引擎验证 `frontend/browser-star-raster.mjs`：原始五角星 PNG → 2653 个实际前景点 → 960×540 正视图，逐点核对原图采样前景，全部 Z=0，运行错误为零；导出 `data/artifacts/star-pointcloud.ply`。没有调用图片或三维生成模型。单元测试另覆盖深色前景、透明背景、轮廓采样、空遮罩、比例保留、歧义节点名、未计算状态和无效摘要拒绝。
+
+报告：`data/artifacts/assistant-mentions-report.json`、`star-raster-validation.json`；真实界面：[截图](images/assistant-star-pointcloud.png)。使用方法见 [@节点与平面点云](AI_API.md#引用节点与图片转平面点云)。
+
 ## DeepSeek 官方创作助手实测
 
 使用用户授权的官方密钥访问 `https://api.deepseek.com`：模型列表 HTTP 200，实际可用模型为 `deepseek-flash` 与 `deepseek-v4-pro`。本次选择 `deepseek-flash`；正式服务的只读对话 HTTP 200，正确解释现有节点链路并返回空命令，案例原件不变。

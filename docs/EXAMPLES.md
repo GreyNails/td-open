@@ -1,6 +1,6 @@
 # 案例索引
 
-95 个可编辑案例，加 1 份空白作品。点击编辑器的“示例作品”可以搜索、分类、筛选并打开；也可以下载下列 JSON 后导入。缩略图来自内置引擎的实际输出；AI / MCP 案例使用明确标注的连接说明卡片；潮汐之像使用本机实跑的点云效果图，其他机器需安装模型后自行生成。
+96 个可编辑案例，加 1 份空白作品。点击编辑器的“示例作品”可以搜索、分类、筛选并打开；也可以下载下列 JSON 后导入。缩略图来自内置引擎的实际输出；AI / MCP 案例使用明确标注的连接说明卡片；潮汐之像使用本机实跑的点云效果图，其他机器需安装模型后自行生成。
 
 ![部分实际输出](images/example-showcase.png)
 
@@ -8,6 +8,7 @@
 
 | 案例 | 节点数 | 练习方向 | 运行条件 |
 | --- | ---: | --- | --- |
+| [星图 · 图片变成平面点云](../examples/star-points.tdopen.json) | 4 | @图片节点让助手搭建链路；切换 bright / dark / alpha 适配背景，fill / outline 切换填充与轮廓。 | 无需外部服务 |
 | [相机、灯光与材质](../examples/editable-scene-material.tdopen.json) | 10 | 调整 Camera 的位置、PBR 的粗糙度，以及 Light 的方向，观察各自作用。 | 无需外部服务 |
 | [布尔建模实验](../examples/boolean-mesh-lab.tdopen.json) | 11 | 移动 Transform 改变切口，再将 Boolean 从 subtract 切换到 union 或 intersect。 | 无需外部服务 |
 | [骨骼捕获与蒙皮](../examples/bone-capture-deform.tdopen.json) | 9 | 调整右侧 Bone 的 rz，观察 Deform 计算后的真实顶点位置。 | 无需外部服务 |

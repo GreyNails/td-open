@@ -1,0 +1,96 @@
+{
+  "id": "example_star-points",
+  "name": "星图 · 图片变成平面点云",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "media_1",
+      "type": "media",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "图片 / 视频",
+        "params": {
+          "url": "/examples/five-point-star.png",
+          "fit": "contain"
+        }
+      }
+    },
+    {
+      "id": "image_to_pointcloud_sop_2",
+      "type": "image_to_pointcloud_sop",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "图片转平面点云",
+        "params": {
+          "resolution": 200,
+          "threshold": 0.5,
+          "mask": "bright",
+          "region": "fill",
+          "width": 3
+        }
+      }
+    },
+    {
+      "id": "pointcloud_project_top_3",
+      "type": "pointcloud_project_top",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "平面点云正视图",
+        "params": {
+          "view_width": 3.2,
+          "point_size": 1.1,
+          "source_color": false,
+          "color": "#ffd598",
+          "background": "#080d1b"
+        }
+      }
+    },
+    {
+      "id": "output_4",
+      "type": "output",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "media_1",
+      "target": "image_to_pointcloud_sop_2",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_2",
+      "source": "image_to_pointcloud_sop_2",
+      "target": "pointcloud_project_top_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "pointcloud_project_top_3",
+      "target": "output_4",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "star-points"
+  }
+}

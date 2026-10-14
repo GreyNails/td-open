@@ -2373,3 +2373,55 @@ svg {
   border: 1px dashed #a5d87b !important;
   background: #b7e28b0b !important;
 }
+
+.assistant-input {
+  position: relative;
+  display: block !important;
+}
+.assistant-references {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.assistant-references span {
+  font-size: 10px;
+  color: #92dfc0;
+  background: #19362e;
+  padding: 4px 7px;
+  border-radius: 6px;
+}
+.assistant-mentions {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow: auto;
+  background: #20232c;
+  border: 1px solid #555b70;
+  border-radius: 8px;
+  z-index: 30;
+  display: block !important;
+  box-shadow: 0 8px 30px #0008;
+}
+.assistant-mentions button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 9px 12px;
+  text-align: left;
+  color: #eee;
+  border: 0;
+  background: transparent;
+}
+.assistant-mentions button[aria-selected="true"],
+.assistant-mentions button:hover {
+  background: #34463f;
+}
+.assistant-mentions small {
+  color: #a6acbd;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}

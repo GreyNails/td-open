@@ -3767,6 +3767,136 @@
     "outputs": []
   },
   {
+    "type": "image_to_pointcloud_sop",
+    "label": "图片转平面点云",
+    "english": "Image to Planar Point Cloud",
+    "family": "SOP",
+    "description": "直接采样已有图片的像素，以亮度或透明度筛选前景，输出 XY 平面、Z=0 的点云；保留比例、像素颜色和 UV，不调用生成模型。",
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "TOP",
+        "label": "原始图片 / 遮罩"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "平面点云"
+      }
+    ],
+    "params": [
+      {
+        "key": "resolution",
+        "label": "最长边采样数",
+        "type": "number",
+        "default": 160,
+        "min": 8,
+        "max": 512,
+        "step": 1
+      },
+      {
+        "key": "threshold",
+        "label": "前景阈值",
+        "type": "number",
+        "default": 0.5,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "key": "mask",
+        "label": "前景选择",
+        "type": "select",
+        "default": "bright",
+        "options": [
+          "bright",
+          "dark",
+          "alpha"
+        ]
+      },
+      {
+        "key": "region",
+        "label": "采样区域",
+        "type": "select",
+        "default": "fill",
+        "options": [
+          "fill",
+          "outline"
+        ]
+      },
+      {
+        "key": "width",
+        "label": "图像平面宽度",
+        "type": "number",
+        "default": 3,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1
+      }
+    ]
+  },
+  {
+    "type": "pointcloud_project_top",
+    "label": "平面点云正视图",
+    "english": "Planar Point Cloud View",
+    "family": "TOP",
+    "description": "正交投影真实点坐标，显示清晰的点阵轮廓。无透视旋转，不改变点云数据。",
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "真实网格 / 点云"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "点阵画面"
+      }
+    ],
+    "params": [
+      {
+        "key": "view_width",
+        "label": "视野宽度",
+        "type": "number",
+        "default": 4,
+        "min": 0.1,
+        "max": 20,
+        "step": 0.1
+      },
+      {
+        "key": "point_size",
+        "label": "点半径（像素）",
+        "type": "number",
+        "default": 1.2,
+        "min": 0.3,
+        "max": 8,
+        "step": 0.1
+      },
+      {
+        "key": "source_color",
+        "label": "使用图片原色",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "key": "color",
+        "label": "点颜色",
+        "type": "color",
+        "default": "#ffd598"
+      },
+      {
+        "key": "background",
+        "label": "背景",
+        "type": "color",
+        "default": "#080d1b"
+      }
+    ]
+  },
+  {
     "type": "model_to_pointcloud_sop",
     "label": "模型转表面点云",
     "english": "Surface Point Cloud",

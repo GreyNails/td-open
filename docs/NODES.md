@@ -1,6 +1,6 @@
 # 节点手册
 
-当前目录含 749 个节点入口：18 AI、128 DAT、205 TOP、213 CHOP、131 SOP、1 OUT、40 COMP、13 MAT。其中 92 个入口需要外部 SDK/设备适配器，不计为内置原生功能。完整逐项映射见 [参考能力清单](reference-capabilities.json)。
+当前目录含 751 个节点入口：18 AI、128 DAT、206 TOP、213 CHOP、132 SOP、1 OUT、40 COMP、13 MAT。其中 92 个入口需要外部 SDK/设备适配器，不计为内置原生功能。完整逐项映射见 [参考能力清单](reference-capabilities.json)。
 
 浏览器执行实际图像、采样、表格、几何与场景运算；Python 服务提供无状态数据求值、脚本与协议。节点使用同名创作概念，但不是 TouchDesigner 参数/数值/API 兼容声明。脚本必须手动运行，设备与音频权限必须显式启用。下表给出默认参数，范围与说明以界面或共享 JSON 目录为准。
 
@@ -162,7 +162,7 @@
 | 表格转对象 / `table_to_json` | in:DAT → out:DAT | 浏览器 / 服务端 | 将 CSV 表头映射成每行对象的键，并可把数字单元格转换为数值。<br>`numeric=True` |
 | 数值转文本 / `chop_to_dat` | in:CHOP → out:DAT | 浏览器 / 服务端 | 把数值信号格式化为指定小数位的文本，便于字幕或数据导出。<br>`digits=2`；`prefix=`；`suffix=` |
 
-## TOP（205 个）
+## TOP（206 个）
 
 | 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
 | --- | --- | --- | --- |
@@ -178,6 +178,7 @@
 | 频谱画面 / `spectrum` | in:CHOP → out:TOP | 浏览器 | 将音频信号绘制成可视化频谱。<br>`bars=64` |
 | 粒子星环 / `particles` | mod:CHOP → out:TOP | 浏览器 | 生成旋转的空间粒子环。输入音频或波形可驱动环的起伏。<br>`count=1600`；`speed=0.3`；`size=2`；`color=#c1a2ff`；`spread=1` |
 | 3D 渲染 / `render` | in:any、mod:CHOP → out:TOP | 浏览器 | 用 WebGL 渲染几何体。支持线框、灯光和自动旋转。<br>`color=#a888ff`；`wireframe=True`；`speed=0.3` |
+| 平面点云正视图 / `pointcloud_project_top` | in:SOP → out:TOP | 浏览器 | 正交投影真实点坐标，显示清晰的点阵轮廓。无透视旋转，不改变点云数据。<br>`view_width=4`；`point_size=1.2`；`source_color=False`；`color=#ffd598`；`background=#080d1b` |
 | 潮汐声景舞台 / `pointcloud_stage_top` | in:SOP → out:TOP | 浏览器 | 为真实点云提供发光粒子、缓慢运镜、光环与声部指示。点击生成整件作品，再启用音频；音频时钟同步驱动画面。<br>`title=潮汐之像`；`subtitle=TIDAL MUSE · WHERE SOUND BECOMES FORM`；`width=1280`；`height=720`；`point_size=3.2`；`glow=2.1`；`warm=#ffd089`；`cool=#4de0cc`；`accent=#aa80ff`；`volume=0.65` |
 | TOP 组件输入 / `network_in_top` | — → out:TOP | 浏览器 | 从所属组件的指定编号输入端口读取数据。根网络无输入时返回空值。<br>`index=1` |
 | TOP 组件输出 / `network_out_top` | in:TOP → out:TOP | 浏览器 | 将内部网络结果输出到组件外部的指定端口。<br>`index=1` |
@@ -590,11 +591,12 @@
 | 触发计时 / `timer_chop` | in:CHOP → out:CHOP | 浏览器 | 输入上升沿启动计时，输出秒数或 0–1 进度，支持循环。<br>`threshold=0.5`；`duration=2`；`loop=False`；`output=progress` |
 | 变化速率限制 / `slew_chop` | in:CHOP → out:CHOP | 浏览器 | 分别限制每秒上升和下降的最大幅度。<br>`rise=1`；`fall=1` |
 
-## SOP（131 个）
+## SOP（132 个）
 
 | 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
 | --- | --- | --- | --- |
 | 几何体 / `geometry` | — → out:SOP | 浏览器 | 创建真正的三维网格。连接到 3D 渲染节点得到画面。<br>`shape=torus`；`detail=32` |
+| 图片转平面点云 / `image_to_pointcloud_sop` | in:TOP → out:SOP | 浏览器 | 直接采样已有图片的像素，以亮度或透明度筛选前景，输出 XY 平面、Z=0 的点云；保留比例、像素颜色和 UV，不调用生成模型。<br>`resolution=160`；`threshold=0.5`；`mask=bright`；`region=fill`；`width=3` |
 | 模型转表面点云 / `model_to_pointcloud_sop` | in:SOP → out:SOP | 浏览器 | 读取真实 GLB / SOP 网格，按三角面面积进行确定性采样；保留法线，不使用替代几何。<br>`count=28000`；`seed=41`；`height=2.7` |
 | 四声部点云编舞 / `pointcloud_dance_sop` | in:SOP、vocals:CHOP、drums:CHOP、bass:CHOP、other:CHOP → out:SOP | 浏览器 | 人声变色、鼓点沿表面法线推进、贝斯呼吸缩放、其他声部产生流动波纹；保留真实点云，GPU 执行连续变形。<br>`pulse=0.12`；`scale=0.14`；`ripple=0.075`；`color_mix=0.75` |
 | SOP 组件输入 / `network_in_sop` | — → out:SOP | 浏览器 | 从所属组件的指定编号输入端口读取数据。根网络无输入时返回空值。<br>`index=1` |

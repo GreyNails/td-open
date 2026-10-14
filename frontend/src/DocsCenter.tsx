@@ -14,6 +14,7 @@ import local from "../../docs/LOCAL_AI.md?raw";
 import tidal from "../../docs/TIDAL_MUSE.md?raw";
 import tidalPicture from "../../docs/images/tidal-muse.png";
 import tidalStudio from "../../docs/images/tidal-muse-studio.png";
+import starPicture from "../../docs/images/star-pointcloud.png";
 import "./docs.css";
 
 const documents: {
@@ -264,13 +265,15 @@ function DocsCenter({
       img: ({ src = "", alt }) => (
         <img
           src={
-            src === "images/tidal-muse-studio.png"
-              ? tidalStudio
-              : src === "images/tidal-muse.png"
-                ? tidalPicture
-                : /^https?:/.test(src)
-                  ? src
-                  : `https://raw.githubusercontent.com/GreyNails/td-open/main/docs/${src.replace(/^\.\//, "")}`
+            src === "images/star-pointcloud.png"
+              ? starPicture
+              : src === "images/tidal-muse-studio.png"
+                ? tidalStudio
+                : src === "images/tidal-muse.png"
+                  ? tidalPicture
+                  : /^https?:/.test(src)
+                    ? src
+                    : `https://raw.githubusercontent.com/GreyNails/td-open/main/docs/${src.replace(/^\.\//, "")}`
           }
           alt={alt || "文档示意图"}
           loading="lazy"

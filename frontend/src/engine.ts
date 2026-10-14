@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { cookImagePointCloud } from "./nodes/imagePointCloud";
 import { loadSceneModel } from "./nodes/sceneModelLoader";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { api } from "./types";
@@ -816,6 +817,8 @@ export class StudioEngine {
     resolveNode: (path: string) => Value,
   ): Value {
     const state = this.state(n.id);
+    if (n.type === "image_to_pointcloud_sop" || n.type === "pointcloud_project_top")
+      return cookImagePointCloud(n, rawInput(), state);
     const performanceTime = this.performance.status.ready
       ? this.performance.time
       : time;
@@ -1167,6 +1170,8 @@ export class StudioEngine {
               ? media.videoHeight
               : media?.naturalHeight;
         if (media && mw && mh) {
+          // Preserve PNG alpha for downstream masks and pixel sampling.
+          ctx.clearRect(0, 0, W, H);
           const factor =
             s("fit") === "contain" || localImageTypes.has(type)
               ? Math.min(W / mw, H / mh)

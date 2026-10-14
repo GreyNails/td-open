@@ -1,3 +1,5 @@
+import { AssistantComposer } from "./AssistantComposer";
+import { mentionedNodes, captureNodeRuntime } from "./assistantContext";
 import {
   exampleDraft,
   isExampleProject,
@@ -1173,6 +1175,24 @@ function Studio() {
   };
   const send = async (message = prompt) => {
     if (!message.trim() || busy) return;
+    const mentioned = mentionedNodes(message, projectRef.current);
+    if (mentioned.length > 12) {
+      notify("每次最多引用 12 个节点");
+      return;
+    }
+    const contextIds = [
+      ...new Set([
+        ...mentioned,
+        ...(selected && projectRef.current.nodes.some((n) => n.id === selected)
+          ? [selected]
+          : []),
+      ]),
+    ].slice(0, 12);
+    const runtime = captureNodeRuntime(
+      engine.current,
+      projectRef.current,
+      contextIds,
+    );
     setPrompt("");
     setChats((c) => [...c, { role: "user", text: message }]);
     setBusy("chat");
@@ -1183,6 +1203,8 @@ function Studio() {
           message,
           project: projectRef.current,
           selected_node: selected || undefined,
+          mentioned_nodes: mentioned,
+          node_runtime: runtime,
           provider_id: chatProvider || undefined,
         },
       );
@@ -2938,18 +2960,11 @@ function Studio() {
           <div ref={chatBottom} />
         </div>
         <div className="chat-compose">
-          <textarea
-            aria-label="对话指令"
-            placeholder="描述你想创作的画面…"
-            rows={2}
+          <AssistantComposer
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void send();
-              }
-            }}
+            onChange={setPrompt}
+            onSend={() => void send()}
+            project={project}
           />
           <div>
             <select
@@ -2976,7 +2991,9 @@ function Studio() {
             </button>
           </div>
         </div>
-        <div className="assistant-footnote">修改前可预览 · 支持撤销</div>
+        <div className="assistant-footnote">
+          @ 引用节点：发送当前参数与运行摘要 · 修改可预览、撤销
+        </div>
       </section>
     ),
   };

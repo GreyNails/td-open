@@ -428,3 +428,36 @@ def test_real_streamable_http_discovery_call_error_and_cleanup(client, loopback_
     terminated = [session for method, session in events if method == "DELETE"]
     assert len(terminated) == 4
     assert len(set(terminated)) == 4
+
+
+def test_chat_mentions_include_real_context_and_pixel_pipeline_schemas(client, monkeypatch):
+    client.post('/api/providers', json=provider())
+    def handler(request):
+        prompt = json.loads(json.loads(request.content)['messages'][0]['content'])
+        context = prompt['referenced_nodes'][0]
+        assert context['id'] == 'noise1'
+        assert 'scale' in context['parameters']
+        assert context['runtime']['outputs']['out']['width'] == 640
+        types = {n['type']: n for n in prompt['node_types']}
+        assert 'image_to_pointcloud_sop' in types
+        assert 'pointcloud_project_top' in types
+        assert 'default' in types['image_to_pointcloud_sop']['parameters'][0]
+        return httpx.Response(200, json={'choices': [{'message': {'content': json.dumps({'reply': '读取完成', 'commands': []})}}]})
+    mock_http(monkeypatch, handler)
+    response = client.post('/api/chat', json={'provider_id': 'local-ai', 'message': '@noise1 读取图片变成平面点云', 'project': project(), 'mentioned_nodes': ['noise1'], 'node_runtime': [{'id': 'noise1', 'outputs': {'out': {'kind': 'image', 'width': 640, 'height': 360}}}]})
+    assert response.status_code == 200, response.text
+
+
+def test_chat_rejects_stale_mentions_unrelated_runtime_and_invalid_ports(client):
+    base = {'message': '读取节点', 'project': project()}
+    for payload in [
+        {'mentioned_nodes': ['deleted']},
+        {'node_runtime': [{'id': 'noise1'}]},
+        {'mentioned_nodes': ['noise1'], 'node_runtime': [{'id': 'noise1', 'outputs': {'missing': {}}}]},
+        {'mentioned_nodes': ['noise1'] * 13},
+        {'mentioned_nodes': ['noise1'], 'node_runtime': [{'id': 'noise1', 'outputs': {'out': {'text': 'x' * 17000}}}]},
+    ]:
+        assert client.post('/api/chat', json={**base, **payload}).status_code == 422
+    response = client.post('/api/chat', json={**base, 'mentioned_nodes': ['noise1']})
+    assert response.status_code == 200
+    assert 'not_captured' in response.json()['reply']

@@ -21,6 +21,57 @@ const port = (id: string, kind: string, label: string): Port => ({
 const geo = port("in", "SOP", "真实网格 / 点云");
 export const performanceCatalog: NodeSpec[] = [
   {
+    type: "image_to_pointcloud_sop",
+    label: "图片转平面点云",
+    english: "Image to Planar Point Cloud",
+    family: "SOP",
+    description:
+      "直接采样已有图片的像素，以亮度或透明度筛选前景，输出 XY 平面、Z=0 的点云；保留比例、像素颜色和 UV，不调用生成模型。",
+    inputs: [port("in", "TOP", "原始图片 / 遮罩")],
+    outputs: [port("out", "SOP", "平面点云")],
+    params: [
+      num("resolution", "最长边采样数", 160, 8, 512, 1),
+      num("threshold", "前景阈值", 0.5, 0, 1),
+      {
+        key: "mask",
+        label: "前景选择",
+        type: "select",
+        default: "bright",
+        options: ["bright", "dark", "alpha"],
+      },
+      {
+        key: "region",
+        label: "采样区域",
+        type: "select",
+        default: "fill",
+        options: ["fill", "outline"],
+      },
+      num("width", "图像平面宽度", 3, 0.1, 10, 0.1),
+    ],
+  },
+  {
+    type: "pointcloud_project_top",
+    label: "平面点云正视图",
+    english: "Planar Point Cloud View",
+    family: "TOP",
+    description:
+      "正交投影真实点坐标，显示清晰的点阵轮廓。无透视旋转，不改变点云数据。",
+    inputs: [geo],
+    outputs: [port("out", "TOP", "点阵画面")],
+    params: [
+      num("view_width", "视野宽度", 4, 0.1, 20, 0.1),
+      num("point_size", "点半径（像素）", 1.2, 0.3, 8, 0.1),
+      {
+        key: "source_color",
+        label: "使用图片原色",
+        type: "boolean",
+        default: false,
+      },
+      { key: "color", label: "点颜色", type: "color", default: "#ffd598" },
+      { key: "background", label: "背景", type: "color", default: "#080d1b" },
+    ],
+  },
+  {
     type: "model_to_pointcloud_sop",
     label: "模型转表面点云",
     english: "Surface Point Cloud",

@@ -45,6 +45,18 @@ const t = (
   requires,
 });
 export const templates: ExampleTemplate[] = [
+  t(
+    "star-points",
+    "星图 · 图片变成平面点云",
+    "三维",
+    "读取五角星 PNG，按前景像素采样为 Z=0 的点阵，完全不调用生成模型。",
+    "@图片节点让助手搭建链路；切换 bright / dark / alpha 适配背景，fill / outline 切换填充与轮廓。",
+    chain(
+      ["media", { url: "/examples/five-point-star.png", fit: "contain" }],
+      ["image_to_pointcloud_sop", { resolution: 200 }],
+      ["pointcloud_project_top", { view_width: 3.2, point_size: 1.1 }],
+    ),
+  ),
   ...referenceTemplates,
   ...localTemplates,
   t(
