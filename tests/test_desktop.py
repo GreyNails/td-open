@@ -59,9 +59,23 @@ def test_owned_backend_uses_writable_workspace_preserves_examples_and_exits(tmp_
             assert result.status_code == 200, result.text
             assert result.json()["value"] == {"中文": 42}
             assert client.get("/api/examples/example_flow").json() == original
+        import asyncio
+        from mcp import ClientSession, StdioServerParameters
+        from mcp.client.stdio import stdio_client
+        async def check_mcp():
+            parameters = StdioServerParameters(command=sys.executable, args=[str(RESOURCE_ROOT / "backend/desktop_mcp.py"), "--session", str(workspace / ".desktop-session.json")])
+            async with stdio_client(parameters) as (read, write):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    tools = await session.list_tools()
+                    assert "list_operators" in [tool.name for tool in tools.tools]
+                    projects = await session.call_tool("list_projects", {})
+                    assert not projects.isError and saved["id"] in str(projects.content)
+        asyncio.run(check_mcp())
         process.stdin.close()  # Simulates a parent crash as well as a normal quit.
         process.wait(timeout=20)
         assert process.returncode == 0
+        assert not (workspace / ".desktop-session.json").exists()
     finally:
         if process.poll() is None: process.kill(); process.wait(timeout=5)
 
@@ -74,3 +88,38 @@ def test_apple_silicon_uses_mps_environment_instead_of_cuda(monkeypatch):
     assert hw["accelerator"] == "mps" and hw["automatic_install_supported"]
     monkeypatch.setattr(manager.platform, "machine", lambda: "x86_64")
     assert not manager.hardware()["automatic_install_supported"]
+
+
+@pytest.mark.parametrize("entry", ["../../outside.py", "repo/../../outside.py"])
+def test_runtime_source_download_rejects_escaping_paths(tmp_path, monkeypatch, entry):
+    import io
+    import zipfile
+    from backend.local_ai import repositories
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w") as zipped: zipped.writestr(entry, "unsafe")
+    def respond(request): return httpx.Response(200, content=archive.getvalue())
+    client = httpx.Client(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(repositories.httpx, "Client", lambda **kwargs: client)
+    with pytest.raises(ValueError, match="Unsafe"):
+        repositories.install_repository("https://github.com/Comfy-Org/ComfyUI.git", "a" * 40, tmp_path / "runtime", lambda: False)
+    assert not (tmp_path / "runtime").exists()
+
+
+def test_runtime_source_install_retains_license_and_is_reusable(tmp_path, monkeypatch):
+    import io
+    import zipfile
+    from backend.local_ai import repositories
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w") as zipped:
+        zipped.writestr("repo/LICENSE", "original license")
+        zipped.writestr("repo/main.py", "print('runtime')")
+    requests = []
+    def respond(request):
+        requests.append(str(request.url))
+        return httpx.Response(200, content=archive.getvalue())
+    client = httpx.Client(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(repositories.httpx, "Client", lambda **kwargs: client)
+    destination = tmp_path / "runtime"
+    for _ in range(2): repositories.install_repository("https://github.com/Comfy-Org/ComfyUI.git", "a" * 40, destination, lambda: False)
+    assert len(requests) == 1 and "/Comfy-Org/ComfyUI/zip/" in requests[0]
+    assert (destination / "LICENSE").read_text() == "original license"

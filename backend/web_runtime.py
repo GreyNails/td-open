@@ -54,11 +54,15 @@ def create_web_router(data_dir: Path):
         name = uuid4().hex + ".png"; path = exports / name
         payload = request.model_dump(); payload["output"] = str(path)
         env = {key: value for key, value in os.environ.items() if key.upper() in ("PATH", "LANG", "LC_ALL", "SYSTEMROOT", "TD_CHROMIUM", "PLAYWRIGHT_BROWSERS_PATH", "HOME", "TEMP", "TMP")}
-        env["TMPDIR"] = str(temporary)
+        # Chromium's POSIX SingletonSocket has a ~100-byte pathname limit.
+        # A relative temp root keeps sockets short even in long/Chinese userData
+        # paths, while all files remain in this workspace's private cache.
+        env["TMPDIR"] = "."
+        if os.name == "nt": env.update(TEMP=str(temporary), TMP=str(temporary))
         try:
             async with slots:
                 code, out, error = await run_bounded_process(executable, str(RESOURCE_ROOT / "scripts/web-render.mjs"),
-                    payload=json.dumps(payload).encode(), env=env, cwd=str(ROOT), timeout=25,
+                    payload=json.dumps(payload).encode(), env=env, cwd=str(temporary), timeout=25,
                     stdout_limit=16384, stderr_limit=65536)
             if code: raise HTTPException(422, "Chromium 网页渲染失败：" + error.decode(errors="replace")[-1600:])
             try: metadata = json.loads(out)

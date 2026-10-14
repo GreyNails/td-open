@@ -24,6 +24,11 @@ def main():
     listener.listen(128)
     listener.setblocking(False)
     os.environ["TD_OPEN_APP_URL"] = f"http://127.0.0.1:{listener.getsockname()[1]}"
+    session_file = port_file.with_name(".desktop-session.json")
+    if session_file.is_symlink(): raise RuntimeError("Desktop session cannot be a symlink")
+    with os.fdopen(os.open(session_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as session:
+        json.dump({"port": listener.getsockname()[1], "pid": os.getpid(), "token": os.environ["TD_DESKTOP_TOKEN"]}, session)
+    session_file.chmod(0o600)
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", log_level="warning", access_log=False))
 
     def parent_pipe():
@@ -48,6 +53,7 @@ def main():
         asyncio.run(server.serve(sockets=[listener]))
     finally:
         listener.close()
+        session_file.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

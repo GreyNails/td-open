@@ -41,7 +41,9 @@ def download(url, destination):
 
 
 def copy_tree(source, target):
-    shutil.copytree(source, target, dirs_exist_ok=True, symlinks=True,
+    assert target.resolve().is_relative_to(STAGE.resolve()) and not target.is_symlink()
+    if target.exists(): shutil.rmtree(target)  # Replace only generated staging copies.
+    shutil.copytree(source, target, symlinks=True,
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"))
 
 

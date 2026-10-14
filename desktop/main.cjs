@@ -28,6 +28,18 @@ function resources() {
   return process.env.TD_DESKTOP_RESOURCES || (app.isPackaged
     ? path.join(process.resourcesPath, "td-runtime") : path.resolve(__dirname, "../build/desktop/resources"));
 }
+async function exportMCPConfig() {
+  const root = resources(), manifest = JSON.parse(fs.readFileSync(path.join(root, "runtime.json"), "utf8"));
+  const config = { mcpServers: { "td-open": {
+    command: path.join(root, manifest.python),
+    args: [path.join(root, "application/backend/desktop_mcp.py"), "--session", path.join(workspace, ".desktop-session.json")],
+  } } };
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, { title: "导出给外部 AI 的 MCP 配置", defaultPath: "TD-Open-MCP.json", filters: [{ name: "JSON", extensions: ["json"] }] });
+  if (!canceled && filePath) {
+    fs.writeFileSync(filePath, JSON.stringify(config, null, 2), { mode: 0o600 });
+    await dialog.showMessageBox(mainWindow, { message: "MCP 配置已导出", detail: "将 mcpServers 中的 td-open 项加入 AI 客户端的配置。连接时保持 TD Open 开启。配置不包含 API 密钥。" });
+  }
+}
 async function startBackend() {
   const root = resources();
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "runtime.json"), "utf8"));
@@ -149,6 +161,7 @@ else {
     Menu.setApplicationMenu(Menu.buildFromTemplate([
       ...(process.platform === "darwin" ? [{ role: "appMenu", label: "TD Open" }] : []),
       { label: "文件", submenu: [{ label: "打开作品与模型目录", click: () => shell.openPath(path.join(workspace, "data")) },
+        { label: "导出 MCP 接入配置…", click: () => exportMCPConfig().catch(error => dialog.showErrorBox("配置导出失败", String(error))) },
         { label: "打开运行日志", click: () => shell.openPath(path.dirname(logPath)) }, { type: "separator" }, { role: "quit", label: "退出" }] },
       { label: "编辑", submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }] },
       { label: "视图", submenu: [{ role: "reload", label: "重新加载工作台" }, { role: "resetZoom" }, { role: "zoomIn" }, { role: "zoomOut" }, { role: "togglefullscreen" }] },
