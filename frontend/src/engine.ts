@@ -488,7 +488,7 @@ export class StudioEngine {
     this.errors.delete("__audio");
   }
   get hasAudio() {
-    return Boolean(this.context) || this.performance.status.ready;
+    return Boolean(this.context);
   }
   setPlaying(playing: boolean) {
     this.playing = playing;

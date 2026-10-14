@@ -22,7 +22,7 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 
 ![潮汐之像：真实本地模型与四声部驱动点云](docs/images/tidal-muse.png)
 
-[观看带声音的演出片段](docs/media/tidal-muse-preview.mp4) · [完整案例操作说明](docs/TIDAL_MUSE.md)：本地文生图 → 本地三维 → 28000 点表面点云；本地文生音乐 → Demucs 四轨 → 人声变色、鼓点跳动、贝斯呼吸、其他乐器波纹。可一键生成整件作品、同步播放与导出带声音的演出。
+[观看带声音的演出片段](docs/media/tidal-muse-preview.mp4) · [完整案例操作说明](docs/TIDAL_MUSE.md)：本地文生图 → 本地三维 → 28000 点表面点云；本地文生音乐 → Demucs 四轨 → 人声变色、鼓点跳动、贝斯呼吸、其他乐器波纹。可一键生成整件作品；预览区直接播放音乐、调整音量和查看输出电平，并可同步播放与导出带声音的演出。
 
 ## 现在可以做什么
 

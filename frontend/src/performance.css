@@ -32,3 +32,46 @@
 .performance-panel .button {
   justify-content: center;
 }
+.performance-audio {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-bottom: 1px solid #334c414d;
+  background: #17201d;
+  color: #b7c9ba;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.performance-audio .button {
+  font-size: 12px;
+  min-height: 30px;
+  background: #c3dfab;
+  color: #17231a;
+  border-color: #c3dfab;
+}
+.performance-volume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.performance-volume input {
+  width: 75px;
+  accent-color: #b9df9b;
+}
+.performance-volume span {
+  width: 31px;
+}
+.performance-audio meter {
+  width: 44px;
+  height: 10px;
+}
+.performance-audio-status {
+  flex: 1;
+  min-width: 120px;
+}
+.performance-audio a {
+  color: #b9d49a;
+  white-space: nowrap;
+}

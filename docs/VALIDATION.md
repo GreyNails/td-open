@@ -19,6 +19,14 @@
 
 验收报告保存在本机 `data/artifacts/tidal-muse-live-report.json`、`tidal-render-inspection.json`、`tidal-ready-browser-report.json`。ML 环境另运行 `scripts/validate-mesh-cleanup.py`，验证边界外壳、反向外壳、主体表面、独立立方体和空结果的处理。
 
+## 音乐播放入口修复
+
+案例预览区新增直接播放、音量、静音、真实输出电平和原始 WAV 试听入口。普通播放按钮与空格可首次启用案例音乐；麦克风输入与音乐输出控制独立。浏览器音频暂停时，界面显示真实状态，并提供显式恢复按钮。
+
+`frontend/browser-performance-audio.mjs` 在隔离工程中使用实际保存的 WAV 和原生 AudioContext 验证 8 项：无需选中节点即可播放、普通播放启动音乐、WAV 试听、静音 / 取消静音、暂停 / 继续、浏览器声音恢复、与节点参数一致的音量控制、带音轨录像。直接读取音量之后的 PCM：播放电平非零、静音电平为零；录制文件含 48 kHz 双声道 Opus，均值约 -29 dB。此检查验证浏览器输出，不代表远程用户的扬声器状态已被检查。
+
+本机报告：`data/artifacts/music-controls-browser-report.json`，截图：`music-controls-studio.png`，录像：`music-controls-recording.webm`。
+
 ## 0.5 本地模型与 ComfyUI
 
 七组模型均通过真实工作台按钮执行，使用固定官方权重，无生成 API 拦截；另完成五组图像编辑与原生工作流实测。详见 [完整运行参数与显存记录](LOCAL_AI_VALIDATION.md)。输出检查覆盖 PNG 像素、WAV 采样、GLB 网格及 MP4 解码与运动。单张 L40 强制 24 GiB 预算，最高进程显存峰值 12.69 GiB；不等于实体游戏显卡测试。

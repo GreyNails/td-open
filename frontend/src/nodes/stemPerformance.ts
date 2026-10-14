@@ -6,6 +6,10 @@ export type PerformanceStatus = {
   duration: number;
   time: number;
   tracks: number;
+  audioState: string;
+  volume: number;
+  level: number;
+  error: string;
 };
 type Output = { name: string; kind: string; url: string };
 export function connectedNode(
@@ -56,6 +60,10 @@ export class StemPerformance {
   private source?: AudioBufferSourceNode;
   private gain?: GainNode;
   private destination?: MediaStreamAudioDestinationNode;
+  private analyser?: AnalyserNode;
+  private meter = new Float32Array(512);
+  private volume = 0.65;
+  private error = "";
   private mix?: AudioBuffer;
   private offset = 0;
   private started = 0;
@@ -78,12 +86,21 @@ export class StemPerformance {
     return this.mix?.duration ? t % this.mix.duration : t;
   }
   get status(): PerformanceStatus {
+    let squares = 0;
+    if (this.mix && this.analyser && this.context?.state === "running") {
+      this.analyser.getFloatTimeDomainData(this.meter);
+      for (const sample of this.meter) squares += sample * sample;
+    }
     return {
       ready: !!this.mix,
-      playing: this.playing,
+      playing: this.playing && this.context?.state === "running",
       duration: this.mix?.duration || 0,
       time: this.time,
       tracks: this.tracks,
+      audioState: this.context?.state || "idle",
+      volume: this.volume,
+      level: Math.sqrt(squares / this.meter.length),
+      error: this.error,
     };
   }
   private async decode(url: string): Promise<AudioBuffer> {
@@ -126,6 +143,7 @@ export class StemPerformance {
     stageId: string,
     volume = 0.65,
   ): Promise<void> {
+    this.error = "";
     this.context ??= new AudioContext();
     await this.context.resume();
     const generation = ++this.generation;
@@ -158,8 +176,12 @@ export class StemPerformance {
     this.rootId = project.id;
     this.signature = this.projectSignature(project, stageId);
     this.gain = this.context.createGain();
-    this.gain.gain.value = volume;
-    this.gain.connect(this.context.destination);
+    this.volume = Math.max(0, Math.min(1, volume));
+    this.gain.gain.value = this.volume;
+    this.analyser = this.context.createAnalyser();
+    this.analyser.fftSize = 512;
+    this.gain.connect(this.analyser);
+    this.analyser.connect(this.context.destination);
     this.destination = this.context.createMediaStreamDestination();
     this.gain.connect(this.destination);
     this.offset = 0;
@@ -191,12 +213,25 @@ export class StemPerformance {
       (!stage || this.projectSignature(project, stage.id) !== this.signature)
     )
       this.release();
-    if (stage && this.gain && this.context)
+    if (stage) this.setVolume(Number(stage.data.params.volume ?? 0.65));
+  }
+  setVolume(volume: number) {
+    this.volume = Math.max(
+      0,
+      Math.min(1, Number.isFinite(volume) ? volume : 0.65),
+    );
+    if (this.gain && this.context)
       this.gain.gain.setTargetAtTime(
-        Math.max(0, Math.min(1, Number(stage.data.params.volume ?? 0.65))),
+        this.volume,
         this.context.currentTime,
         0.04,
       );
+  }
+  async resume() {
+    if (!this.context || !this.mix) throw new Error("请先启用生成音乐");
+    this.error = "";
+    await this.context.resume();
+    this.setPlaying(true);
   }
   setPlaying(playing: boolean) {
     if (!this.context || !this.mix || playing === this.playing) return;
@@ -208,7 +243,6 @@ export class StemPerformance {
       this.playing = false;
       return;
     }
-    void this.context.resume();
     this.source = this.context.createBufferSource();
     this.source.buffer = this.mix;
     this.source.loop = true;
@@ -216,6 +250,12 @@ export class StemPerformance {
     this.started = this.context.currentTime + 0.06;
     this.source.start(this.started, this.offset);
     this.playing = true;
+    const source = this.source;
+    void this.context.resume().catch(() => {
+      if (this.source !== source) return;
+      this.setPlaying(false);
+      this.error = "浏览器未启用声音，请点击继续音乐重试";
+    });
   }
   rewind() {
     const playing = this.playing;
@@ -229,9 +269,11 @@ export class StemPerformance {
     this.source?.disconnect();
     this.gain?.disconnect();
     this.destination?.disconnect();
+    this.analyser?.disconnect();
     this.source = undefined;
     this.gain = undefined;
     this.destination = undefined;
+    this.analyser = undefined;
     this.offset = 0;
     this.playing = false;
     this.mix = undefined;

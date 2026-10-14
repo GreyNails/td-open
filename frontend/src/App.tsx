@@ -1,4 +1,6 @@
 import PerformancePanel from "./PerformancePanel";
+import PerformanceAudio from "./PerformanceAudio";
+import { performanceAncestors } from "./nodes/stemPerformance";
 import {
   generatePerformance,
   type PerformanceProgress,
@@ -450,6 +452,76 @@ function Studio() {
     clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(""), 6500);
   }, []);
+  const [startingPerformance, setStartingPerformance] = useState(false);
+  const startingPerformanceRef = useRef(false);
+  const performanceStage = project.nodes.find(
+    (node) => node.type === "pointcloud_stage_top",
+  );
+  const performanceMusic = performanceStage
+    ? performanceAncestors(project, performanceStage.id).find(
+        (node) => node.type === "local_music",
+      )
+    : undefined;
+  const performanceMusicUrl = String(
+    performanceMusic?.data.params.result_url || "",
+  );
+  const togglePerformanceMusic = async () => {
+    const player = engine.current,
+      stage = projectRef.current.nodes.find(
+        (node) => node.type === "pointcloud_stage_top",
+      );
+    if (!player || !stage || startingPerformanceRef.current || busy) return;
+    const status = player.performance.status;
+    if (status.ready && status.playing) {
+      player.setPlaying(false);
+      setPlaying(false);
+      return;
+    }
+    startingPerformanceRef.current = true;
+    setStartingPerformance(true);
+    try {
+      if (status.ready) await player.performance.resume();
+      else await player.startPerformance(stage.id);
+      player.setPlaying(true);
+      setPlaying(true);
+      setMic(player.hasAudio);
+      renderDirty.current = true;
+    } catch (error) {
+      notify(friendly(error));
+    } finally {
+      startingPerformanceRef.current = false;
+      setStartingPerformance(false);
+    }
+  };
+  const togglePlayback = () => {
+    const hasStage = projectRef.current.nodes.some(
+      (node) => node.type === "pointcloud_stage_top",
+    );
+    const status = engine.current?.performance.status;
+    if (hasStage && (!status?.ready || status.audioState !== "running"))
+      void togglePerformanceMusic();
+    else setPlaying((value) => !value);
+  };
+  const togglePlaybackRef = useRef(togglePlayback);
+  togglePlaybackRef.current = togglePlayback;
+  const setPerformanceVolume = (volume: number) => {
+    const stage = projectRef.current.nodes.find(
+      (node) => node.type === "pointcloud_stage_top",
+    );
+    if (!stage) return;
+    engine.current?.performance.setVolume(volume);
+    setProject((current) => ({
+      ...current,
+      nodes: current.nodes.map((node) =>
+        node.id === stage.id
+          ? {
+              ...node,
+              data: { ...node.data, params: { ...node.data.params, volume } },
+            }
+          : node,
+      ),
+    }));
+  };
   const checkpoint = () => {
     history.current.push(structuredClone(rootProjectRef.current));
     if (history.current.length > 60) history.current.shift();
@@ -867,7 +939,7 @@ function Studio() {
         el === document.body || Boolean(el.closest(".flow-container"));
       if (e.code === "Space" && inCanvas) {
         e.preventDefault();
-        setPlaying((p) => !p);
+        togglePlaybackRef.current();
       }
       if (
         (e.key === "Tab" && inCanvas) ||
@@ -1728,7 +1800,6 @@ function Studio() {
               onClick={async () => {
                 if (mic) {
                   engine.current?.stopAudio();
-                  engine.current?.performance.stop();
                   setMic(false);
                 } else
                   try {
@@ -1769,6 +1840,17 @@ function Studio() {
             </button>
           </div>
         </div>
+        {performanceStage && (
+          <PerformanceAudio
+            engine={engine.current}
+            musicUrl={performanceMusicUrl}
+            volume={Number(performanceStage.data.params.volume ?? 0.65)}
+            starting={startingPerformance}
+            disabled={Boolean(busy)}
+            toggle={() => void togglePerformanceMusic()}
+            setVolume={setPerformanceVolume}
+          />
+        )}
         <div className="preview-stage">
           <canvas
             ref={preview}
@@ -1790,10 +1872,21 @@ function Studio() {
         <div className="transport">
           <button
             className="play-button"
-            onClick={() => setPlaying((p) => !p)}
-            title={playing ? "暂停（空格）" : "播放（空格）"}
+            onClick={togglePlayback}
+            disabled={startingPerformance}
+            title={
+              performanceStage &&
+              (!engine.current?.performance.status.ready ||
+                engine.current?.performance.status.audioState !== "running")
+                ? "播放音乐与画面（空格）"
+                : playing
+                  ? "暂停（空格）"
+                  : "播放（空格）"
+            }
           >
-            {playing ? (
+            {playing &&
+            (!performanceStage ||
+              engine.current?.performance.status.playing) ? (
               <Pause size={15} fill="currentColor" />
             ) : (
               <Play size={15} fill="currentColor" />
@@ -2479,7 +2572,7 @@ function Studio() {
                       notify={notify}
                       onPlay={() => {
                         setPlaying(true);
-                        setMic(true);
+                        setMic(engine.current?.hasAudio || false);
                       }}
                     />
                   )}
