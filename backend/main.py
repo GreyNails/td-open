@@ -41,7 +41,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
             yield
         finally:
             application.state.local_ai.shutdown()
-    app = FastAPI(title="TD Open API", version="0.5.0", description="Local-first visual programming workspace", lifespan=lifespan)
+    app = FastAPI(title="TD Open API", version="0.5.1", description="Local-first visual programming workspace", lifespan=lifespan)
     store = ProjectStore(data_dir)
     app.state.store = store
     from backend.local_ai.manager import LocalAIManager
@@ -89,7 +89,7 @@ def create_app(data_dir: Path | None = None, include_integrations: bool = True) 
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "version": "0.5.0", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
+        return {"status": "ok", "version": "0.5.1", "operators": len(NODE_TYPES), "data_dir": str(store.data_dir)}
 
     @app.get("/api/catalog")
     def catalog():

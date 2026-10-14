@@ -666,8 +666,17 @@
         ]
       },
       {
+        "key": "mesh_threshold",
+        "label": "表面等值阈值",
+        "type": "number",
+        "default": 0.6,
+        "min": -1,
+        "max": 1,
+        "step": 0.01
+      },
+      {
         "key": "clean_mesh",
-        "label": "移除孤立碎片，保留主体",
+        "label": "移除外壳与碎片，保留主体",
         "type": "boolean",
         "default": true
       },
@@ -3756,6 +3765,328 @@
       }
     ],
     "outputs": []
+  },
+  {
+    "type": "model_to_pointcloud_sop",
+    "label": "模型转表面点云",
+    "english": "Surface Point Cloud",
+    "family": "SOP",
+    "description": "读取真实 GLB / SOP 网格，按三角面面积进行确定性采样；保留法线，不使用替代几何。",
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "真实网格 / 点云"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "表面点云"
+      }
+    ],
+    "params": [
+      {
+        "key": "count",
+        "label": "点数量",
+        "type": "number",
+        "default": 28000,
+        "min": 500,
+        "max": 60000,
+        "step": 500
+      },
+      {
+        "key": "seed",
+        "label": "采样种子",
+        "type": "number",
+        "default": 41,
+        "min": 0,
+        "max": 4294967295,
+        "step": 1
+      },
+      {
+        "key": "height",
+        "label": "标准化高度",
+        "type": "number",
+        "default": 2.7,
+        "min": 0.1,
+        "max": 10,
+        "step": 0.1
+      }
+    ]
+  },
+  {
+    "type": "stem_track_chop",
+    "label": "读取独立分轨",
+    "english": "Stem Track PCM",
+    "family": "CHOP",
+    "description": "从上游本地分轨任务中解析指定声部，使用完整 WAV 的真实 PCM；在声景舞台一次启用所有轨道。",
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "本地分轨结果"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "声部 PCM"
+      }
+    ],
+    "params": [
+      {
+        "key": "track",
+        "label": "声部",
+        "type": "select",
+        "default": "vocals",
+        "options": [
+          "vocals",
+          "drums",
+          "bass",
+          "other",
+          "instrumental"
+        ]
+      },
+      {
+        "key": "samples",
+        "label": "分析窗口",
+        "type": "number",
+        "default": 2048,
+        "min": 512,
+        "max": 8192,
+        "step": 512
+      }
+    ]
+  },
+  {
+    "type": "audio_envelope_chop",
+    "label": "音乐能量与瞬态",
+    "english": "Audio Envelope",
+    "family": "CHOP",
+    "description": "从真实声部 PCM 计算 RMS 与瞬态；按该声部的整体能量自适应归一化，并使用攻击 / 释放平滑。静音输出零。",
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "CHOP",
+        "label": "声部 PCM"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "CHOP",
+        "label": "energy / hit / rms"
+      }
+    ],
+    "params": [
+      {
+        "key": "gain",
+        "label": "响应强度",
+        "type": "number",
+        "default": 1,
+        "min": 0.1,
+        "max": 4,
+        "step": 0.1
+      },
+      {
+        "key": "attack",
+        "label": "攻击时间（秒）",
+        "type": "number",
+        "default": 0.035,
+        "min": 0.005,
+        "max": 0.5,
+        "step": 0.005
+      },
+      {
+        "key": "release",
+        "label": "释放时间（秒）",
+        "type": "number",
+        "default": 0.25,
+        "min": 0.02,
+        "max": 2,
+        "step": 0.01
+      }
+    ]
+  },
+  {
+    "type": "pointcloud_dance_sop",
+    "label": "四声部点云编舞",
+    "english": "Four Stem Choreography",
+    "family": "SOP",
+    "description": "人声变色、鼓点沿表面法线推进、贝斯呼吸缩放、其他声部产生流动波纹；保留真实点云，GPU 执行连续变形。",
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "真实网格 / 点云"
+      },
+      {
+        "id": "vocals",
+        "kind": "CHOP",
+        "label": "人声 · 色彩"
+      },
+      {
+        "id": "drums",
+        "kind": "CHOP",
+        "label": "鼓 · 跳动"
+      },
+      {
+        "id": "bass",
+        "kind": "CHOP",
+        "label": "贝斯 · 缩放"
+      },
+      {
+        "id": "other",
+        "kind": "CHOP",
+        "label": "其他 · 波纹"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "SOP",
+        "label": "点云编舞"
+      }
+    ],
+    "params": [
+      {
+        "key": "pulse",
+        "label": "鼓点冲击",
+        "type": "number",
+        "default": 0.12,
+        "min": 0,
+        "max": 0.5,
+        "step": 0.01
+      },
+      {
+        "key": "scale",
+        "label": "贝斯呼吸",
+        "type": "number",
+        "default": 0.14,
+        "min": 0,
+        "max": 0.5,
+        "step": 0.01
+      },
+      {
+        "key": "ripple",
+        "label": "流动波纹",
+        "type": "number",
+        "default": 0.075,
+        "min": 0,
+        "max": 0.3,
+        "step": 0.01
+      },
+      {
+        "key": "color_mix",
+        "label": "人声色彩",
+        "type": "number",
+        "default": 0.75,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      }
+    ]
+  },
+  {
+    "type": "pointcloud_stage_top",
+    "label": "潮汐声景舞台",
+    "english": "Tidal Point Stage",
+    "family": "TOP",
+    "description": "为真实点云提供发光粒子、缓慢运镜、光环与声部指示。点击生成整件作品，再启用音频；音频时钟同步驱动画面。",
+    "inputs": [
+      {
+        "id": "in",
+        "kind": "SOP",
+        "label": "真实网格 / 点云"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out",
+        "kind": "TOP",
+        "label": "艺术画面"
+      }
+    ],
+    "params": [
+      {
+        "key": "title",
+        "label": "作品标题",
+        "type": "text",
+        "default": "潮汐之像"
+      },
+      {
+        "key": "subtitle",
+        "label": "副标题",
+        "type": "text",
+        "default": "TIDAL MUSE · WHERE SOUND BECOMES FORM"
+      },
+      {
+        "key": "width",
+        "label": "画面宽度",
+        "type": "number",
+        "default": 1280,
+        "min": 640,
+        "max": 1920,
+        "step": 160
+      },
+      {
+        "key": "height",
+        "label": "画面高度",
+        "type": "number",
+        "default": 720,
+        "min": 360,
+        "max": 1080,
+        "step": 90
+      },
+      {
+        "key": "point_size",
+        "label": "粒子尺寸",
+        "type": "number",
+        "default": 3.2,
+        "min": 0.6,
+        "max": 8,
+        "step": 0.1
+      },
+      {
+        "key": "glow",
+        "label": "光晕强度",
+        "type": "number",
+        "default": 2.1,
+        "min": 0.2,
+        "max": 3,
+        "step": 0.05
+      },
+      {
+        "key": "warm",
+        "label": "暖色",
+        "type": "color",
+        "default": "#ffd089"
+      },
+      {
+        "key": "cool",
+        "label": "冷色",
+        "type": "color",
+        "default": "#4de0cc"
+      },
+      {
+        "key": "accent",
+        "label": "点缀色",
+        "type": "color",
+        "default": "#aa80ff"
+      },
+      {
+        "key": "volume",
+        "label": "音乐音量",
+        "type": "number",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ]
   },
   {
     "type": "base_comp",

@@ -164,3 +164,11 @@ def test_mcp_local_generation_queues_validated_model_and_reads_or_cancels_exact_
     with pytest.raises(ValueError):asyncio.run(mcp_server.run_local_model('unknown',{},{}))
     with pytest.raises(ValueError):asyncio.run(mcp_server.cancel_local_model_job('../other'))
     assert len(calls)==count
+
+
+def test_hunyuan_surface_threshold_uses_shape_level_and_validates_finite_values():
+    graph=build_workflow('hunyuan3d-21',{}, {'image':'input.png'},'shape_level')
+    extraction=next(n for n in graph.values() if n['class_type']=='VoxelToMesh')
+    assert extraction['inputs']['threshold']==.6
+    assert any(n['class_type']=='TDOpenCleanMesh' for n in graph.values())
+    with pytest.raises(ValueError):build_workflow('hunyuan3d-21',{'mesh_threshold':float('nan')},{'image':'input.png'},'bad_level')

@@ -32,6 +32,7 @@
           "steps": 30,
           "cfg": 5,
           "resolution": "128",
+          "mesh_threshold": 0.6,
           "clean_mesh": true,
           "seed": 42,
           "result_url": "",

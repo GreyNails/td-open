@@ -137,7 +137,7 @@ def build_workflow(profile_id: str, parameters: dict, inputs: dict[str, str], jo
                       seed=seed,steps=number(p,'steps',30,1,100,True),cfg=number(p,'cfg',5,0,20),sampler_name='euler',scheduler='normal',denoise=1)
         voxels=g.add('VAEDecodeHunyuan3D',samples=sampled,vae=g.output(loaded,2),num_chunks=8000,
                      octree_resolution=number(p,'resolution',128,32,256,True))
-        mesh=g.add('VoxelToMesh',voxel=voxels,algorithm='surface net',threshold=.6)
+        mesh=g.add('VoxelToMesh',voxel=voxels,algorithm='surface net',threshold=number(p,'mesh_threshold',.6,-1,1))
         if p.get('clean_mesh',True):mesh=g.add('TDOpenCleanMesh',mesh=mesh)
         g.add('SaveGLB',mesh=mesh,filename_prefix=g.prefix+'/mesh')
     elif profile['category'] == 'stems':

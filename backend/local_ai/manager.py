@@ -291,6 +291,7 @@ class LocalAIManager:
         plugin = self.runtime/'custom_nodes/td_open_nodes'
         plugin.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(Path(__file__).with_name('comfy_nodes.py'),plugin/'__init__.py')
+        shutil.copyfile(Path(__file__).with_name('mesh_cleanup.py'),plugin/'mesh_cleanup.py')
         self._run_command(job_id,[str(self.python),'-m','pip','check'],self.logs/'install-comfy.log')
         lock = subprocess.check_output([str(self.python),'-m','pip','freeze'],text=True)
         (self.env_dir/'requirements.installed.txt').write_text(lock)
@@ -300,6 +301,7 @@ class LocalAIManager:
         plugin=self.runtime/'custom_nodes/td_open_nodes'
         plugin.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(Path(__file__).with_name('comfy_nodes.py'),plugin/'__init__.py')
+        shutil.copyfile(Path(__file__).with_name('mesh_cleanup.py'),plugin/'mesh_cleanup.py')
 
     def install(self, profile_ids: list[str], environment: bool = True) -> dict:
         assets = profile_assets(profile_ids)

@@ -1,3 +1,8 @@
+import PerformancePanel from "./PerformancePanel";
+import {
+  generatePerformance,
+  type PerformanceProgress,
+} from "./performanceWorkflow";
 import { comfyDefaults } from "./comfySchema";
 import { TemplateGallery } from "./TemplateGallery";
 import { templateById } from "./templates";
@@ -313,6 +318,8 @@ function Studio() {
     [recording, setRecording] = useState(false),
     [historyVersion, setHistoryVersion] = useState(0),
     [mediaSDP, setMediaSDP] = useState("");
+  const [performanceProgress, setPerformanceProgress] =
+    useState<PerformanceProgress>({ busy: false, message: "" });
   const [networkPath, setNetworkPath] = useState<string[]>([]);
   const [docsPage, setDocsPage] = useState<GuidePage | null>(() =>
     guideFromHash(),
@@ -592,7 +599,17 @@ function Studio() {
           previewRef.current || undefined,
         );
         const ctx = preview.current?.getContext("2d");
-        if (ctx) ctx.drawImage(frame, 0, 0, 640, 360);
+        if (ctx) {
+          if (
+            ctx.canvas.width !== frame.width ||
+            ctx.canvas.height !== frame.height
+          ) {
+            ctx.canvas.width = frame.width;
+            ctx.canvas.height = frame.height;
+          }
+          ctx.clearRect(0, 0, frame.width, frame.height);
+          ctx.drawImage(frame, 0, 0);
+        }
         renderDirty.current = false;
         count++;
       }
@@ -1075,6 +1092,60 @@ function Studio() {
       setBusy("");
     }
   };
+  const runPerformanceWorkflow = async () => {
+    if (!active || busy) return;
+    const snapshot = projectRef.current,
+      rootId = rootProjectRef.current.id,
+      path = [...networkPathRef.current],
+      stageId = active.id;
+    checkpoint();
+    setBusy("performance");
+    engine.current?.performance.release();
+    const patch = (
+      id: string,
+      params: Record<string, string | number | boolean>,
+    ) =>
+      setRootProject((current) =>
+        current.id !== rootId
+          ? current
+          : updateGraph(current, path, (graph) => ({
+              ...graph,
+              nodes: graph.nodes.map((node) =>
+                node.id === id
+                  ? {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        params: { ...node.data.params, ...params },
+                      },
+                    }
+                  : node,
+              ),
+            })),
+      );
+    try {
+      await generatePerformance(
+        snapshot,
+        stageId,
+        rootId,
+        path,
+        patch,
+        setPerformanceProgress,
+        () =>
+          rootProjectRef.current.id === rootId &&
+          JSON.stringify(networkPathRef.current) === JSON.stringify(path),
+      );
+      notify("整件作品素材已生成，点击启用音频并演出");
+    } catch (error) {
+      setPerformanceProgress({
+        busy: false,
+        message: (error as Error).message,
+      });
+      throw error;
+    } finally {
+      setBusy("");
+    }
+  };
   const runLocalNode = async () => {
     if (!active) return;
     const node = active,
@@ -1439,9 +1510,13 @@ function Studio() {
     }
     try {
       const stream = preview.current!.captureStream(30);
+      engine.current?.performance
+        .stream()
+        ?.getAudioTracks()
+        .forEach((track) => stream.addTrack(track.clone()));
       const mime = [
-        "video/webm;codecs=vp9",
-        "video/webm;codecs=vp8",
+        "video/webm;codecs=vp9,opus",
+        "video/webm;codecs=vp8,opus",
         "video/webm",
       ].find((t) => MediaRecorder.isTypeSupported(t));
       if (!mime) throw new Error("浏览器不支持 WebM 录制");
@@ -1461,7 +1536,11 @@ function Studio() {
       r.start();
       recorder.current = r;
       setRecording(true);
-      notify("正在录制画面，再次点击停止并下载");
+      notify(
+        stream.getAudioTracks().length
+          ? "正在录制画面与演出声音，再次点击停止并保存"
+          : "正在录制画面，再次点击停止并保存",
+      );
     } catch (e) {
       notify(friendly(e));
     }
@@ -1639,7 +1718,9 @@ function Studio() {
             </span>
           </div>
           <div className="preview-actions">
-            <span className="resolution">640 × 360</span>
+            <span className="resolution">
+              {preview.current?.width || 640} × {preview.current?.height || 360}
+            </span>
             <button
               className={`icon-button ${mic ? "on" : ""}`}
               aria-label={mic ? "关闭音频" : "启用麦克风"}
@@ -1647,6 +1728,7 @@ function Studio() {
               onClick={async () => {
                 if (mic) {
                   engine.current?.stopAudio();
+                  engine.current?.performance.stop();
                   setMic(false);
                 } else
                   try {
@@ -1722,6 +1804,7 @@ function Studio() {
             title="回到起点"
             onClick={() => {
               timeRef.current = 0;
+              engine.current?.performance.rewind();
               setTime(0);
               renderDirty.current = true;
             }}
@@ -2387,6 +2470,19 @@ function Studio() {
                         )}
                       </div>
                     ))}
+                  {active.type === "pointcloud_stage_top" && (
+                    <PerformancePanel
+                      engine={engine.current}
+                      nodeId={active.id}
+                      progress={performanceProgress}
+                      generate={runPerformanceWorkflow}
+                      notify={notify}
+                      onPlay={() => {
+                        setPlaying(true);
+                        setMic(true);
+                      }}
+                    />
+                  )}
                   {(active.type.startsWith("local_") ||
                     active.type.startsWith("comfy_")) && (
                     <LocalNodePanel

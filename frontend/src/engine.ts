@@ -31,6 +31,16 @@ import { buildScene, isSceneSpec, type SceneSpec } from "./nodes/sceneRuntime";
 import { isMaterialSpec, type MaterialSpec } from "./nodes/materialRuntime";
 import { MediaRuntime } from "./nodes/mediaRuntime";
 import { BrowserInputs } from "./nodes/browserRuntime";
+import { StemPerformance } from "./nodes/stemPerformance";
+import {
+  sampleSurface,
+  cookEnvelope,
+  danceSpec,
+  pointCloudPLY,
+  type PointCloudSpec,
+} from "./nodes/pointPerformance";
+import { PointStage } from "./nodes/pointStage";
+import { resolveSceneModel } from "./nodes/modelRegistry";
 import { cookComponentNode } from "./nodes/componentRuntime";
 
 import { cookVisualNode } from "./nodes/visual";
@@ -104,6 +114,7 @@ export class StudioEngine {
   }
   private operatorStates = new Map<string, Map<string, unknown>>();
   private lastTime = 0;
+  readonly performance = new StemPerformance();
   private state(id: string) {
     let state = this.operatorStates.get(id);
     if (!state) {
@@ -200,6 +211,7 @@ export class StudioEngine {
     const previous = this.project;
     const switched = previous.id !== project.id;
     this.project = project;
+    this.performance.reconcile(project);
     const ids = new Set(project.nodes.map((n) => n.id));
     const previousNodes = new Map(previous.nodes.map((n) => [n.id, n]));
     const resourceIds = new Set(
@@ -476,10 +488,11 @@ export class StudioEngine {
     this.errors.delete("__audio");
   }
   get hasAudio() {
-    return Boolean(this.context);
+    return Boolean(this.context) || this.performance.status.ready;
   }
   setPlaying(playing: boolean) {
     this.playing = playing;
+    this.performance.setPlaying(playing);
     this.stream?.getAudioTracks().forEach((track) => {
       track.enabled = playing;
     });
@@ -513,7 +526,15 @@ export class StudioEngine {
   }
   render(time: number, previewId?: string): HTMLCanvasElement {
     if (previewId) previewId = this.resolveId(previewId);
-    if (time < this.lastTime) this.clearStates();
+    if (time < this.lastTime) {
+      // A seek resets temporal operators while retaining immutable surface
+      // samples and GPU buffers, so the audio clock can resume immediately.
+      for (const [id, state] of this.operatorStates) {
+        if (state.has("cloud_key") || state.has("point_stage")) continue;
+        this.releaseState(state);
+        this.operatorStates.delete(id);
+      }
+    }
     this.lastTime = time;
     this.values.clear();
     if (this.playing && this.analyser) {
@@ -663,6 +684,30 @@ export class StudioEngine {
     this.frames.delete(fullId);
     return result;
   }
+  async startPerformance(id: string) {
+    this.stopAudio();
+    const fullId = this.resolveId(id),
+      node = this.project.nodes.find((n) => n.id === fullId);
+    if (!node) throw new Error("声景舞台不存在");
+    await this.performance.prepare(
+      this.project,
+      fullId,
+      Number(node.data.params.volume ?? 0.65),
+    );
+    this.playing = true;
+    this.revision++;
+    return this.performance.status;
+  }
+  exportPerformancePoints(id: string) {
+    const fullId = this.resolveId(id),
+      edge = this.project.edges.find(
+        (e) =>
+          e.target === fullId && (!e.targetHandle || e.targetHandle === "in"),
+      );
+    const value = this.values.get(edge?.source || fullId);
+    if (!isGeometrySpec(value)) throw new Error("点云尚未就绪");
+    return pointCloudPLY(value as PointCloudSpec);
+  }
   private localAudioNode(node: GraphNode): GraphNode {
     if (
       !localAudioTypes.has(node.type) &&
@@ -771,6 +816,82 @@ export class StudioEngine {
     resolveNode: (path: string) => Value,
   ): Value {
     const state = this.state(n.id);
+    const performanceTime = this.performance.status.ready
+      ? this.performance.time
+      : time;
+    if (n.type === "stem_track_chop")
+      return this.performance.samples(this.project, n, performanceTime);
+    if (n.type === "audio_envelope_chop")
+      return cookEnvelope(
+        n,
+        rawInput(),
+        performanceTime,
+        state,
+        this.performance.reference(this.project, n),
+      );
+    if (n.type === "model_to_pointcloud_sop") {
+      const source = rawInput();
+      if (!isGeometrySpec(source) || (!source.url && !source.mesh))
+        return {
+          shape: "mesh",
+          detail: 1,
+          pointCloud: true,
+          mesh: { positions: [], faces: [] },
+        } as PointCloudSpec;
+      if (source.url && !resolveSceneModel(source.url)) {
+        this.loadModel(source.url);
+        return {
+          shape: "mesh",
+          detail: 1,
+          pointCloud: true,
+          mesh: { positions: [], faces: [] },
+        } as PointCloudSpec;
+      }
+      const key = JSON.stringify([source, n.data.params]);
+      if (state.get("cloud_key") !== key) {
+        state.set(
+          "cloud",
+          sampleSurface(
+            source,
+            Math.floor(Number(n.data.params.count) || 28000),
+            Number(n.data.params.seed) || 41,
+            Number(n.data.params.height) || 2.7,
+          ),
+        );
+        state.set("cloud_key", key);
+      }
+      return state.get("cloud") as PointCloudSpec;
+    }
+    if (n.type === "pointcloud_dance_sop")
+      return danceSpec(n, rawInput(), rawInput, performanceTime);
+    if (n.type === "pointcloud_stage_top") {
+      if (!this.renderer) throw new Error("声景舞台需要 WebGL 2");
+      const source = rawInput();
+      const cloud = isGeometrySpec(source)
+        ? (source as PointCloudSpec)
+        : { shape: "mesh", detail: 1, mesh: { positions: [], faces: [] } };
+      let stage = state.get("point_stage") as PointStage | undefined;
+      if (!stage) {
+        stage = new PointStage();
+        state.set("point_stage", stage);
+        state.set("dispose", () => stage!.dispose());
+      }
+      return stage.render(cloud, n, this.renderer);
+    }
+    if (n.type === "output") {
+      const source = rawInput();
+      if (source instanceof HTMLCanvasElement) {
+        const canvas = this.canvas(n.id);
+        if (canvas.width !== source.width || canvas.height !== source.height) {
+          canvas.width = source.width;
+          canvas.height = source.height;
+        }
+        const ctx = canvas.getContext("2d")!;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(source, 0, 0);
+        return canvas;
+      }
+    }
     if (n.type === "web_render_top") {
       const url = state.get("web_url") as string | undefined;
       if (!url) throw new Error("点击捕获网页以加载页面");
@@ -786,7 +907,11 @@ export class StudioEngine {
         throw new Error("点击运行 Python 以执行脚本");
       return state.get("python_result") as Value;
     }
-    if (localAudioTypes.has(n.type) && !n.data.params.result_url) return 0;
+    if (
+      localAudioTypes.has(n.type) &&
+      (!n.data.params.result_url || !this.mediaRuntime.status(n.id).active)
+    )
+      return 0;
     const media = this.mediaRuntime.cook(
       this.localAudioNode(n),
       time,
@@ -1463,6 +1588,7 @@ export class StudioEngine {
     geometries.forEach((geometry) => geometry.dispose());
   }
   dispose() {
+    this.performance.dispose();
     this.browserInputs.dispose();
     this.mediaRuntime.dispose();
     for (const entry of this.sceneFrames.values()) entry.built.dispose();

@@ -49,7 +49,7 @@ flowchart LR
 | `backend/plugins/` | 受信任的本地 Python 扩展，含 `scale.py` 示例 |
 | `data/projects/` | 用户项目 JSON |
 | `data/assets/` | 上传素材与从 AI 返回的 base64 中提取的媒体文件 |
-| `data/exports/` | 界面导出的 PNG、无音轨 WebM 与项目 JSON |
+| `data/exports/` | 界面导出的 PNG、WebM 与项目 JSON |
 | `data/config/` | 服务商与 MCP 连接配置，可能含密钥；不应提交 Git |
 | `docs/` | 架构、范围和开发路线 |
 
@@ -145,7 +145,7 @@ flowchart LR
 
 暂停时冻结音频频谱、暂停文件音频与视频，并禁用麦克风音轨；改变参数仍可更新静态画面。切换项目停止当前音频，重开项目后需手动播放已保存的音频素材。未被图引用的媒体会被清理。多个 3D 渲染节点共享模型缓存的几何与材质资源，各自保留变换；缓存拥有这些 GPU 资源，单个实例移除时不会释放其他实例还在使用的资源。几何变形、边线与包围盒转换会创建独立可释放资源，避免修改缓存模型。Mesh、LineSegments 与 Points 的资源均纳入释放路径。
 
-PNG、PCM16 WAV 和 WebM 从运行结果导出，经 API 保存到项目的 `data/exports/`。WebM 是浏览器实时录制，不含音轨，也不保证实际达到请求的帧率；它不等同于离线逐帧渲染。长期运行的资源预算、逐节点 profiler 和跨帧脏标记缓存仍在路线图中。
+PNG、PCM16 WAV 和 WebM 从运行结果导出，经 API 保存到项目的 `data/exports/`。WebM 是浏览器实时录制，潮汐声景演出会同步录入音轨，其他画面默认仅录视频；不保证实际达到请求的帧率；它不等同于离线逐帧渲染。长期运行的资源预算、逐节点 profiler 和跨帧脏标记缓存仍在路线图中。
 
 Python 的 `POST /api/evaluate` 用于无状态标量、文本、54 种无状态采样/表格运算与 Python evaluator，不用于代替浏览器渲染。返回 `values`、`errors`、`skipped`、`skip_reasons` 和 `time`。滞后、积分、计数器、包络、微分、采样保持、弹簧、延迟、窗口统计、迟滞、触发随机与计时依赖连续帧历史，只在浏览器运行；服务端明确跳过并说明原因，不用单帧假值冒充状态计算。上游跳过会传播到下游；独立分支仍然计算。新 Python 节点不会因此自动进入浏览器每帧循环。
 

@@ -1,0 +1,433 @@
+{
+  "id": "example_tidal-muse",
+  "name": "潮汐之像 · 四轨点云声景",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "local_image_1",
+      "type": "local_image",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "本地图片生成",
+        "params": {
+          "model_id": "flux-klein-4b",
+          "prompt": "A single elegant white porcelain bust of a serene young woman, classical sculptural face, flowing wavy hair resting on shoulders, complete head neck and shoulders, frontal view with a very slight three-quarter angle, smooth continuous solid sculpture, isolated centered full object on pure white background, soft studio lighting, no pedestal, no text",
+          "width": 512,
+          "height": 512,
+          "steps": 4,
+          "cfg": 1,
+          "seed": 314159,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "local_3d_2",
+      "type": "local_3d",
+      "position": {
+        "x": 245,
+        "y": 0
+      },
+      "data": {
+        "label": "本地三维模型生成",
+        "params": {
+          "input_url": "",
+          "steps": 30,
+          "cfg": 5,
+          "resolution": "256",
+          "mesh_threshold": 0.6,
+          "clean_mesh": true,
+          "seed": 314159,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "model_to_pointcloud_sop_3",
+      "type": "model_to_pointcloud_sop",
+      "position": {
+        "x": 490,
+        "y": 0
+      },
+      "data": {
+        "label": "模型转表面点云",
+        "params": {
+          "count": 28000,
+          "seed": 41,
+          "height": 2.7
+        }
+      }
+    },
+    {
+      "id": "local_music_4",
+      "type": "local_music",
+      "position": {
+        "x": 0,
+        "y": 205
+      },
+      "data": {
+        "label": "本地音乐生成",
+        "params": {
+          "prompt": "Dreamy melodic downtempo electronica, clear soft female singing voice, warm deep sine bass, crisp syncopated electronic drums, airy analog synth arpeggios and spacious pads, 96 BPM, A minor, elegant cinematic atmosphere, clean distinct instrument layers, polished studio recording",
+          "lyrics": "[Verse]\nWe are light upon the water\nWe are shadows in the blue\nEvery wave becomes a whisper\nEvery spark returns to you\n[Chorus]\nCarry me into the silence\nLet the tide become our song",
+          "duration": 32,
+          "bpm": 96,
+          "language": "en",
+          "keyscale": "A minor",
+          "generate_audio_codes": false,
+          "steps": 8,
+          "input_url": "",
+          "seed": 271828,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "local_stems_5",
+      "type": "local_stems",
+      "position": {
+        "x": 245,
+        "y": 205
+      },
+      "data": {
+        "label": "本地音乐分轨",
+        "params": {
+          "model_id": "demucs-4",
+          "input_url": "",
+          "segment": 4,
+          "result_url": "",
+          "result_text": "",
+          "job_id": "",
+          "outputs_json": "",
+          "result_kind": "",
+          "job_status": ""
+        }
+      }
+    },
+    {
+      "id": "stem_track_chop_6",
+      "type": "stem_track_chop",
+      "position": {
+        "x": 490,
+        "y": 205
+      },
+      "data": {
+        "label": "读取独立分轨",
+        "params": {
+          "track": "vocals",
+          "samples": 2048
+        }
+      }
+    },
+    {
+      "id": "stem_track_chop_7",
+      "type": "stem_track_chop",
+      "position": {
+        "x": 490,
+        "y": 410
+      },
+      "data": {
+        "label": "读取独立分轨",
+        "params": {
+          "track": "drums",
+          "samples": 2048
+        }
+      }
+    },
+    {
+      "id": "stem_track_chop_8",
+      "type": "stem_track_chop",
+      "position": {
+        "x": 490,
+        "y": 615
+      },
+      "data": {
+        "label": "读取独立分轨",
+        "params": {
+          "track": "bass",
+          "samples": 2048
+        }
+      }
+    },
+    {
+      "id": "stem_track_chop_9",
+      "type": "stem_track_chop",
+      "position": {
+        "x": 490,
+        "y": 820
+      },
+      "data": {
+        "label": "读取独立分轨",
+        "params": {
+          "track": "other",
+          "samples": 2048
+        }
+      }
+    },
+    {
+      "id": "audio_envelope_chop_10",
+      "type": "audio_envelope_chop",
+      "position": {
+        "x": 735,
+        "y": 0
+      },
+      "data": {
+        "label": "音乐能量与瞬态",
+        "params": {
+          "gain": 1,
+          "attack": 0.055,
+          "release": 0.35
+        }
+      }
+    },
+    {
+      "id": "audio_envelope_chop_11",
+      "type": "audio_envelope_chop",
+      "position": {
+        "x": 735,
+        "y": 205
+      },
+      "data": {
+        "label": "音乐能量与瞬态",
+        "params": {
+          "gain": 1,
+          "attack": 0.015,
+          "release": 0.16
+        }
+      }
+    },
+    {
+      "id": "audio_envelope_chop_12",
+      "type": "audio_envelope_chop",
+      "position": {
+        "x": 735,
+        "y": 410
+      },
+      "data": {
+        "label": "音乐能量与瞬态",
+        "params": {
+          "gain": 1,
+          "attack": 0.035,
+          "release": 0.3
+        }
+      }
+    },
+    {
+      "id": "audio_envelope_chop_13",
+      "type": "audio_envelope_chop",
+      "position": {
+        "x": 735,
+        "y": 615
+      },
+      "data": {
+        "label": "音乐能量与瞬态",
+        "params": {
+          "gain": 1,
+          "attack": 0.08,
+          "release": 0.4
+        }
+      }
+    },
+    {
+      "id": "pointcloud_dance_sop_14",
+      "type": "pointcloud_dance_sop",
+      "position": {
+        "x": 980,
+        "y": 0
+      },
+      "data": {
+        "label": "四声部点云编舞",
+        "params": {
+          "pulse": 0.12,
+          "scale": 0.14,
+          "ripple": 0.075,
+          "color_mix": 0.75
+        }
+      }
+    },
+    {
+      "id": "pointcloud_stage_top_15",
+      "type": "pointcloud_stage_top",
+      "position": {
+        "x": 1225,
+        "y": 0
+      },
+      "data": {
+        "label": "潮汐声景舞台",
+        "params": {
+          "title": "潮汐之像",
+          "subtitle": "TIDAL MUSE · WHERE SOUND BECOMES FORM",
+          "width": 1280,
+          "height": 720,
+          "point_size": 3.2,
+          "glow": 2.1,
+          "warm": "#ffd089",
+          "cool": "#4de0cc",
+          "accent": "#aa80ff",
+          "volume": 0.65
+        }
+      }
+    },
+    {
+      "id": "output_16",
+      "type": "output",
+      "position": {
+        "x": 1470,
+        "y": 0
+      },
+      "data": {
+        "label": "画面输出",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_1",
+      "source": "local_image_1",
+      "target": "local_3d_2",
+      "sourceHandle": "out",
+      "targetHandle": "image"
+    },
+    {
+      "id": "edge_2",
+      "source": "local_3d_2",
+      "target": "model_to_pointcloud_sop_3",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_3",
+      "source": "local_music_4",
+      "target": "local_stems_5",
+      "sourceHandle": "out",
+      "targetHandle": "audio"
+    },
+    {
+      "id": "edge_4",
+      "source": "local_stems_5",
+      "target": "stem_track_chop_6",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_5",
+      "source": "local_stems_5",
+      "target": "stem_track_chop_7",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_6",
+      "source": "local_stems_5",
+      "target": "stem_track_chop_8",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_7",
+      "source": "local_stems_5",
+      "target": "stem_track_chop_9",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_8",
+      "source": "stem_track_chop_6",
+      "target": "audio_envelope_chop_10",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_9",
+      "source": "stem_track_chop_7",
+      "target": "audio_envelope_chop_11",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_10",
+      "source": "stem_track_chop_8",
+      "target": "audio_envelope_chop_12",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_11",
+      "source": "stem_track_chop_9",
+      "target": "audio_envelope_chop_13",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_12",
+      "source": "model_to_pointcloud_sop_3",
+      "target": "pointcloud_dance_sop_14",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_13",
+      "source": "audio_envelope_chop_10",
+      "target": "pointcloud_dance_sop_14",
+      "sourceHandle": "out",
+      "targetHandle": "vocals"
+    },
+    {
+      "id": "edge_14",
+      "source": "audio_envelope_chop_11",
+      "target": "pointcloud_dance_sop_14",
+      "sourceHandle": "out",
+      "targetHandle": "drums"
+    },
+    {
+      "id": "edge_15",
+      "source": "audio_envelope_chop_12",
+      "target": "pointcloud_dance_sop_14",
+      "sourceHandle": "out",
+      "targetHandle": "bass"
+    },
+    {
+      "id": "edge_16",
+      "source": "audio_envelope_chop_13",
+      "target": "pointcloud_dance_sop_14",
+      "sourceHandle": "out",
+      "targetHandle": "other"
+    },
+    {
+      "id": "edge_17",
+      "source": "pointcloud_dance_sop_14",
+      "target": "pointcloud_stage_top_15",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    },
+    {
+      "id": "edge_18",
+      "source": "pointcloud_stage_top_15",
+      "target": "output_16",
+      "sourceHandle": "out",
+      "targetHandle": "in"
+    }
+  ],
+  "settings": {
+    "preset": "tidal-muse"
+  }
+}

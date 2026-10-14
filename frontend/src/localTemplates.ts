@@ -21,6 +21,87 @@ const imagePrompt =
   "A small ceramic robot, clean white background, studio photography";
 export const localTemplates: ExampleTemplate[] = [
   local(
+    "tidal-muse",
+    "潮汐之像 · 四轨点云声景",
+    "本地文本生成雕塑与音乐，真实网格成为点云，四个独立声部控制色彩、跳动、缩放与流动。",
+    "选择潮汐声景舞台，点击生成整件作品；完成后启用音频并演出。首次安装 FLUX、Hunyuan3D、ACE-Step 与 Demucs。",
+    {
+      nodes: [
+        [
+          "local_image",
+          {
+            prompt:
+              "A single elegant white porcelain bust of a serene young woman, classical sculptural face, flowing wavy hair resting on shoulders, complete head neck and shoulders, frontal view with a very slight three-quarter angle, smooth continuous solid sculpture, isolated centered full object on pure white background, soft studio lighting, no pedestal, no text",
+            seed: 314159,
+            width: 512,
+            height: 512,
+            steps: 4,
+          },
+        ],
+        [
+          "local_3d",
+          {
+            steps: 30,
+            resolution: "256",
+            cfg: 5,
+            seed: 314159,
+            mesh_threshold: 0.6,
+            clean_mesh: true,
+          },
+        ],
+        ["model_to_pointcloud_sop", { count: 28000, seed: 41, height: 2.7 }],
+        [
+          "local_music",
+          {
+            prompt:
+              "Dreamy melodic downtempo electronica, clear soft female singing voice, warm deep sine bass, crisp syncopated electronic drums, airy analog synth arpeggios and spacious pads, 96 BPM, A minor, elegant cinematic atmosphere, clean distinct instrument layers, polished studio recording",
+            lyrics:
+              "[Verse]\nWe are light upon the water\nWe are shadows in the blue\nEvery wave becomes a whisper\nEvery spark returns to you\n[Chorus]\nCarry me into the silence\nLet the tide become our song",
+            duration: 32,
+            bpm: 96,
+            keyscale: "A minor",
+            seed: 271828,
+            generate_audio_codes: false,
+          },
+        ],
+        ["local_stems", { model_id: "demucs-4", segment: 4 }],
+        ["stem_track_chop", { track: "vocals" }],
+        ["stem_track_chop", { track: "drums" }],
+        ["stem_track_chop", { track: "bass" }],
+        ["stem_track_chop", { track: "other" }],
+        ["audio_envelope_chop", { attack: 0.055, release: 0.35 }],
+        ["audio_envelope_chop", { attack: 0.015, release: 0.16 }],
+        ["audio_envelope_chop", { attack: 0.035, release: 0.3 }],
+        ["audio_envelope_chop", { attack: 0.08, release: 0.4 }],
+        "pointcloud_dance_sop",
+        "pointcloud_stage_top",
+        "output",
+      ],
+      edges: [
+        [0, 1, "image"],
+        [1, 2],
+        [3, 4, "audio"],
+        [4, 5],
+        [4, 6],
+        [4, 7],
+        [4, 8],
+        [5, 9],
+        [6, 10],
+        [7, 11],
+        [8, 12],
+        [2, 13],
+        [9, 13, "vocals"],
+        [10, 13, "drums"],
+        [11, 13, "bass"],
+        [12, 13, "other"],
+        [13, 14],
+        [14, 15],
+      ],
+    },
+    true,
+  ),
+
+  local(
     "local-flux",
     "本地 · FLUX.2 图片",
     "四步采样生成图片，再调色输出。",

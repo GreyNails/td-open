@@ -11,6 +11,9 @@ import mcp from "../../docs/MCP_GUIDE.md?raw";
 import http from "../../docs/HTTP_API.md?raw";
 import io from "../../docs/IO_GUIDE.md?raw";
 import local from "../../docs/LOCAL_AI.md?raw";
+import tidal from "../../docs/TIDAL_MUSE.md?raw";
+import tidalPicture from "../../docs/images/tidal-muse.png";
+import tidalStudio from "../../docs/images/tidal-muse-studio.png";
 import "./docs.css";
 
 const documents: {
@@ -20,6 +23,13 @@ const documents: {
   file: string;
   source: string;
 }[] = [
+  {
+    id: "tidal",
+    title: "潮汐之像案例",
+    summary: "本地生成、四轨点云与演出",
+    file: "TIDAL_MUSE.md",
+    source: tidal,
+  },
   {
     id: "local",
     title: "本地模型与 ComfyUI",
@@ -254,9 +264,13 @@ function DocsCenter({
       img: ({ src = "", alt }) => (
         <img
           src={
-            /^https?:/.test(src)
-              ? src
-              : `https://raw.githubusercontent.com/GreyNails/td-open/main/docs/${src.replace(/^\.\//, "")}`
+            src === "images/tidal-muse-studio.png"
+              ? tidalStudio
+              : src === "images/tidal-muse.png"
+                ? tidalPicture
+                : /^https?:/.test(src)
+                  ? src
+                  : `https://raw.githubusercontent.com/GreyNails/td-open/main/docs/${src.replace(/^\.\//, "")}`
           }
           alt={alt || "文档示意图"}
           loading="lazy"

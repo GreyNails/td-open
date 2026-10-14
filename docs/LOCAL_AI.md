@@ -300,3 +300,7 @@ with httpx.Client(base_url="http://127.0.0.1:8765", timeout=120) as client:
 原生 API 图放到 `workflow`，省略 `profile_id`。如需关联此次上传，在 LoadImage / LoadAudio 字段填 `__TD_INPUT__image` / `__TD_INPUT__audio`，并在 `inputs` 中提供对应 URL；执行器会上传到引擎并替换标记。必须包含实际返回资源的保存节点。
 
 任务返回不会自动覆盖某个已保存工程。浏览器为提交时的项目作用域记录 job ID，并只回写仍对应这次任务的节点；Python 或 MCP 客户端需要再使用图编辑 API 将资源 URL 写入目标节点。页面切换、参数修改和嵌套组件不会把旧任务结果误写到当前选中节点。
+
+## 完整本地艺术案例
+
+[潮汐之像](TIDAL_MUSE.md) 将本地文生图、图生三维、真实点云采样、文生音乐和 Demucs 四轨串成一个 16 节点作品。舞台提供“生成整件作品”按钮与共享音频时钟，四条声部分别驱动色彩、跳动、缩放和波纹。

@@ -105,7 +105,8 @@ class TDOpenCleanMesh:
             generated.remove_unreferenced_vertices()
             components=generated.split(only_watertight=False)
             if not len(components):raise ValueError('模型没有生成可用的三维表面，请换用主体清晰的参考图片')
-            main=max(components,key=lambda part:len(part.faces))
+            from .mesh_cleanup import select_generated_surface
+            main=select_generated_surface(components)
             vertices.append(torch.as_tensor(main.vertices.copy(),dtype=v.dtype,device=v.device))
             faces.append(torch.as_tensor(main.faces.copy(),dtype=f.dtype,device=f.device))
         return (pack_variable_mesh_batch(vertices,faces),)

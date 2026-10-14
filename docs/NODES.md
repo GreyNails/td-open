@@ -1,6 +1,6 @@
 # 节点手册
 
-当前目录含 744 个节点入口：18 AI、128 DAT、204 TOP、211 CHOP、129 SOP、1 OUT、40 COMP、13 MAT。其中 92 个入口需要外部 SDK/设备适配器，不计为内置原生功能。完整逐项映射见 [参考能力清单](reference-capabilities.json)。
+当前目录含 749 个节点入口：18 AI、128 DAT、205 TOP、213 CHOP、131 SOP、1 OUT、40 COMP、13 MAT。其中 92 个入口需要外部 SDK/设备适配器，不计为内置原生功能。完整逐项映射见 [参考能力清单](reference-capabilities.json)。
 
 浏览器执行实际图像、采样、表格、几何与场景运算；Python 服务提供无状态数据求值、脚本与协议。节点使用同名创作概念，但不是 TouchDesigner 参数/数值/API 兼容声明。脚本必须手动运行，设备与音频权限必须显式启用。下表给出默认参数，范围与说明以界面或共享 JSON 目录为准。
 
@@ -15,7 +15,7 @@
 | 本地图像重绘 / `local_image_to_image` | image:TOP → out:TOP | 手动本地 ComfyUI / 模型环境 | Z-Image 对输入图像进行扩散重绘，降噪强度控制改动程度。<br>`prompt=A small ceramic robot, white background, studio lighting`；`input_url=`；`width=512`；`height=512`；`denoise=0.65`；`steps=9`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
 | 本地遮罩修复 / `local_inpaint` | image:TOP、mask:TOP → out:TOP | 手动本地 ComfyUI / 模型环境 | 白色遮罩区域参与重绘，黑色区域保留原图。输入原图和独立灰度遮罩。<br>`prompt=A small ceramic robot, white background, studio lighting`；`input_url=`；`mask_url=`；`width=512`；`height=512`；`denoise=0.8`；`steps=9`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
 | 本地音乐生成 / `local_music` | audio:CHOP → out:CHOP | 手动本地 ComfyUI / 模型环境 | ACE-Step 1.5 Turbo 通过风格描述与歌词生成真实音频；可提供参考音色。<br>`prompt=Warm instrumental electronic music, soft piano, mellow synth bass, steady drums, 120 BPM`；`lyrics=[Instrumental]`；`duration=10`；`bpm=120`；`language=en`；`keyscale=C major`；`generate_audio_codes=False`；`steps=8`；`input_url=`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
-| 本地三维模型生成 / `local_3d` | image:TOP → out:SOP | 手动本地 ComfyUI / 模型环境 | Hunyuan3D 2.1 从参考图生成 GLB 几何网格；该预设不包含纹理绘制。<br>`input_url=`；`steps=30`；`cfg=5`；`resolution=128`；`clean_mesh=True`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
+| 本地三维模型生成 / `local_3d` | image:TOP → out:SOP | 手动本地 ComfyUI / 模型环境 | Hunyuan3D 2.1 从参考图生成 GLB 几何网格；该预设不包含纹理绘制。<br>`input_url=`；`steps=30`；`cfg=5`；`resolution=128`；`mesh_threshold=0.6`；`clean_mesh=True`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
 | 本地音乐分轨 / `local_stems` | audio:CHOP → out:CHOP | 手动本地 ComfyUI / 模型环境 | Demucs 四轨（人声/鼓/贝斯/其他）或 MelBand RoFormer 人声/伴奏双轨；所有分轨可下载或单独播放。<br>`model_id=demucs-4`；`input_url=`；`segment=4`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
 | 本地视频生成 / `local_video` | image:TOP → out:TOP | 手动本地 ComfyUI / 模型环境 | Wan 2.2 TI2V 5B 支持文生视频和图生视频，使用低显存分块解码。<br>`prompt=A small ceramic robot, white background, studio lighting`；`input_url=`；`width=512`；`height=320`；`frames=17`；`fps=16`；`steps=20`；`cfg=5`；`seed=42`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
 | ComfyUI 工作流 / `comfy_workflow` | — → out:any | 手动本地 ComfyUI / 模型环境 | 导入 API 格式工作流，运行当前本地 ComfyUI 中安装的节点，返回全部图片、音频、视频与模型资源。<br>`workflow_json={}`；`output_kind=image`；`result_url=`；`result_text=`；`job_id=`；`outputs_json=`；`result_kind=`；`job_status=` |
@@ -162,7 +162,7 @@
 | 表格转对象 / `table_to_json` | in:DAT → out:DAT | 浏览器 / 服务端 | 将 CSV 表头映射成每行对象的键，并可把数字单元格转换为数值。<br>`numeric=True` |
 | 数值转文本 / `chop_to_dat` | in:CHOP → out:DAT | 浏览器 / 服务端 | 把数值信号格式化为指定小数位的文本，便于字幕或数据导出。<br>`digits=2`；`prefix=`；`suffix=` |
 
-## TOP（204 个）
+## TOP（205 个）
 
 | 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
 | --- | --- | --- | --- |
@@ -178,6 +178,7 @@
 | 频谱画面 / `spectrum` | in:CHOP → out:TOP | 浏览器 | 将音频信号绘制成可视化频谱。<br>`bars=64` |
 | 粒子星环 / `particles` | mod:CHOP → out:TOP | 浏览器 | 生成旋转的空间粒子环。输入音频或波形可驱动环的起伏。<br>`count=1600`；`speed=0.3`；`size=2`；`color=#c1a2ff`；`spread=1` |
 | 3D 渲染 / `render` | in:any、mod:CHOP → out:TOP | 浏览器 | 用 WebGL 渲染几何体。支持线框、灯光和自动旋转。<br>`color=#a888ff`；`wireframe=True`；`speed=0.3` |
+| 潮汐声景舞台 / `pointcloud_stage_top` | in:SOP → out:TOP | 浏览器 | 为真实点云提供发光粒子、缓慢运镜、光环与声部指示。点击生成整件作品，再启用音频；音频时钟同步驱动画面。<br>`title=潮汐之像`；`subtitle=TIDAL MUSE · WHERE SOUND BECOMES FORM`；`width=1280`；`height=720`；`point_size=3.2`；`glow=2.1`；`warm=#ffd089`；`cool=#4de0cc`；`accent=#aa80ff`；`volume=0.65` |
 | TOP 组件输入 / `network_in_top` | — → out:TOP | 浏览器 | 从所属组件的指定编号输入端口读取数据。根网络无输入时返回空值。<br>`index=1` |
 | TOP 组件输出 / `network_out_top` | in:TOP → out:TOP | 浏览器 | 将内部网络结果输出到组件外部的指定端口。<br>`index=1` |
 | TOP 路径引用 / `operator_select_top` | — → out:TOP | 浏览器 | 通过节点 ID 路径读取算子输出。支持 / 根路径、../ 父级路径以及组件内部路径。循环引用会显示运行错误。<br>`path=` |
@@ -371,7 +372,7 @@
 | 变暗合成 / `composite_darken` | in:TOP、in2:TOP → out:TOP | 浏览器 | 逐通道保留两张图中更暗的颜色。<br>`opacity=0.7` |
 | 透明异或 / `composite_xor` | in:TOP、in2:TOP → out:TOP | 浏览器 | 仅保留两个画面不透明区域不重叠的部分。<br>`opacity=0.7` |
 
-## CHOP（211 个）
+## CHOP（213 个）
 
 | 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
 | --- | --- | --- | --- |
@@ -379,6 +380,8 @@
 | 常量 / `constant` | — → out:CHOP | 浏览器 / 服务端 | 输出一个固定数值，用于参数控制。<br>`value=1` |
 | 数值运算 / `math` | in:CHOP、in2:CHOP → out:CHOP | 浏览器 / 服务端 | 两路信号执行四则运算、极值或范围限制；第二路未连接时使用运算值。<br>`operation=multiply`；`value=1` |
 | 音频输入 / `audio` | — → out:CHOP | 浏览器 | 读取麦克风音量与频谱。点击工具栏麦克风按钮授权后生效。<br>`gain=1`；`url=` |
+| 读取独立分轨 / `stem_track_chop` | in:CHOP → out:CHOP | 浏览器 | 从上游本地分轨任务中解析指定声部，使用完整 WAV 的真实 PCM；在声景舞台一次启用所有轨道。<br>`track=vocals`；`samples=2048` |
+| 音乐能量与瞬态 / `audio_envelope_chop` | in:CHOP → out:CHOP | 浏览器 | 从真实声部 PCM 计算 RMS 与瞬态；按该声部的整体能量自适应归一化，并使用攻击 / 释放平滑。静音输出零。<br>`gain=1`；`attack=0.035`；`release=0.25` |
 | CHOP 组件输入 / `network_in_chop` | — → out:CHOP | 浏览器 | 从所属组件的指定编号输入端口读取数据。根网络无输入时返回空值。<br>`index=1` |
 | CHOP 组件输出 / `network_out_chop` | in:CHOP → out:CHOP | 浏览器 | 将内部网络结果输出到组件外部的指定端口。<br>`index=1` |
 | CHOP 路径引用 / `operator_select_chop` | — → out:CHOP | 浏览器 | 通过节点 ID 路径读取算子输出。支持 / 根路径、../ 父级路径以及组件内部路径。循环引用会显示运行错误。<br>`path=` |
@@ -587,11 +590,13 @@
 | 触发计时 / `timer_chop` | in:CHOP → out:CHOP | 浏览器 | 输入上升沿启动计时，输出秒数或 0–1 进度，支持循环。<br>`threshold=0.5`；`duration=2`；`loop=False`；`output=progress` |
 | 变化速率限制 / `slew_chop` | in:CHOP → out:CHOP | 浏览器 | 分别限制每秒上升和下降的最大幅度。<br>`rise=1`；`fall=1` |
 
-## SOP（129 个）
+## SOP（131 个）
 
 | 名称 / 类型 ID | 输入 → 输出 | 运行位置 | 用途与默认参数 |
 | --- | --- | --- | --- |
 | 几何体 / `geometry` | — → out:SOP | 浏览器 | 创建真正的三维网格。连接到 3D 渲染节点得到画面。<br>`shape=torus`；`detail=32` |
+| 模型转表面点云 / `model_to_pointcloud_sop` | in:SOP → out:SOP | 浏览器 | 读取真实 GLB / SOP 网格，按三角面面积进行确定性采样；保留法线，不使用替代几何。<br>`count=28000`；`seed=41`；`height=2.7` |
+| 四声部点云编舞 / `pointcloud_dance_sop` | in:SOP、vocals:CHOP、drums:CHOP、bass:CHOP、other:CHOP → out:SOP | 浏览器 | 人声变色、鼓点沿表面法线推进、贝斯呼吸缩放、其他声部产生流动波纹；保留真实点云，GPU 执行连续变形。<br>`pulse=0.12`；`scale=0.14`；`ripple=0.075`；`color_mix=0.75` |
 | SOP 组件输入 / `network_in_sop` | — → out:SOP | 浏览器 | 从所属组件的指定编号输入端口读取数据。根网络无输入时返回空值。<br>`index=1` |
 | SOP 组件输出 / `network_out_sop` | in:SOP → out:SOP | 浏览器 | 将内部网络结果输出到组件外部的指定端口。<br>`index=1` |
 | SOP 路径引用 / `operator_select_sop` | — → out:SOP | 浏览器 | 通过节点 ID 路径读取算子输出。支持 / 根路径、../ 父级路径以及组件内部路径。循环引用会显示运行错误。<br>`path=` |

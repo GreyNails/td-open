@@ -2,6 +2,7 @@ import type { GraphNode, NodeSpec, Param, Port, Project } from "./types";
 import { decorateReferenceProject } from "./referenceTemplates";
 import { mediaCatalog } from "./nodes/mediaCatalog";
 import { localAICatalog, comfyCatalog } from "./nodes/localAICatalog";
+import { performanceCatalog } from "./nodes/performanceCatalog";
 import { referenceTopCatalog } from "./nodes/referenceTopCatalog";
 import { compatibilityTopCatalog } from "./nodes/compatibilityTopCatalog";
 import { browserOutputCatalog } from "./nodes/browserOutputCatalog";
@@ -356,6 +357,7 @@ export const catalog: NodeSpec[] = [
     [input],
     [],
   ),
+  ...performanceCatalog,
 ];
 catalog.push(
   ...componentCatalog,

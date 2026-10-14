@@ -310,7 +310,8 @@
         "steps": 30,
         "cfg": 5,
         "seed": 42,
-        "resolution": 128
+        "resolution": 128,
+        "mesh_threshold": 0.6
       }
     },
     {

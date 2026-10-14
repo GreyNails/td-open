@@ -2,7 +2,7 @@
 
 一个以中文新手体验为起点的开源节点创作工作台：连接节点、实时调整画面，把 AI 服务和 MCP 工具接入同一张创作图。
 
-**744 个节点入口 · 94 个可编辑案例 · 联动停靠工作区 · Python + TypeScript · MIT**
+**749 个节点入口 · 95 个可编辑案例 · 联动停靠工作区 · Python + TypeScript · MIT**
 
 Open-source visual programming studio with a dockable workspace, real-time graphics, local AI models, AI APIs and MCP.
 
@@ -20,20 +20,24 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 
 ![工作台实跑：图片、音乐、三维与视频生成](docs/images/local-ai-live.png)
 
+![潮汐之像：真实本地模型与四声部驱动点云](docs/images/tidal-muse.png)
+
+[观看带声音的演出片段](docs/media/tidal-muse-preview.mp4) · [完整案例操作说明](docs/TIDAL_MUSE.md)：本地文生图 → 本地三维 → 28000 点表面点云；本地文生音乐 → Demucs 四轨 → 人声变色、鼓点跳动、贝斯呼吸、其他乐器波纹。可一键生成整件作品、同步播放与导出带声音的演出。
+
 ## 现在可以做什么
 
 - **类似 Blender 的联动停靠布局**：节点资源、实时预览、节点画布、参数、创作助手共用边界；拖动分隔线时相邻区域同步增减，支持上下/左右拆分、拖动合并标签、隐藏、最大化和按作品保存。
 - 在无限节点画布上添加、移动、框选、多选复制、删除、连接节点；复制多选节点时保留内部连线，支持撤销、重做和整理布局。
-- **744 个节点入口**：TOP 204、CHOP 211、SOP 129、DAT 128、COMP 40、MAT 13、AI 18、OUT 1。包含 **92 个需要外部 SDK/硬件适配器的入口**，其余也按实际实现子集说明；数量不代表商业软件完整兼容。详见 [逐项对照](docs/REFERENCE_COVERAGE.md) 与 [节点手册](docs/NODES.md)。
+- **749 个节点入口**：TOP 205、CHOP 213、SOP 131、DAT 128、COMP 40、MAT 13、AI 18、OUT 1。包含 **92 个需要外部 SDK/硬件适配器的入口**，其余也按实际实现子集说明；数量不代表商业软件完整兼容。详见 [逐项对照](docs/REFERENCE_COVERAGE.md) 与 [节点手册](docs/NODES.md)。
 - **本地 AI 与原生 ComfyUI**：45 个新增节点入口，支持 FLUX.2 Klein、Z-Image、ACE-Step 1.5、Hunyuan3D 2.1、MelBand、Demucs、Wan 2.2。提供独立环境、可续传权重下载、哈希校验、单卡显存预算、任务队列、取消、结果下载，以及原生 API 工作流导入和实际 Comfy 节点库。七组模型已通过工作界面实跑；[安装文档](docs/LOCAL_AI.md) / [真实运行与显存记录](docs/LOCAL_AI_VALIDATION.md)。
 - **真正可编辑的组件内部网络**：双击进入 Base / Container / Time 等组件，通过 In/Out 与父级连接，使用绝对/相对节点引用；支持独立时钟和 Replicator 模板复制。
 - **真实采样、网格和着色器**：命名多通道 CHOP、表格 DAT、音频 PCM/FFT/WAV、布尔/曲线/蒙皮 SOP、13 个 MAT、相机灯光与刚体场景、WebGL 2 GLSL。
 - **Python、网页与协议**：手动运行 Python TOP/CHOP/SOP/DAT；Chromium 捕获网页；OSC、UDP/TCP、WebSocket、MQTT、Art-Net、串口、文件与共享内存；授权后使用 MIDI、摄像头、屏幕捕获和浏览器音频。
-- **94 个代表性案例**：纹理与分形、图像处理、合成与遮罩、三维雕塑、音频与信号、文字数据、AI 与 MCP。支持搜索、分类、入门筛选；附真实缩略图和动手提示。另提供 1 份空白作品，全部可从 [案例索引](docs/EXAMPLES.md) 下载。
+- **95 个代表性案例**：纹理与分形、图像处理、合成与遮罩、三维雕塑、音频与信号、文字数据、AI 与 MCP。支持搜索、分类、入门筛选；附真实缩略图和动手提示。另提供 1 份空白作品，全部可从 [案例索引](docs/EXAMPLES.md) 下载。
 - 通过中文/英文快捷搜索添加节点、收藏常用节点，并自动连接选中节点的兼容输出。
 - 使用 LFO、常量和数学节点驱动参数；导入音频或授权麦克风后，让频谱和粒子跟随声音。音频导入后可保存 URL 并手动重新播放。
 - 通过 WebGL / Three.js 渲染几何体、材质与场景，以及可访问的 glTF / GLB / OBJ / FBX 资源。
-- 保存作品、自动保存、导入 JSON；导出 PNG 和无音轨 WebM 录像，导出文件保留在本地 `data/exports`。
+- 保存作品、自动保存、导入 JSON；导出 PNG 和 WebM 录像（声景演出支持同步音轨），导出文件保留在本地 `data/exports`。
 - 配置 OpenAI 兼容的文本/图片服务；通过自定义 HTTP 模板连接音乐、3D 和其他生成服务。实际请求仅在手动运行时发送。
 - 在助手中预览并应用图编辑指令。未配置模型时使用明确标注的本地中文/英文指令解析器；连接语言模型后可让模型提出结构化图编辑。
 - 连接 Streamable HTTP MCP 服务、发现和调用工具；也可将 TD Open 作为 stdio MCP 工具提供给外部 AI。编辑器在没有本地未保存修改时轮询同步外部项目更改。
@@ -114,7 +118,7 @@ npx playwright install chromium
 
 ![拖动合并后的标签工作区](docs/images/studio-merged.png)
 
-“示例作品”收录 94 个完整节点网络。无须密钥即可运行大多数程序图像、信号和三维案例；声音案例可导入音频或使用麦克风。AI / MCP 案例需要配置服务并手动执行；新增 12 个本地 AI 案例需要安装相应权重。
+“示例作品”收录 95 个完整节点网络。无须密钥即可运行大多数程序图像、信号和三维案例；声音案例可导入音频或使用麦克风。AI / MCP 案例需要配置服务并手动执行；新增 13 个本地 AI 案例需要安装相应权重。
 
 ![可搜索、分类与筛选的案例库](docs/images/example-browser.png)
 
@@ -167,7 +171,7 @@ MCP 客户端示例配置（请把路径替换为自己的安装目录）：
 | `data/config` | 服务配置与密钥，文件权限限制且 Git 忽略 |
 | `data/exports` | PNG、WebM、WAV、JSON 导出文件 |
 | `data/artifacts` | 验证报告与界面截图 |
-| `examples` | 94 个案例 + 1 个空白项目 JSON |
+| `examples` | 95 个案例 + 1 个空白项目 JSON |
 | `examples/api` | API 演练服务、四份连接配置与 MCP 客户端配置模板 |
 | `docs/*API*.md`、`docs/MCP_GUIDE.md`、`docs/IO_GUIDE.md` | 应用内文档中心共用的接入教程源码 |
 | `frontend/public/examples` | 实际渲染的案例缩略图；AI 卡片明确显示连接说明 |

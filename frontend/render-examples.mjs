@@ -88,7 +88,11 @@ try {
       const mean = sum / (480 * 270),
         variance = square / (480 * 270) - mean * mean;
       const template = templates.find((t) => t.id === id);
-      if (template.requires === "ai" || template.requires === "mcp" || template.requires === "local") {
+      if (
+        template.requires === "ai" ||
+        template.requires === "mcp" ||
+        template.requires === "local"
+      ) {
         // Explicit instruction card: no fabricated AI result is presented as a generated asset.
         ctx.fillStyle = "#171320";
         ctx.fillRect(0, 0, 480, 270);
@@ -105,15 +109,19 @@ try {
         ctx.font = "14px sans-serif";
         ctx.fillStyle = "#c6abdf";
         ctx.textAlign = "center";
-        [template.requires === "local" ? "LOCAL" : "API", "NODES", "OUTPUT"].forEach((t, i) =>
-          ctx.fillText(t, 115 + i * 126, 128),
-        );
+        [
+          template.requires === "local" ? "LOCAL" : "API",
+          "NODES",
+          "OUTPUT",
+        ].forEach((t, i) => ctx.fillText(t, 115 + i * 126, 128));
         ctx.font = "16px sans-serif";
         ctx.fillStyle = "#ded2e9";
         ctx.fillText(
           template.requires === "mcp"
             ? "连接 MCP 后手动运行"
-            : template.requires === "local" ? "安装本地模型后手动运行" : "配置 AI 服务后手动运行",
+            : template.requires === "local"
+              ? "安装本地模型后手动运行"
+              : "配置 AI 服务后手动运行",
           240,
           197,
         );
@@ -131,6 +139,27 @@ try {
         image: small.toDataURL("image/webp", 0.85),
       };
     }, template.id);
+    if (template.id === "tidal-muse") {
+      const actual = await fs.readFile(
+        path.join(root, "docs/images/tidal-muse.png"),
+      );
+      result.image = await page.evaluate(
+        async (data) => {
+          const source = new Image();
+          source.src = data;
+          await source.decode();
+          const small = document.createElement("canvas");
+          small.width = 480;
+          small.height = 270;
+          small.getContext("2d").drawImage(source, 0, 0, 480, 270);
+          window.gallery.images.set("tidal-muse", small);
+          return small.toDataURL("image/webp", 0.85);
+        },
+        "data:image/png;base64," + actual.toString("base64"),
+      );
+      result.source =
+        "Actual local-model performance; installation and generation required";
+    }
     await fs.writeFile(
       path.join(assets, `${template.id}.webp`),
       Buffer.from(result.image.split(",")[1], "base64"),
