@@ -2378,6 +2378,12 @@ svg {
   position: relative;
   display: block !important;
 }
+.assistant-compose-hint {
+  font-size: 10px;
+  color: #b3c4ad;
+  margin-bottom: 7px;
+  line-height: 1.5;
+}
 .assistant-references {
   display: flex;
   flex-wrap: wrap;

@@ -1,4 +1,7 @@
-import { AssistantComposer } from "./AssistantComposer";
+import {
+  AssistantComposer,
+  type AssistantComposerHandle,
+} from "./AssistantComposer";
 import { mentionedNodes, captureNodeRuntime } from "./assistantContext";
 import {
   exampleDraft,
@@ -484,6 +487,7 @@ function Studio() {
     importInput = useRef<HTMLInputElement>(null),
     toastTimer = useRef(0),
     chatBottom = useRef<HTMLDivElement>(null),
+    assistantComposer = useRef<AssistantComposerHandle>(null),
     recorder = useRef<MediaRecorder | null>(null);
   const flow = useReactFlow<FlowNode>();
   projectRef.current = project;
@@ -2196,6 +2200,7 @@ function Studio() {
             onConnect={onConnect}
             onNodeDragStart={checkpoint}
             onNodeClick={(event, n) => {
+              assistantComposer.current?.pickNode(n.id);
               setSelected(n.id);
               if (!event.ctrlKey && !event.metaKey && !event.shiftKey)
                 setSelectedIds(new Set([n.id]));
@@ -2961,10 +2966,14 @@ function Studio() {
         </div>
         <div className="chat-compose">
           <AssistantComposer
+            ref={assistantComposer}
             value={prompt}
             onChange={setPrompt}
             onSend={() => void send()}
             project={project}
+            history={chats
+              .filter((chat) => chat.role === "user")
+              .map((chat) => chat.text)}
           />
           <div>
             <select
