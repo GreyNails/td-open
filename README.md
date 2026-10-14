@@ -42,6 +42,7 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 - 保存作品、自动保存、导入 JSON；导出 PNG 和 WebM 录像（声景演出支持同步音轨），导出文件保留在本地 `data/exports`。
 - 配置 OpenAI 兼容的文本/图片服务；通过自定义 HTTP 模板连接音乐、3D 和其他生成服务。实际请求仅在手动运行时发送。
 - 在助手中预览并应用图编辑指令。未配置模型时使用明确标注的本地中文/英文指令解析器；连接语言模型后可让模型提出结构化图编辑。
+- **DeepSeek 官方创作助手已实测**：真实对话、参数修改、重命名、节点创建与连接、撤销 / 重做和保存均通过；[配置与复现步骤](docs/AI_API.md#deepseek-官方已实测的创作助手连接) / [工作台实测截图](docs/images/deepseek-assistant-live.png)。
 - 连接 Streamable HTTP MCP 服务、发现和调用工具；也可将 TD Open 作为 stdio MCP 工具提供给外部 AI。编辑器在没有本地未保存修改时轮询同步外部项目更改。
 - 用 Python 编写后端节点插件；代码里附带独立的 `python_scale` 示例。后端插件不会自动获得浏览器实时渲染能力。
 

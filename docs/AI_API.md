@@ -65,6 +65,35 @@ https://image.example/api/v2 + /generate
 
 本地自托管的兼容服务也是相同步骤：根地址改为其实际监听地址（例如 `http://127.0.0.1:1234/v1`），模型名仍按服务端配置。这个端口只是示例，TD Open 不会自动启动模型，也不包含模型权重。
 
+### DeepSeek 官方：已实测的创作助手连接
+
+2026-10-14 使用官方接口验证了真实对话、改参、重命名、节点创建、端口连接、撤销 / 重做和自动保存。配置如下：
+
+| 字段 | 填写内容 |
+| --- | --- |
+| 服务名称 | `DeepSeek 官方` |
+| 协议 | `OpenAI 兼容` |
+| 生成类型 | `语言 / 对话` |
+| API 基础地址 | `https://api.deepseek.com` |
+| 模型名称 | `deepseek-flash` |
+| API Key | 自己账号的官方密钥，仅填入本机连接设置 |
+
+程序实际请求 `https://api.deepseek.com/chat/completions`。本次认证后的 `GET /models` 返回 `deepseek-flash` 与 `deepseek-v4-pro`；验证使用前者。模型名称以你账号实时返回的列表为准，依据：[DeepSeek 官方接入说明](https://api-docs.deepseek.com/)。
+
+保存后刷新工作台，在创作助手底部的**对话模型**选择 **DeepSeek 官方**。保持“本地指令模式”时不会请求 DeepSeek。选中噪声节点，可以发送：“将所选节点的流动速度改为 0.17、纹理尺度改为 4，并把作品重命名为夜色流光。”先检查返回的修改提案，再点击**应用修改**。仅对话不会改图；编辑案例会保存为独立项目，原件保留。
+
+真实验收脚本为 `frontend/browser-live-assistant.mjs`，必须显式设置 `TD_LIVE_AI=1` 才会调用供应商，且仅接受项目内 `.cache/` 的隔离服务。先在隔离服务的连接设置中添加语言连接，然后运行：
+
+```bash
+TD_PORT=8782 TD_DATA_DIR=.cache/deepseek-chat-qa ./scripts/start.sh
+# 另一终端；TD_PROVIDER_ID 使用隔离连接设置中的实际 ID
+TD_LIVE_AI=1 TD_PROVIDER_ID=deepseek-official \
+  TD_BASE_URL=http://127.0.0.1:8782 TD_CHROMIUM=/path/to/chromium \
+  node frontend/browser-live-assistant.mjs
+```
+
+脚本会真实生成回复并保存隔离测试项目。密钥从后端配置读取，不要把密钥填入脚本、工作流 JSON 或上述命令。测试报告与截图保存到 `data/artifacts/`。
+
 ### 用 Python 安全保存一个连接
 
 在项目根目录运行 `.venv/bin/python`，使用交互输入避免把真实密钥粘到代码或命令历史里：
@@ -414,4 +443,4 @@ AI 适配逻辑在 `backend/integrations.py`：`ProviderConfig` 约束配置，`
 
 一个独立适配服务可以保留供应商专有认证与异步协议，只向 TD Open 暴露稳定的 `POST + JSON`：输入 `prompt/model/options`，输出 `text`、`image_url`、`audio_url` 或 `model_url`。这样其他开发者无需把每一家供应商逻辑塞进节点引擎。
 
-当前验证覆盖请求/返回格式、密钥保留与脱敏、真实本地 HTTP、媒体保存、错误和图命令；供应商账号与计费生成需要使用者自行验证。本文官方引用仅用于接口规范核对，本地功能范围仍以项目代码与测试为准。
+当前验证覆盖请求/返回格式、密钥保留与脱敏、真实本地 HTTP、媒体保存、错误和图命令，并已实测 DeepSeek 官方语言接口及创作助手完整流程；其他供应商账号、模型和计费生成需分别验证。本文官方引用用于接口规范核对，本地功能范围仍以项目代码与测试为准。

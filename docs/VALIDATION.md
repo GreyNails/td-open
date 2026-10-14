@@ -1,6 +1,14 @@
 # Alpha 验收记录
 
-日期：2026-10-14。环境：Linux、Python 3.11、项目内 Node 22.21.1、Chromium 无头浏览器（软件 WebGL）。测试数据、报告、截图、缓存和导出保存在本项目内。没有调用收费 AI 服务；API 测试使用本地模拟服务。硬件测试范围在下文单独注明。
+日期：2026-10-14。环境：Linux、Python 3.11、项目内 Node 22.21.1、Chromium 无头浏览器（软件 WebGL）。测试数据、报告、截图、缓存和导出保存在本项目内。自动测试使用本地模拟服务；DeepSeek 与本地模型的真实运行范围在下文注明。
+
+## DeepSeek 官方创作助手实测
+
+使用用户授权的官方密钥访问 `https://api.deepseek.com`：模型列表 HTTP 200，实际可用模型为 `deepseek-flash` 与 `deepseek-v4-pro`。本次选择 `deepseek-flash`；正式服务的只读对话 HTTP 200，正确解释现有节点链路并返回空命令，案例原件不变。
+
+`frontend/browser-live-assistant.mjs` 在隔离数据目录使用真实后端与官方 API，未拦截或模拟 AI 请求，通过 6 项浏览器检查：密钥不进入浏览器响应；修改提案未经应用不会改图或保存；改参与重命名应用后保存独立项目；撤销 / 重做保留同一项目 ID；新建柔光节点并正确替换输入连接，通过图校验；刷新后保留实际创建的工作流。两次浏览器 AI 请求分别耗时 3.95 秒和 9.81 秒，仅代表本次实测，不是时延承诺。
+
+报告：`data/artifacts/deepseek-models-check.json`、`deepseek-chat-readonly.json`、`deepseek-assistant-browser-report.json`；截图：`deepseek-assistant-live.png`。密钥仅存在本机权限为 `0600` 的后端配置文件，不包含在报告、截图或 Git 产物中。复现需显式授权真实请求，步骤见 [DeepSeek 接入说明](AI_API.md#deepseek-官方已实测的创作助手连接)。
 
 ## 案例保护、框选与端口修复
 
@@ -142,4 +150,4 @@ node frontend/browser-reference-exports-check.mjs
 node frontend/render-examples.mjs
 ```
 
-脚本会保存测试作品和配置，只应对隔离数据目录运行。原始报告和私人数据不随 Git 发布，源码包含复现脚本和真实效果图。真实付费供应商、专有设备 SDK、跨平台驱动、长时间演出与专业视频同步尚未完成验证。
+脚本会保存测试作品和配置，只应对隔离数据目录运行。原始报告和私人数据不随 Git 发布，源码包含复现脚本和真实效果图。DeepSeek 官方语言接口已实测；其他付费供应商、专有设备 SDK、跨平台驱动、长时间演出与专业视频同步尚未完成验证。
