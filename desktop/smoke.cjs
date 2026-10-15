@@ -3,6 +3,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const assert = require("node:assert/strict");
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const { app } = require("electron");
 
 async function smoke(window, options) {
   const { origin, workspace, report, backendPID } = options;
@@ -37,11 +38,17 @@ async function smoke(window, options) {
       ioProtocols:io.protocols,upload:upload.url,audioPeak:peak,webgl2:!!gl,renderedNodes:document.querySelectorAll('.studio-node').length,
       hasNodeIntegration:typeof window.require !== 'undefined',platform:navigator.platform};
   })()`);
+  result.gpuFeatures = app.getGPUFeatureStatus();
+  result.gpuInfo = await app.getGPUInfo("basic");
+  await fs.mkdir(path.dirname(report), { recursive: true });
+  await fs.writeFile(report.replace(/\.json$/, ".png"), (await window.webContents.capturePage()).toPNG());
+  await fs.writeFile(report, JSON.stringify({ passed: false, ...result, backendPID }, null, 2));
   assert(result.operators >= 751 && result.examples >= 90);
   assert.notEqual(result.savedID, result.sourceID);
   assert.equal(result.script.desktop, 42);
   assert.equal(result.webTitle, "TD desktop web capture");
-  assert(result.audioPeak > .5 && result.webgl2);
+  assert(result.audioPeak > .5, "Audio render returned no signal");
+  assert(result.webgl2, "WebGL 2 context unavailable; see GPU diagnostics");
   assert.equal(result.hasNodeIntegration, false);
   assert(result.localProfiles >= 7);
   assert(result.ioProtocols.includes("sharedmem"));

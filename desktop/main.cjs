@@ -10,8 +10,12 @@ const { sameOrigin, externalURL } = require("./security.cjs");
 // No privileged renderer bridge: the exact browser UI talks to its owned backend.
 const smokePath = process.env.TD_DESKTOP_SMOKE_REPORT;
 if (smokePath) {
-  app.commandLine.appendSwitch("use-angle", "swiftshader");
-  app.commandLine.appendSwitch("enable-unsafe-swiftshader");
+  const angle = process.env.TD_DESKTOP_SMOKE_ANGLE || (process.platform === "darwin" ? "default" : "swiftshader");
+  if (angle !== "default") {
+    app.commandLine.appendSwitch("use-gl", "angle");
+    app.commandLine.appendSwitch("use-angle", angle);
+    if (angle.startsWith("swiftshader")) app.commandLine.appendSwitch("enable-unsafe-swiftshader");
+  }
 }
 app.setName("TD Open");
 app.setPath("userData", process.env.TD_DESKTOP_USER_DATA ? path.resolve(process.env.TD_DESKTOP_USER_DATA) : path.join(app.getPath("appData"), "TD Open"));
@@ -175,7 +179,12 @@ else {
     }
   }).catch(async error => {
     logLine(error.stack || error);
-    if (smokePath) { fs.mkdirSync(path.dirname(smokePath), { recursive: true }); fs.writeFileSync(smokePath, JSON.stringify({ passed: false, error: String(error), logPath })); }
+    if (smokePath) {
+      fs.mkdirSync(path.dirname(smokePath), { recursive: true });
+      let partial = {};
+      try { partial = JSON.parse(fs.readFileSync(smokePath, "utf8")); } catch {}
+      fs.writeFileSync(smokePath, JSON.stringify({ ...partial, passed: false, error: String(error), logPath }));
+    }
     else dialog.showErrorBox("TD Open 启动失败", String(error.message || error) + "\n日志：" + logPath);
     process.exitCode = 1; app.quit();
   });

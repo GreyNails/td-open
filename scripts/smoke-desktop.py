@@ -45,24 +45,33 @@ def main():
     executable = args.executable or next((ROOT / "dist/desktop").glob(candidates[system]), None)
     if not executable or not executable.is_file(): raise RuntimeError("Packaged executable not found")
     report = output / "native-smoke.json"
-    report.unlink(missing_ok=True)
     env = {**os.environ, "TD_DESKTOP_SMOKE_REPORT": str(report),
            "TD_DESKTOP_USER_DATA": str(ROOT / ".cache/desktop-smoke/用户数据 with spaces")}
     command = [str(executable.resolve())]
     if system == "Linux": command += ["--no-sandbox", "--ozone-platform=headless"]
-    with (output / "launcher.log").open("w", encoding="utf-8") as log:
-        process = subprocess.Popen(command, cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT)
-        try: process.wait(timeout=240)
-        except subprocess.TimeoutExpired:
-            parent = psutil.Process(process.pid)
-            for child in parent.children(recursive=True):
-                try: child.kill()
-                except psutil.NoSuchProcess: pass
-            process.kill(); process.wait()
-            raise RuntimeError("Packaged GUI timed out; see launcher.log and userData logs")
-    if not report.is_file(): raise RuntimeError("GUI produced no smoke report; see launcher.log")
-    result = json.loads(report.read_text(encoding="utf-8"))
-    if not result.get("passed"): raise RuntimeError(json.dumps(result, ensure_ascii=False))
+    # Hosted Mac VMs expose different GPU backends from physical Macs. Try the
+    # normal runtime first, then explicit ANGLE modes; never waive WebGL checks.
+    modes = ["default", "gl", "swiftshader", "swiftshader-webgl"] if system == "Darwin" else ["swiftshader"]
+    for mode in modes:
+        report.unlink(missing_ok=True)
+        env["TD_DESKTOP_SMOKE_ANGLE"] = mode
+        with (output / ("launcher-" + mode + ".log")).open("w", encoding="utf-8") as log:
+            process = subprocess.Popen(command, cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT)
+            try: process.wait(timeout=240)
+            except subprocess.TimeoutExpired:
+                parent = psutil.Process(process.pid)
+                for child in parent.children(recursive=True):
+                    try: child.kill()
+                    except psutil.NoSuchProcess: pass
+                process.kill(); process.wait()
+                raise RuntimeError("Packaged GUI timed out; see launcher logs and userData logs")
+        if not report.is_file(): raise RuntimeError("GUI produced no smoke report; see launcher logs")
+        result = json.loads(report.read_text(encoding="utf-8"))
+        if result.get("passed"): break
+        (output / ("failed-" + mode + ".json")).write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        if result.get("webgl2") is not False: raise RuntimeError(json.dumps(result, ensure_ascii=False))
+    else: raise RuntimeError("All GPU modes failed: " + json.dumps(result, ensure_ascii=False))
+    result["smokeAngle"] = mode
     for _ in range(50):
         if not psutil.pid_exists(result["backendPID"]): break
         time.sleep(.1)
