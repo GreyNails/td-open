@@ -1,0 +1,42 @@
+name: Publish verified desktop installers
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Build desktop installers run ID
+        required: true
+        type: string
+permissions:
+  contents: write
+  actions: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN_ID: ${{ inputs.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify successful native build
+        run: |
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN_ID" > build-run.json
+          python - <<'PY'
+          import json
+          data = json.load(open('build-run.json'))
+          assert data['name'] == 'Build desktop installers'
+          assert data['conclusion'] == 'success' and data['status'] == 'completed'
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          pattern: TD-Open-*
+          path: downloaded
+      - name: Collect installers and verification evidence
+        run: python scripts/collect-desktop-release.py downloaded release-assets build-run.json
+      - name: Publish desktop release
+        run: |
+          build_sha=$(python -c 'import json; print(json.load(open("build-run.json"))["head_sha"])')
+          gh release create desktop-v0.6.0 release-assets/* --target "$build_sha" --title "TD Open 0.6.0 · Windows / macOS 桌面版" --notes-file docs/releases/desktop-v0.6.0.md
