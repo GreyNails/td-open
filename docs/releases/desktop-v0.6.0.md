@@ -3,8 +3,8 @@ Windows 与 macOS 桌面安装包已加入，同一套节点、案例、自由�
 | 系统 | 下载 |
 | --- | --- |
 | Windows 10 / 11，Intel / AMD 64 位 | `TD-Open-0.6.0-win-x64.exe` |
-| macOS 13+，Apple Silicon（M 系列） | `TD-Open-0.6.0-mac-arm64.dmg` |
-| macOS 13+，Intel | `TD-Open-0.6.0-mac-x64.dmg` |
+| macOS 13.5+，Apple Silicon（M 系列） | `TD-Open-0.6.0-mac-arm64.dmg` |
+| macOS 13.5+，Intel | `TD-Open-0.6.0-mac-x64.dmg` |
 
 Windows 双击安装；Mac 打开 DMG，将 TD Open 拖到 Applications。包内包含 Python、Node.js、Chromium 与 FFmpeg，首次运行不用先安装开发环境。Mac 同时提供 ZIP。
 

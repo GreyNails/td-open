@@ -12,7 +12,7 @@
 | Apple Silicon Mac（M1 / M2 / M3 / M4 等） | `TD-Open-0.6.0-mac-arm64.dmg` | 打开磁盘映像，将 TD Open 拖到 Applications，再从应用程序启动 |
 | Intel Mac | `TD-Open-0.6.0-mac-x64.dmg` | 同上，选择 x64 版本 |
 
-macOS 要求 13 或更高。Windows ARM 暂未单独构建。Mac 另提供 ZIP，用于手动解压和分发。
+macOS 要求 13.5 或更高（内置 Node.js 24 的[官方运行要求](https://github.com/nodejs/node/blob/v24.22.0/BUILDING.md#platform-list)）。Windows ARM 暂未单独构建。Mac 另提供 ZIP，用于手动解压和分发。
 
 本次发布没有商业代码签名证书：Windows 可能显示未知发布者，macOS 安装包使用临时签名，未经 Apple 公证。确认下载来自本仓库并核对发布页的 SHA-256 后，按系统的应用放行提示操作。Mac 首次打开被阻止时，可在“系统设置 → 隐私与安全性”使用“仍要打开”；不需要全局关闭 Gatekeeper。参见 [Apple 官方说明](https://support.apple.com/zh-cn/102445)。
 
