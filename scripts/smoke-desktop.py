@@ -55,6 +55,7 @@ def main():
     for mode in modes:
         report.unlink(missing_ok=True)
         env["TD_DESKTOP_SMOKE_ANGLE"] = mode
+        env["TD_DESKTOP_USER_DATA"] = str(ROOT / ".cache/desktop-smoke" / ("用户数据 with spaces-" + mode))
         with (output / ("launcher-" + mode + ".log")).open("w", encoding="utf-8") as log:
             process = subprocess.Popen(command, cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT)
             try: process.wait(timeout=240)

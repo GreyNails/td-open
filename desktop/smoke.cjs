@@ -39,7 +39,8 @@ async function smoke(window, options) {
       hasNodeIntegration:typeof window.require !== 'undefined',platform:navigator.platform};
   })()`);
   result.gpuFeatures = app.getGPUFeatureStatus();
-  result.gpuInfo = await app.getGPUInfo("basic");
+  try { result.gpuInfo = await app.getGPUInfo("basic"); }
+  catch (error) { result.gpuInfoError = String(error); }
   await fs.mkdir(path.dirname(report), { recursive: true });
   await fs.writeFile(report.replace(/\.json$/, ".png"), (await window.webContents.capturePage()).toPNG());
   await fs.writeFile(report, JSON.stringify({ passed: false, ...result, backendPID }, null, 2));
