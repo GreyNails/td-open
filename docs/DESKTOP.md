@@ -2,6 +2,12 @@
 
 桌面版使用与网页版相同的 React 工作台、751 个节点入口、96 个案例、Python 后端、AI API / MCP 接入和工程格式。网页版的启动方式继续保留。现有节点的支持范围仍以[功能矩阵](FEATURE_MATRIX.md)为准，安装包不意味着 TouchDesigner 全功能兼容。
 
+以下为原生安装包实际启动后的工作台截图：
+
+![Windows 安装后运行的 TD Open 工作台](images/desktop-windows.png)
+
+![Apple Silicon Mac 安装后运行的 TD Open 工作台](images/desktop-macos.png)
+
 ## 下载与安装
 
 安装包发布在 [GitHub Releases](https://github.com/GreyNails/td-open/releases)。选择与你的电脑对应的文件：
