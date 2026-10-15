@@ -19,6 +19,7 @@
     "appId": "org.tdopen.studio",
     "productName": "TD Open",
     "asar": true,
+    "afterPack": "./after-pack.cjs",
     "directories": {"output": "../dist/desktop", "buildResources": "assets"},
     "files": ["main.cjs", "security.cjs", "smoke.cjs", "loading.html", "package.json"],
     "extraResources": [{"from": "../build/desktop/resources", "to": "td-runtime", "filter": ["**/*"]}],
