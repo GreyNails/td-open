@@ -55,6 +55,10 @@ Open-source visual programming studio with a dockable workspace, real-time graph
 
 Windows 与 macOS 用户可以使用独立桌面安装包，无需先安装 Python 或 Node.js。见 [桌面版下载、安装、数据迁移和平台支持说明](docs/DESKTOP.md)；[安装包发布页](https://github.com/GreyNails/td-open/releases)。桌面版与网页版共享工作台、节点和工程格式；大型模型首次使用仍需下载，Mac 的本地模型兼容范围与 NVIDIA 环境有区别。
 
+| Windows x64 | Mac：M 系列芯片 | Mac：Intel |
+| --- | --- | --- |
+| [下载安装 EXE](https://github.com/GreyNails/td-open/releases/download/desktop-v0.6.0/TD-Open-0.6.0-win-x64.exe) | [下载 DMG](https://github.com/GreyNails/td-open/releases/download/desktop-v0.6.0/TD-Open-0.6.0-mac-arm64.dmg) | [下载 DMG](https://github.com/GreyNails/td-open/releases/download/desktop-v0.6.0/TD-Open-0.6.0-mac-x64.dmg) |
+
 ![macOS 安装包实际运行的工作台](docs/images/desktop-macos.png)
 
 [Windows 安装后实测截图](docs/images/desktop-windows.png) · 桌面菜单提供作品目录、运行日志与 MCP 接入配置导出。

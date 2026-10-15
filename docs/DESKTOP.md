@@ -14,9 +14,9 @@
 
 | 电脑 | 文件 | 安装方式 |
 | --- | --- | --- |
-| Windows 10 / 11，Intel 或 AMD 64 位 | `TD-Open-0.6.0-win-x64.exe` | 双击安装；桌面和开始菜单会出现 TD Open |
-| Apple Silicon Mac（M1 / M2 / M3 / M4 等） | `TD-Open-0.6.0-mac-arm64.dmg` | 打开磁盘映像，将 TD Open 拖到 Applications，再从应用程序启动 |
-| Intel Mac | `TD-Open-0.6.0-mac-x64.dmg` | 同上，选择 x64 版本 |
+| Windows 10 / 11，Intel 或 AMD 64 位 | [下载安装 EXE](https://github.com/GreyNails/td-open/releases/download/desktop-v0.6.0/TD-Open-0.6.0-win-x64.exe) | 双击安装；桌面和开始菜单会出现 TD Open |
+| Apple Silicon Mac（M1 / M2 / M3 / M4 等） | [下载 arm64 DMG](https://github.com/GreyNails/td-open/releases/download/desktop-v0.6.0/TD-Open-0.6.0-mac-arm64.dmg) | 打开磁盘映像，将 TD Open 拖到 Applications，再从应用程序启动 |
+| Intel Mac | [下载 x64 DMG](https://github.com/GreyNails/td-open/releases/download/desktop-v0.6.0/TD-Open-0.6.0-mac-x64.dmg) | 同上，选择 x64 版本 |
 
 macOS 要求 13.5 或更高（内置 Node.js 24 的[官方运行要求](https://github.com/nodejs/node/blob/v24.22.0/BUILDING.md#platform-list)）。Windows ARM 暂未单独构建。Mac 另提供 ZIP，用于手动解压和分发。
 
