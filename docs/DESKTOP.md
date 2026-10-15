@@ -32,10 +32,18 @@ macOS 要求 13.5 或更高（内置 Node.js 24 的[官方运行要求](https://
 - 大型生成模型需要在“本地模型中心”首次下载；联网、磁盘空间、模型许可和显卡要求与网页版相同，安装桌面应用不等于预装所有权重。
 - Windows 的自动环境安装面向 NVIDIA CUDA 显卡。驱动由用户安装，推荐在 24 GB 显存预算内使用已验证的配置。
 - Apple Silicon 提供 PyTorch MPS 环境安装路径。但现有七组模型的工作界面推理记录来自 **Linux / NVIDIA**，不是 Mac 验证记录。FP8 权重、自定义 CUDA 算子以及部分模型可能不支持 MPS，不能保证现有全部模型在 Mac 原样推理。
-- Intel Mac 可以使用普通节点、AI API 和外部 ComfyUI；当前自动安装器不提供 Intel Mac 本地生成环境。Mac 也可连接局域网中已有的 NVIDIA ComfyUI 服务，在相同节点图中运行生成任务。
+- Intel Mac 可以使用普通节点、AI API 和已有 ComfyUI；当前自动安装器不提供 Intel Mac 本地生成环境。连接其他电脑上的 NVIDIA ComfyUI 时，需要先通过 SSH 转发到本机回环地址，再选择“已有 ComfyUI”，详见下方步骤。
 - MIDI、摄像头、串口、NDI、专业硬件等仍需要对应系统权限、驱动或外部适配器。桌面打包不会消除原有外部 SDK 限制。
 
 详细模型说明见 [本地 AI 安装与接入](LOCAL_AI.md) 和 [实际验证记录](LOCAL_AI_VALIDATION.md)。
+
+例如，GPU 电脑上的 ComfyUI 监听 `127.0.0.1:8188` 时，在 Mac 终端运行以下命令，并保持连接：
+
+```bash
+ssh -N -L 8189:127.0.0.1:8188 your-user@your-gpu-server
+```
+
+然后在本地模型中心把回环地址设为 `http://127.0.0.1:8189`，选择使用已有 ComfyUI。GPU 电脑需预先安装相应权重和本项目需要的 Comfy 自定义节点。管理器仅接受回环 HTTP 地址，不能直接把局域网 IP 填入该设置。
 
 ## 数据、迁移与升级
 
